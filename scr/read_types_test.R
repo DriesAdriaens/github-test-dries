@@ -12,3 +12,18 @@ read_scheme_types() %>%
 read_schemes() %>% view()
 
 read_env_pressures() %>% view()
+
+
+#types per class of groundwater dependence
+
+read_types() %>% 
+  filter(groundw_dep != "GD0") %>% 
+  group_by(groundw_dep) %>% 
+  summarize(test = paste(type, collapse = "|")) %>% 
+  view()
+
+read_types() %>% 
+  filter(groundw_dep != "GD0") %>% 
+  group_by(groundw_dep) %>% 
+  summarize(test = paste(type, collapse = "|")) %>% 
+  view()
