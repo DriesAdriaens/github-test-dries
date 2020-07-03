@@ -33,6 +33,8 @@ mylocs %>%
 
 get_locs(con = watina, loc_vec = c("SILP003"), collect = TRUE, obswells = TRUE) %>% View()
 
+get_xg3(get_locs(con = watina, loc_vec = c("SILP003")), con = watina, startyear = 1900, vert_crs = "local", truncated = FALSE, collect = TRUE) %>% View()
+
 get_xg3(get_locs(con = watina, loc_vec = c("SILP003")), con = watina, startyear = 1900, vert_crs = "local", truncated = FALSE, collect = TRUE) %>% 
   eval_xg3_avail(xg3_type = c("L", "H", "V"))
 
