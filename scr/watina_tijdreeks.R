@@ -11,10 +11,18 @@ watina <- connect_watina()
 
 locaties <- get_locs(watina,
                      # area_codes = "SIL",
-                     # loc_type = "P",
+                     # loc_type = c("P", "S", "R", "N", "W", "D", "L", "B"),
                      # loc_vec = c("KASP001", "KASP002", "KASP032"),
                      loc_vec = c("SILP001", "SILP002", "SILP003", "SILP004"),
                      loc_validity = c("VLD", "ENT"),
+                     # mask = NULL,
+                     # join_mask = FALSE,
+                     # buffer = 10,
+                     # filterdepth_range = c(0, 3),
+                     # filterdepth_guess = FALSE,
+                     # filterdepth_na = FALSE,
+                     # obswells = FALSE,
+                     # obswell_aggr = c("latest", "latest_fd", "latest_sso", "mean"),
                      collect = FALSE)
 tijdreeks <-
   locaties %>% 
