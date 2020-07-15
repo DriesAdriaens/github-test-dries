@@ -14,7 +14,7 @@ locaties <- get_locs(watina,
                      # loc_type = c("P", "S", "R", "N", "W", "D", "L", "B"),
                      # loc_vec = c("KASP001", "KASP002", "KASP032"),
                      # loc_vec = c("SILP001", "SILP002", "SILP003", "SILP004"),
-                     loc_vec = c("KRGP004"),
+                     loc_vec = c("SILP004"),
                      loc_validity = c("VLD", "ENT"),
                      # mask = NULL,
                      # join_mask = FALSE,
@@ -36,28 +36,30 @@ tijdreeks <-
 
 ggplot(tijdreeks) +
   geom_line(aes(x = date(Datum), y = mMaaiveld,
-                colour = paste(loc_code, " (", round(mvTAW,2), " mTAW)")
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                # Peilmetingstatus weergeven in legende (lijntype; ingegeven/gevalideerd)
                 # ,linetype = PeilmetingStatus
                 )) +
-  # non-clipping zoom
+  ## non-clipping zoom
   # coord_cartesian(ylim = c(-1, 0.1)
-  #                 , xlim = c(ymd("2009-01-01"), ymd("2017-01-01"))
+  #                 , xlim = c(ymd("1999-01-01"), ymd("2010-01-01"))
   #                 ) +
-  # end non-clipping zoom
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
-  # clipping zoom
+  ## clipping zoom
   # xlim(ymd("2009-01-01"), ymd("2017-01-01")) +
   # ylim(-1, 0.1) +
-  # end clipping zoom
   geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "m-mv", colour = "Meetpunt") +
-  # plotten van peilmetingen met representatieve periode > 30 dagen
+  ## plotten van peilmetingen met representatieve periode > 30 dagen
   geom_point(data = tijdreeks %>%
                filter(ReprPeriode > 30),
-             aes(x = date(Datum), y = mMaaiveld))
-  # accentueren van specifieke tijdreeks
+             aes(x = date(Datum), y = mMaaiveld, alpha = ReprPeriode)) +
+  scale_alpha_continuous(breaks = c(31, 60, 90, 120),
+                         labels = c("31", "60", "90", ">120"),
+                         limits = c(31, 120)) + labs(alpha = "ReprPer > 30 (dagen)")
+  ## accentueren van specifieke tijdreeks
   # geom_line(data = tijdreeks %>%
   #               filter(loc_code == "ASHP013"),
   #             aes(x = date(Datum), y = mMaaiveld),
@@ -66,6 +68,7 @@ ggplot(tijdreeks) +
 
 DBI::dbDisconnect(watina)
 
+#Bereken per meetpunt het aantal hydrojaren waarin bepaalde representatieve periode wel of niet wordt overschreden
 tijdreeks %>% 
   group_by(loc_code, HydroJaar) %>%
   summarise(max_reprper = max(ReprPeriode)) %>% 
