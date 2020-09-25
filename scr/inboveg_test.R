@@ -4,6 +4,7 @@ library(assertthat)
 library(dplyr)
 library(inbodb)
 library(ggplot2)
+library(inboggvegan)
 library(vegan)
 library(tidyverse)
 library(stringr)
@@ -56,11 +57,22 @@ Sci_uni <- testdata %>%
   arrange(ScientificName)
 testdata <- testdata %>% left_join(Sci_uni, by = "ScientificName")
 
-## Transform data to wide format
+## Transform data to wide format and replace RecordingGivid with UserReference as site name
 testdata_trans <- testdata %>% 
   select(RecordingGivid, Sci_abbr, PctValue) %>% 
   spread(key = Sci_abbr, value = PctValue, fill = 0) %>% 
   left_join(testdata_header %>% 
              select(RecordingGivid, UserReference),
            by = "RecordingGivid") %>% 
-  select(UserReference, everything(), -RecordingGivid)
+  select(UserReference, everything(), -RecordingGivid) %>% 
+  data.frame(row.names = "UserReference")
+rownames(testdata_trans) <- testdata_trans$UserReference
+
+## Quick vegan analysis CA
+CA <- cca(testdata_trans)
+ggscreeplot(CA, type = "both")
+ggbiplot_vegan(CA)
+
+CA_plot <- ordiplot(CA, type = "text", xlim = c(-4, 4), ylim = c(-2, 0.5))
+identify(CA_plot, "species")
+identify(CA_plot, "sites")
