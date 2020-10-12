@@ -10,11 +10,11 @@ watina <- connect_watina()
 # 1. tabel met peilmetingen opvragen voor gewenste meetpunten ----
 
 locaties <- get_locs(watina,
-                     area_codes = "NEB",
+                     # area_codes = "NEB",
                      # loc_type = c("P", "S", "R", "N", "W", "D", "L", "B"),
                      # loc_vec = c("KASP001", "KASP002", "KASP032"),
                      # loc_vec = c("SILP001", "SILP002", "SILP003", "SILP004"),
-                     #loc_vec = c("ASHP013"),
+                     loc_vec = c("LDOP043"),
                      loc_validity = c("VLD", "ENT"),
                      # mask = NULL,
                      # join_mask = FALSE,
