@@ -4,6 +4,8 @@ library(lubridate)
 library(dplyr)
 library(stringr)
 library(tidyr)
+library(sf)
+library(leaflet)
 
 
 watina <- connect_watina()
@@ -43,16 +45,19 @@ trans_mom_3 <- c("MOMP027", "MOMS011", "MOMP026", "MOMP025", "MOMP024",
                  "MOMP019", "MOMP020", "MOMP021", "MOMP022")
 trans_mom_4 <- c("MOMP028")
 
-transects <- data.frame(loc_code = locaties$loc_code,
+locs <- locaties %>% collect()
+transects <- data.frame(loc_code = locs$loc_code,
                         transect_nr = 0, stringsAsFactors = FALSE) %>% 
   mutate(transect_nr = ifelse(loc_code %in% trans_mom_1, 1,
                               ifelse(loc_code %in% trans_mom_2, 2,
                                      ifelse(loc_code %in% trans_mom_3, 3,
                                             ifelse(loc_code %in% trans_mom_4, 4,
                                                    transect_nr)))))
-
-locaties <- locaties %>% 
+locs <- locaties %>% collect() %>% 
   left_join(transects, by = "loc_code")
+
+# locaties <- locaties %>% # niet uitvoeren want anders geen "lazy query" meer (nodig voor opbouw tijdreeks via sql)
+#   left_join(transects, by = "loc_code")
 
 # 3. tijdreeks aanmaken ----
 
@@ -106,6 +111,19 @@ plot_tijdreeks_trans_mom_1
 check <- tijdreeks %>% 
   filter(transect_nr == 1 & mMaaiveld > 0) %>% 
   arrange(loc_code, date(Datum))
+
+locs_transect1 <- locs %>% 
+  filter(transect_nr == 1) %>% 
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+  st_transform(crs = 4326)
+
+leaflet(data = locs_transect1) %>%
+  addTiles() %>% 
+  # addProviderTiles("OpenTopoMap") %>% 
+  addCircleMarkers(label = locs_transect1$loc_code, fill = FALSE, weight = 3, color = "red",
+             labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                         direction = "right", opacity = 0.75)) %>% 
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
   
 # 4.2 raai 2 ----
 
@@ -142,6 +160,19 @@ plot_tijdreeks_trans_mom_2 <- ggplot(tijdreeks %>%
 
 plot_tijdreeks_trans_mom_2
 
+locs_transect2 <- locs %>% 
+  filter(transect_nr == 2) %>% 
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+  st_transform(crs = 4326)
+
+leaflet(data = locs_transect2) %>%
+  addTiles() %>% 
+  # addProviderTiles("OpenTopoMap") %>% 
+  addCircleMarkers(label = locs_transect2$loc_code, fill = FALSE, weight = 3, color = "red",
+                   labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                         direction = "right", opacity = 0.75)) %>% 
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
+
 # 4.3 raai 3 ----
 
 plot_tijdreeks_trans_mom_3 <- ggplot(tijdreeks %>% 
@@ -176,6 +207,19 @@ plot_tijdreeks_trans_mom_3 <- ggplot(tijdreeks %>%
 #             colour = "black", size = 1.5)
 
 plot_tijdreeks_trans_mom_3
+
+locs_transect3 <- locs %>% 
+  filter(transect_nr == 3) %>% 
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+  st_transform(crs = 4326)
+
+leaflet(data = locs_transect3) %>%
+  addTiles() %>% 
+  # addProviderTiles("OpenTopoMap") %>% 
+  addCircleMarkers(label = locs_transect3$loc_code, fill = FALSE, weight = 3, color = "red",
+                   labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                               direction = "right", opacity = 0.75)) %>% 
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
 
 # 4.4 raai 4 ----
 
@@ -212,3 +256,15 @@ plot_tijdreeks_trans_mom_4 <- ggplot(tijdreeks %>%
 
 plot_tijdreeks_trans_mom_4
 
+locs_transect4 <- locs %>% 
+  filter(transect_nr == 4) %>% 
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+  st_transform(crs = 4326)
+
+leaflet(data = locs_transect4) %>%
+  addTiles() %>% 
+  # addProviderTiles("OpenTopoMap") %>% 
+  addCircleMarkers(label = locs_transect4$loc_code, fill = FALSE, weight = 3, color = "red",
+                   labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                               direction = "right", opacity = 0.75)) %>% 
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
