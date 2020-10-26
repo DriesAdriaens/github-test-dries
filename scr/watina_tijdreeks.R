@@ -250,10 +250,10 @@ plot_tijdreeks_TAW <- ggplot(tijdreeks_TAW) +
                 # Peilmetingstatus weergeven in legende (lijntype; ingegeven/gevalideerd)
                 # ,linetype = PeilmetingStatus
   )) +
-  geom_line(data = tijdreeks_TAW %>% filter(loc_typecode == "P"),
-            aes(x = date(Datum), y = mvTAW,
-                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
-            linetype = "dashed", size = 1) +
+  # geom_line(data = tijdreeks_TAW %>% filter(loc_typecode == "P"),
+  #           aes(x = date(Datum), y = mvTAW,
+  #               colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
+  #           linetype = "dashed", size = 1) +
   ## non-clipping zoom
   # coord_cartesian(ylim = c(-1, 0.1),
   #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
