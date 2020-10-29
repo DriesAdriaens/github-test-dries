@@ -209,7 +209,7 @@ plot_tijdreeks_trans_mom_3 <- ggplot(tijdreeks %>%
 plot_tijdreeks_trans_mom_3
 ```
 
-## Raai 1
+## Raai 4
 
 ### Kaart
 
