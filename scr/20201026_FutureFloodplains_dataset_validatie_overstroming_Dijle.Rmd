@@ -36,6 +36,7 @@ We vragen al de meetpunten met peilbuis op (piëzometer: peilpuntcategorie met c
 
 ```{r meetpunten}
 komgr_neerijse_loc_vec <- c("DYLP137", "DYLP105", "DYLP088", "DYLB028", "DYLB005", "DYLB080", "DYLB073", "DYLB072", "DYLB071", "DYLB065", "DYLP202", "DYLP204", "DYLP203", "DYLP021", "DYLP020", "DYLP034", "DYLP087", "DYLP086", "DYLP083", "DYLP082", "DYLP081", "DYLP095", "DYLP090", "DYLP089", "DYLP104", "DYLP098", "DYLP066", "DYLP065", "DYLP064", "DYLP080", "DYLP073", "DYLP072", "DYLP071", "DYLP070", "DYLP174", "DYLP170", "DYLP084", "DYLP028", "DYLP085", "DYLP005", "DYLP099", "DYLP047", "DYLP029")
+
 komgr_neerijse_loc <- get_locs(watina,
                      loc_vec = komgr_neerijse_loc_vec,
                      loc_type = c("P", "B"),
@@ -80,6 +81,23 @@ komgr_neerijse_tijdreeks <-
 #   knitr::kable()
 ```
 
+Het gaat hier enkel om de gevalideerde metingen.
+
+```{r tijdreeks neerijse}
+komgr_neerijse_tijdreeks <-
+  komgr_neerijse_loc %>% 
+  rename(mvTAW = soilsurf_ost) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD") %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID"))
+
+# tbl(watina, "FactPeilMeting") %>%
+#   select(PeilmetingCategorieCode, PeilmetingCategorie) %>%
+#   distinct() %>%
+#   knitr::kable()
+```
+
 ```{r tijdreeks_plot, message=FALSE, warning=FALSE}
 komgr_neerijse_tijdreeks_plot <- ggplot(komgr_neerijse_tijdreeks) +
   geom_line(aes(x = date(Datum),
@@ -98,9 +116,15 @@ komgr_neerijse_tijdreeks_plot <- ggplot(komgr_neerijse_tijdreeks) +
   #            aes(x = date(Datum),
   #                y = mMaaiveld,
   #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_point(data = komgr_neerijse_tijdreeks %>% 
+               filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+             aes(x = date(Datum),
+                 y = mMaaiveld,
+                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "bottom") +
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
   labs(x = "Datum", y = "m-mv", colour = NULL)
   
 komgr_neerijse_tijdreeks_plot
@@ -368,6 +392,74 @@ ggplot(komgr_neerijse_tijdreeks %>%
 Uit bovenstaande figuren blijkt dat de stijghoogten in de diepere buizen systematisch minstens 20 cm hoger liggen dan in de ondiepe buizen van de peilbuiskoppels. Het verschil is het grootst voor de koppels DYLP170-DYLP174 en DYLP095-DYLP098, met verschillen die tot 50 cm bedragen. Voor het koppel DYLP047-DYLP099 liggen de verschillen lager, maar schommelen toch nog steeds rond de 20 cm.
 
 We kunnen hier alvast besluiten dat het niet raadzaam is om de diepere peilbuizen te gebruiken om overstromingsdiepten te kalibreren. Die verwijderen we dus uit de selectie.
+=======
+```
+
+Meetpunten met peilen boven maaiveld:
+
+```{r meetpunten met peilen boven maaiveld}
+komgr_neerijse_tijdreeks %>% 
+  filter(mMaaiveld >= 0) %>% 
+  select(loc_code) %>% 
+  distinct() %>% 
+  knitr::kable()
+```
+```{r}
+aantal <- komgr_neerijse_tijdreeks %>% 
+  filter(mMaaiveld >= 0) %>% 
+  select(loc_code) %>% 
+  distinct() %>% 
+  count() %>% 
+  collect() %>% 
+  .$n
+```
+
+Het gaat hier dus om nog `r aantal` meetpunten.
+
+Meetpunten met manuele metingen met als categorieën "maaiveld onder water" (SOUWA) en "peilbuis staat onder water" (TBWWL):
+
+```{r}
+komgr_neerijse_tijdreeks %>% 
+  filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")) %>% 
+  select(loc_code) %>% 
+  distinct() %>% 
+  knitr::kable()
+```
+
+Tijdreeks hiervoor met aanduiding van de betreffende manuele metingen:
+
+```{r warning=FALSE}
+temp <- komgr_neerijse_tijdreeks %>% 
+                  filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")) %>% 
+                  select(loc_code) %>% 
+                  distinct() %>% 
+                  pull()
+
+ggplot(komgr_neerijse_tijdreeks %>% 
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  # coord_cartesian(
+  #   ylim = c(-1, 0.1),
+  #   xlim = c(ymd("2013-01-01"), ymd("2015-01-01"))) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_point(data = komgr_neerijse_tijdreeks %>% 
+               filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+             aes(x = date(Datum),
+                 y = mMaaiveld)) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "bottom") +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+
+DYLP047 en DYLP099 zijn resp. een diepe en ondiepe peilbuis op dezelfde plaats, wat wijst op een aanzienlijke kweldruk. DYLP047 geeft daarom niet de stand van de werkelijke watertafel weer. De tijdreeks van DYLP099 zal die wel benaderen.
+>>>>>>> 6ecaa89cf082caa97ea0396f2a867f6aba44a6af
 
 ## Oppervlaktewatermeetpunten
 
