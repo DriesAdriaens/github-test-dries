@@ -68,7 +68,8 @@ Het gaat hier enkel om de gevalideerde metingen.
 
 ```{r tijdreeks neerijse}
 komgr_neerijse_tijdreeks <-
-  komgr_neerijse_loc %>% 
+  komgr_neerijse_loc %>%
+  # filter(filterdepth <= 3) %>% 
   rename(mvTAW = soilsurf_ost) %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
              by = c("loc_wid" = "MeetpuntWID")) %>% 
@@ -224,11 +225,12 @@ Twee opmerkingen bij bovenstaande figuur.
 
 We kunnen dan best checken of het verschil in stijghoogte ook terug te vinden is bij andere diepe(re) peilbuizen. Even kijken wat de verdeling is qua filterdiepten voor de peilbuizen:
 
-```{r histogram peilbuisdiepte}
+```{r histogram peilbuisdiepte, message = FALSE, warning = FALSE, error = FALSE, echo = FALSE}
 komgr_neerijse_loc %>% 
   ggplot() +
   geom_histogram(aes(x = filterdepth))
 ```
+
 Uit bovenstaande figuur kunnen we dan kiezen om alle peilbuizen dieper dan 3 m als "diep" te beschouwen. Het gaat om deze peilbuizen:
 
 ```{r diepe peilbuizen}
@@ -253,6 +255,7 @@ leaflet() %>%
                                                direction = "right", opacity = 0.75)) %>% 
   addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
 ```
+
 We moeten dan nog kijken of bij elk van de diepere peilbuizen ook een ondiepe peilbuis zit, die samen een zgn. "peilbuiskoppel" vormen. Voor die koppels kunnen we dan kijken of een eventueel verschil in stijghoogte duidt op de aanwezigheid van een kweldruk.
 
 Uit onderstaand kaartje (diepe peilbuizen in blauw, ondiepe in rood) blijkt dat er voor de 3 diepere peilbuizen die starten met DYLP20* geen ondiepe tegenhanger aanwezig is. Dat is wel zo voor DYLP047, DYLP095 en DYLP170. Die laatste vormen dus met hun ondiepe tegenhangers, resp. DYLP099, DYLP098 en DYLP174, telkens een peilbuiskoppel.
@@ -379,6 +382,97 @@ Uit bovenstaande figuren blijkt dat de stijghoogten in de diepere buizen systema
 
 We kunnen hier alvast besluiten dat het niet raadzaam is om de diepere peilbuizen te gebruiken om overstromingsdiepten te kalibreren. Die verwijderen we dus uit de selectie.
 
+Figuur met ondiepe meetpunten (<= 3 m):
+
+```{r tijdreeks_plot, message=FALSE, warning=FALSE}
+komgr_neerijse_tijdreeks_plot <- ggplot(komgr_neerijse_tijdreeks %>% 
+                                          filter(filterdepth <= 3)) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_neerijse_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_point(data = komgr_neerijse_tijdreeks %>% 
+               filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+             aes(x = date(Datum),
+                 y = mMaaiveld,
+                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+  
+komgr_neerijse_tijdreeks_plot
+```
+
+## Opsplitsing naar raaien?
+
+### Raai 1
+
+### Raai 2
+
 ## Oppervlaktewatermeetpunten
 
 Peilen nog aftoetsen aan oppervlaktewaterpeilen van leigracht(en) of Dijle (mTAW) ...
+
+- DYLS001 (Dijle)
+- DYLS102 (Leigracht)
+
+```{r oppervlaktewatermeetpunt komgr neerijse}
+komgr_neerijse_loc_opp <- get_locs(watina,
+                                   loc_vec = c("DYLS001", "DYLS102"),
+                                   loc_type = "S")
+
+komgr_neerijse_loc_opp %>% collect() %>% knitr::kable()
+```
+
+```{r oppervlaktewatermeetpunt komgr neerijse tijdreeks}
+komgr_neerijse_tijdreeks_opp <-
+  komgr_neerijse_loc_opp %>% 
+  rename(mvTAW = soilsurf_ost) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD") %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID"))
+
+ggplot(komgr_neerijse_tijdreeks_opp) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  coord_cartesian(xlim = c(ymd("2007-01-01"), ymd("2021-01-01"))) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_neerijse_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+Samenhang met grondwaterstanden, en meer specifiek met grondwaterstanden boven maaiveld?
+
+# Andere komgronden?
+
+## Grondwatermeetpunten
+
+## Tijdreeks grondwatermeetpunten
+
+## Oppervlaktewatermeetpunten
