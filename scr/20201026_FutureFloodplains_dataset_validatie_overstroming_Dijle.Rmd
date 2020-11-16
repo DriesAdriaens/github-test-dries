@@ -649,7 +649,7 @@ komgr_neerijse_raai1_locs %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-DYLP085 samen plotten met peil van Leigracht (DYLS102)
+DYLP085 samen plotten met peil van Leigracht (DYLS102) 
 
 ```{r}
 get_locs(watina, loc_vec = c("DYLP085", "DYLS102"), loc_type = c("P", "B", "S")) %>% 
