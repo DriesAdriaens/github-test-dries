@@ -54,17 +54,22 @@ komgr_neerijse_loc_sf <- komgr_neerijse_loc %>%
   st_transform(crs = 4326)
 
 leaflet(data = komgr_neerijse_loc_sf) %>%
-  addTiles() %>% 
-  # addProviderTiles("OpenTopoMap") %>% 
-  addCircleMarkers(label = komgr_neerijse_loc_sf$loc_code, fill = FALSE, weight = 3, color = "red",
+  addTiles(group = "OSM") %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI WorldImagery") %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
              labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
                                          direction = "right", opacity = 0.75)) %>% 
-  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "ESRI WorldImagery"),
+    overlayGroups = "Meetpunten",
+    options = layersControlOptions(collapsed = FALSE)
+  )
 ```
 
 ## Tijdreeks grondwatermeetpunten
 
-Het gaat hier enkel om de gevalideerde metingen.
+We selecteren hier enkel de gevalideerde metingen (`PeilmetingStatusCode == "VLD"`).
 
 ```{r tijdreeks neerijse}
 komgr_neerijse_tijdreeks <-
@@ -243,8 +248,8 @@ Die hier gelegen zijn (diepe peilbuizen in blauw, ondiepe in rood):
 
 ```{r kaart diepe peilbuizen}
 leaflet() %>%
-  addTiles() %>% 
-  # addProviderTiles("OpenTopoMap") %>% 
+  addTiles(group = "OSM") %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI WorldImagery") %>% 
   addCircleMarkers(data = komgr_neerijse_loc_sf %>% 
                      filter(filterdepth >= 3),
                    label = komgr_neerijse_loc_sf %>% 
@@ -253,7 +258,12 @@ leaflet() %>%
                    fill = FALSE, weight = 3, color = "blue",
                    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
                                                direction = "right", opacity = 0.75)) %>% 
-  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "ESRI WorldImagery"),
+    overlayGroups = "Meetpunten",
+    options = layersControlOptions(collapsed = FALSE)
+  )
 ```
 
 We moeten dan nog kijken of bij elk van de diepere peilbuizen ook een ondiepe peilbuis zit, die samen een zgn. "peilbuiskoppel" vormen. Voor die koppels kunnen we dan kijken of een eventueel verschil in stijghoogte duidt op de aanwezigheid van een kweldruk.
@@ -262,8 +272,8 @@ Uit onderstaand kaartje (diepe peilbuizen in blauw, ondiepe in rood) blijkt dat 
 
 ```{r kaart diepe en ondiepe peilbuizen}
 leaflet() %>%
-  addTiles() %>% 
-  # addProviderTiles("OpenTopoMap") %>% 
+  addTiles(group = "OSM") %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI WorldImagery") %>% 
   addCircleMarkers(data = komgr_neerijse_loc_sf %>% 
                      filter(filterdepth >= 3),
                    label = komgr_neerijse_loc_sf %>% 
@@ -280,7 +290,12 @@ leaflet() %>%
                    fill = FALSE, weight = 3, color = "red",
                    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
                                                direction = "right", opacity = 0.75)) %>%
-  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "ESRI WorldImagery"),
+    overlayGroups = "Meetpunten",
+    options = layersControlOptions(collapsed = FALSE)
+  )
 ```
 
 Voor deze punten kunnen we de tijdreeksen weergeven, telkens per koppel (diep-ondiep).
@@ -417,12 +432,6 @@ komgr_neerijse_tijdreeks_plot <- ggplot(komgr_neerijse_tijdreeks %>%
 komgr_neerijse_tijdreeks_plot
 ```
 
-## Opsplitsing naar raaien?
-
-### Raai 1
-
-### Raai 2
-
 ## Oppervlaktewatermeetpunten
 
 Peilen nog aftoetsen aan oppervlaktewaterpeilen van leigracht(en) of Dijle (mTAW) ...
@@ -467,7 +476,15 @@ ggplot(komgr_neerijse_tijdreeks_opp) +
         legend.position = "bottom") +
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
+
 Samenhang met grondwaterstanden, en meer specifiek met grondwaterstanden boven maaiveld?
+
+## Opsplitsing naar raaien?
+Met samenhang oppervlakte- en grondwater
+
+### Raai 1
+
+### Raai 2
 
 # Andere komgronden?
 
@@ -476,3 +493,32 @@ Samenhang met grondwaterstanden, en meer specifiek met grondwaterstanden boven m
 ## Tijdreeks grondwatermeetpunten
 
 ## Oppervlaktewatermeetpunten
+
+# Klad
+
+```{r}
+dyl_locs_opp <- get_locs(watina, loc_type = "S", area_codes = "DYL")
+
+dyl_locs_opp %>% 
+  collect()
+```
+```{r}
+dyl_locs_opp %>% 
+  collect() %>% 
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+  st_transform(crs = 4326) %>% 
+  leaflet() %>% 
+  addTiles(group = "OSM") %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI WorldImagery") %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
+             labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                         direction = "right", opacity = 0.75),
+             group = "Peilschalen") %>% 
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "ESRI WorldImagery"),
+    overlayGroups = "Peilschalen",
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
+
