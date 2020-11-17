@@ -60,7 +60,7 @@ We vragen alle meetpunten op van het type "peilbuis" (peilpuntcategorie met code
 Selectie van de meetpunten:
 
 ```{r meetpunten}
-komgr_neerijse_loc_vec <- c("DYLP137", "DYLP105", "DYLP088", "DYLB028", "DYLB005", "DYLB080", "DYLB073", "DYLB072", "DYLB071", "DYLB065", "DYLP202", "DYLP204", "DYLP203", "DYLP021", "DYLP020", "DYLP034", "DYLP087", "DYLP086", "DYLP083", "DYLP082", "DYLP081", "DYLP095", "DYLP090", "DYLP089", "DYLP104", "DYLP098", "DYLP066", "DYLP065", "DYLP064", "DYLP080", "DYLP073", "DYLP072", "DYLP071", "DYLP070", "DYLP174", "DYLP170", "DYLP084", "DYLP028", "DYLP085", "DYLP005", "DYLP099", "DYLP047", "DYLP029")
+komgr_neerijse_loc_vec <- c("DYLP137", "DYLP105", "DYLP088", "DYLB028", "DYLB005", "DYLB080", "DYLB073", "DYLB072", "DYLB071", "DYLB065", "DYLP202", "DYLP204", "DYLP203", "DYLP021", "DYLP020", "DYLP034", "DYLP087", "DYLP086", "DYLP083", "DYLP082", "DYLP081", "DYLP095", "DYLP090", "DYLP089", "DYLP104", "DYLP098", "DYLP066", "DYLP065", "DYLP064", "DYLP080", "DYLP073", "DYLP072", "DYLP071", "DYLP070", "DYLP174", "DYLP170", "DYLP084", "DYLP028", "DYLP085", "DYLP005", "DYLP099", "DYLP047", "DYLP029", "DYLP019", "DYLP018")
 
 komgr_neerijse_loc <- get_locs(watina,
                      loc_vec = komgr_neerijse_loc_vec,
@@ -305,7 +305,7 @@ komgr_neerijse_loc %>%
   knitr::kable()
 ```
 
-Deze diepe peilbuizen staan afgebeeld op onderstaand kaartje.
+Deze diepe peilbuizen staan afgebeeld op onderstaand kaartje. Ze liggen allen in het meest zuidelijke deel van de komgrond.
 
 ```{r kaart diepe peilbuizen}
 leaflet() %>%
@@ -615,9 +615,9 @@ Met bespreking van samenhang tussen oppervlakte- en grondwaterpeilen?
 
 ### Raai 1
 
-Type: transversaal
+#### Type: transversaal
 
-Meetpunten:
+#### Meetpunten:
 
 ```{r}
 komgr_neerijse_raai1_locs <- get_locs(
@@ -628,7 +628,7 @@ komgr_neerijse_raai1_locs <- get_locs(
 komgr_neerijse_raai1_locs %>% collect() %>% knitr::kable()
 ```
 
-Ligging:
+#### Ligging:
 
 ```{r}
 leaflet(komgr_neerijse_raai1_locs %>% 
@@ -649,12 +649,12 @@ leaflet(komgr_neerijse_raai1_locs %>%
                                                direction = "right", opacity = 1)) %>% 
   addMiniMap(toggleDisplay = TRUE, zoomLevelOffset = -5, minimized = TRUE) %>% 
   addLayersControl(
-    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb", "DTM"),
     overlayGroups = "Meetpunten",
     options = layersControlOptions(collapsed = FALSE))
 ```
 
-Tijdreeksen:
+#### Tijdreeksen:
 
 ```{r}
 komgr_neerijse_raai1_locs %>% 
@@ -665,7 +665,7 @@ komgr_neerijse_raai1_locs %>%
   ggplot() +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
-                colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)"))) +
+                colour = loc_code)) +
   ## non-clipping zoom
   # coord_cartesian(xlim = c(ymd("2007-01-01"), ymd("2021-01-01"))) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
@@ -686,9 +686,9 @@ get_locs(watina, loc_vec = "DYLP085") %>%
   collect()
 ```
 
-Samenhang grond- en oppervlaktewaterpeilen:
+#### Samenhang grond- en oppervlaktewaterpeilen:
 
-```{r}
+```{r, warning = FALSE}
 get_locs(watina, loc_vec = c("DYLP085", "DYLP090", "DYLS102", "DYLS002"), loc_type = c("P", "B", "S")) %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
              by = c("loc_wid" = "MeetpuntWID")) %>% 
@@ -697,13 +697,17 @@ get_locs(watina, loc_vec = c("DYLP085", "DYLP090", "DYLS102", "DYLS002"), loc_ty
   ggplot() +
   geom_line(aes(x = date(Datum),
                 y = mTAW,
-                colour = loc_code), alpha = 0.75) +
+                colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)"))
+            , alpha = 0.75) +
   ## non-clipping zoom
   # coord_cartesian(xlim = c(ymd("2007-01-01"), ymd("2021-01-01"))) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
   # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
   # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = soilsurf_ost,
+                colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)"))) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed"),
         legend.position = "right") +
@@ -716,19 +720,169 @@ Uit bovenstaande figuur blijkt alvast het volgende:
 
 ### Raai 2
 
-# Andere komgronden?
+#### Type: transversaal
 
-* komgrond Doode Bemde tussen waterlopen Grens Van Oud-Heverlee en Vaalbeek, ten oosten van Dijle; gedraineerd door Leibeek
-* Langerodevijver
-* Leibeek Oost (tot E40)
-* Leibeek West (tot E40)
-* Egenhovenbos
+#### Meetpunten:
+
+```{r}
+komgr_neerijse_raai2_locs <- get_locs(
+  watina, 
+  loc_vec = c("DYLB005",
+              "DYLB071",
+              "DYLB072",
+              "DYLB073",
+              "DYLP019",
+              "DYLP020",
+              "DYLP070",
+              "DYLP071",
+              "DYLP072",
+              "DYLP073",
+              "DYLP080",
+              "DYLP081",
+              "DYLP082",
+              "DYLP083",
+              "DYLP005"),
+  filterdepth_range = c(0,3))
+
+komgr_neerijse_raai2_locs %>% collect() %>% knitr::kable()
+```
+
+#### Ligging:
+
+```{r}
+leaflet(komgr_neerijse_raai2_locs %>% 
+          collect() %>% 
+          st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+          st_transform(crs = 4326)) %>% 
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addTiles(group = "OSM") %>%
+  addCircleMarkers(label = ~loc_code,
+                   fill = FALSE, weight = 3, color = "blue",
+                   labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                               direction = "right", opacity = 0.75)) %>% 
+  addMiniMap(toggleDisplay = TRUE, zoomLevelOffset = -5, minimized = TRUE) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = "Meetpunten",
+    options = layersControlOptions(collapsed = FALSE))
+```
+
+#### Tijdreeksen:
+
+```{r}
+komgr_neerijse_raai2_locs %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD") %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>% 
+  ggplot() +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  # coord_cartesian(xlim = c(ymd("2007-01-01"), ymd("2021-01-01"))) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+Schijnbaar minder uitgesproken overstromingen (zowel naar frequentie als peilen) in vergelijking met raai 1, die meer zuidelijk gelegen is.
+
+#### Samenhang grond- en oppervlaktewaterpeilen:
+
+```{r warning = FALSE}
+get_locs(watina, loc_vec = c("DYLP072", "DYLP073", "DYLP005", "DYLS102", "DYLS002"), loc_type = c("P", "B", "S")) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD") %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>% 
+  ggplot() +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)")), alpha = 0.75) +
+  ## non-clipping zoom
+  # coord_cartesian(xlim = c(ymd("2007-01-01"), ymd("2021-01-01"))) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = soilsurf_ost,
+                colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)"))) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+## Finale selectie grondwatermeetpunten en -metingen
+
+Selectiecriteria meetpunt
+* metingen boven maaiveld,
+* diepte peilbuis,
+* ruimtelijke ligging
+* andere?
+
+Selectiecriteria metingen
+* PeilMetingCategorie
+* andere?
+
+# Komgrond Doode Beemde
+tussen waterlopen Grens Van Oud-Heverlee en Vaalbeek, ten oosten van Dijle; gedraineerd door Leibeek
 
 ## Grondwatermeetpunten
 
-## Tijdreeks grondwatermeetpunten
+```{r}
+komgr_doodebeemde_loc_vec <- c("BAOL502", "DYLR003", "DYLP075", "DYLP041", "DYLB039", "DYLB093", "DYLP024", "DYLP040", "DYLP007", "DYLP008", "DYLP009", "DYLP015", "DYLP017", "DYLP022", "DYLP039", "DYLP054", "DYLP059", "DYLP062", "DYLP063", "DYLP074", "DYLP091", "DYLP092", "DYLP093", "DYLS003", "DYLS004", "DYLP016", "DYLP004", "DYLP006", "DYLP042", "DYLP055", "DYLP023")
+```
 
+```{r}
+komgr_doodebeemde_loc <- get_locs(watina,
+                     loc_vec = komgr_neerijse_loc_vec,
+                     loc_type = c("P", "B"),
+                     loc_validity = c("VLD", "ENT"),
+                     filterdepth_range = c(0, 3))
+komgr_doodebeemde_loc %>% collect() %>% knitr::kable()
+```
+
+
+
+## Tijdreeks grondwatermeetpunten
 ## Oppervlaktewatermeetpunten
+## Opsplitsing naar raaien
+### Raai 1
+#### Meetpunten:
+#### Ligging:
+#### Tijdreeksen:
+#### Samenhang grond- en oppervlaktewaterpeilen
+
+
+
+# Komgrond Langerodevijver
+# Komgrond Leibeek Oost (tot E40)
+# Komgrond Leibeek West (tot E40)
+# Komgrond Egenhovenbos
+# Komgrond template
+## Grondwatermeetpunten
+## Tijdreeks grondwatermeetpunten
+## Oppervlaktewatermeetpunten
+## Opsplitsing naar raaien
+### Raai 1
+#### Meetpunten:
+#### Ligging:
+#### Tijdreeksen:
+#### Samenhang grond- en oppervlaktewaterpeilen
 
 # Openstaande vragen
 
@@ -745,13 +899,18 @@ tbl(watina, "FactPeilMeting") %>%
 # Klad
 
 ```{r}
-dyl_locs_opp <- get_locs(watina, loc_type = "S", area_codes = "DYL")
-
-dyl_locs_opp %>% 
+get_locs(watina, loc_type = c("P", "B"),
+         loc_vec = "DYLP005",
+         # area_codes = "DYL",
+         obswells = TRUE
+         ) %>% 
   collect()
 ```
-```{r}
-dyl_locs_opp %>% 
+```{r kaartje}
+get_locs(watina,
+         loc_vec = c("DYLP080", "DYLP081", "DYLS102", "DYLS002"),
+         loc_type = c("P", "B", "S"),
+         ) %>%  
   collect() %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
   st_transform(crs = 4326) %>% 
@@ -775,5 +934,115 @@ dyl_locs_opp %>%
     overlayGroups = "Peilschalen",
     options = layersControlOptions(collapsed = TRUE)
   )
+```
+
+```{r tijdreeks meetpunt mTAW, warning = FALSE}
+get_locs(watina,
+         loc_vec = c("DYLP080", "DYLP081", "DYLS102", "DYLS002"),
+         loc_type = c("P", "B", "S"),
+         ) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD") %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>% 
+  ggplot() +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)")
+                )
+            ) +
+  ## non-clipping zoom
+  # coord_cartesian(xlim = c(ymd("2007-01-01"), ymd("2021-01-01"))) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = soilsurf_ost,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)")
+                )
+            ) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+```{r tijdreeks meetpunt m-mv}
+get_locs(watina,
+         loc_vec = c("DYLP080", "DYLP081"),
+         loc_type = c("P", "B")
+         ) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD") %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>% 
+  ggplot() +
+  geom_hline(yintercept = 0, colour = "black") +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)")
+                ),
+            ) +
+  ## non-clipping zoom
+  # coord_cartesian(xlim = c(ymd("2007-01-01"), ymd("2021-01-01"))) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+```{r tijdreeks peilpunt mTAW, warning = FALSE}
+get_locs(watina,
+         loc_vec = c("DYLP005"),
+         loc_type = c("P", "B", "S"),
+         obswells = TRUE
+         ) %>%
+  inner_join(tbl(watina, "DimPeilpunt") %>% 
+               select(PeilpuntWID, PeilpuntCode),
+             by = c("obswell_code" = "PeilpuntCode")) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID", "PeilpuntWID" = "PeilpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD") %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>% 
+  ggplot() +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = obswell_code,
+                # colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)")
+                )
+            ) +
+  ## non-clipping zoom
+  # coord_cartesian(
+  #   xlim = c(ymd("2007-01-01"), ymd("2021-01-01")),
+  #   ylim = c(27, 27.5)
+  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = soilsurf_ost,
+                # colour = loc_code,
+                colour = obswell_code,
+                # colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)")
+                )
+            ) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+
+```{r}
+DBI::dbDisconnect(watina)
 ```
 
