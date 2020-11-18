@@ -980,7 +980,7 @@ aantal_doodebeemde <- komgr_doodebeemde_tijdreeks %>%
   .$n
 ```
 
-Alle `r aantal_doodebeemde` van de `r length(komgr_doodebeemde_loc_vec)` meetpunten in de komgrond van de Doode Beemde hebben dus stijghoogte die ooit eens boven maaiveld gelegen hebben.
+In `r aantal_doodebeemde` van de `r length(komgr_doodebeemde_loc_vec)` meetpunten in de komgrond van de Doode Beemde hebben de stijghoogten ooit eens boven maaiveld gelegen hebben.
 
 Figuur met de tijdreeksen voor de subset van meetpunten met minstens één of meerdere stijghoogten boven maaiveld:
 
