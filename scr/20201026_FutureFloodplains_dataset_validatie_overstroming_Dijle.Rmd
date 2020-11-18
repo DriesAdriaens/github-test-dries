@@ -499,7 +499,7 @@ ggplot(komgr_neerijse_tijdreeks %>%
 
 Enkel voor DYLP203 werden peilen boven maaiveld gemeten. Afgaande op bovenstaande vaststellingen is het dus twijfelachtig of die metingen overeenstemmen met effectieve overstromingen van het maaiveld. Naast het feit dat het om een diepe peilbuis gaat, laat ook de locatie aan de (steil)rand van de vallei vermoeden dat er in deze diepe peilbuis sprake is van een verhoogde kweldruk waardoor de gemeten stijghoogte nog extra kan afwijken van de effectieve grondwatertafel. Aan de voet van steile hellingen, op de overgang naar de vallei, is er immers vaak sprake van verhoogde kweldrukken doordat de topografische verschillen zorgen voor een plotse insnijding van het freatisch grondwatervlak of doordat afgesloten, watervoerende geologische lagen plots dagzomen en het grondwater bijgevolg onder een grotere druk uittreedt. 
 
-We kunnen hier alvast besluiten dat het niet raadzaam is om de diepere peilbuizen te gebruiken om overstromingsdiepten te kalibreren. We verwijderen ze daarom uit de selectie.
+**Samengevat**: We kunnen hier alvast besluiten dat het niet raadzaam is om de diepere peilbuizen te gebruiken om overstromingsdiepten te kalibreren. We verwijderen ze daarom uit de selectie.
 
 De figuur met de tijdreeksen van de overblijvende meetpunten staat hieronder weergegeven (enkel ondiepe meetpunten met filterdiepte <= 3 m).
 
@@ -839,14 +839,19 @@ Selectiecriteria metingen
 * andere?
 
 # Komgrond Doode Beemde
-tussen waterlopen Grens Van Oud-Heverlee en Vaalbeek/Molenbeek, ten oosten van Dijle; gedraineerd door Leibeek
+Deze komgrond ligt op de oostelijke oever van de Dijle en wordt afgelijnd door de  waterlopen Grens Van Oud-Heverlee in het zuiden, de Vaalbeek/Molenbeek in het noorden, en de spoorweg in het oosten. De komgrond wordt gedraineerd door de Leibeek, die hier ook ontspringt.
+
+Noot: het is onduidelijk of ook de meetpunten ten oosten van de spoorwegbedding tot deze komgrond moeten gerekend worden. In principe lijkt dit stuk wel hydrologisch verbonden via de doorgang onder de spoorweg (verbindingsweggetje naar Waversebaan).
 
 ## Grondwatermeetpunten
 
 We vragen alle meetpunten op van het type "peilbuis" (peilpuntcategorie met code "P" of "B") die gelegen zijn in de komgrond van de Doode Beemde in de vallei van de Dijle. De ruimtelijke selectie gebeurt ad hoc op basis van expertkennis in GIS. De metadata van deze punten wordt vervolgens opgevraagd met behulp van het R-package `Watina`.
 
 ```{r}
-komgr_doodebeemde_loc_vec <- c("BAOL502", "DYLR003", "DYLP075", "DYLP041", "DYLB039", "DYLB093", "DYLP024", "DYLP040", "DYLP007", "DYLP008", "DYLP009", "DYLP015", "DYLP017", "DYLP022", "DYLP039", "DYLP054", "DYLP059", "DYLP062", "DYLP063", "DYLP074", "DYLP091", "DYLP092", "DYLP093", "DYLS003", "DYLS004", "DYLP016", "DYLP004", "DYLP006", "DYLP042", "DYLP055", "DYLP023")
+komgr_doodebeemde_loc_vec <- c(
+  # meetpunten ten oosten van spoorweg; mee te nemen?
+  # "DYLP052", "DYLB050", "DYLB051", "DYLB056", "DYLP053", "DYLP056", "DYLP012", "DYLP013", "DYLP026", "DYLP038", "DYLP050", "DYLP051", "DYLP037",
+  "BAOL502", "DYLR003", "DYLP075", "DYLP041", "DYLB039", "DYLB093", "DYLP024", "DYLP040", "DYLP007", "DYLP008", "DYLP009", "DYLP015", "DYLP017", "DYLP022", "DYLP039", "DYLP054", "DYLP059", "DYLP062", "DYLP063", "DYLP074", "DYLP091", "DYLP092", "DYLP093", "DYLS003", "DYLS004", "DYLP016", "DYLP004", "DYLP006", "DYLP042", "DYLP055", "DYLP023")
 ```
 
 Selectie van de meetpunten:
@@ -896,6 +901,25 @@ leaflet() %>%
     options = layersControlOptions(collapsed = FALSE)
   )
 ```
+
+Spreiding qua filterdiepte van de peilbuizen:
+
+```{r histogram peilbuisdiepte doodebeemde, message = FALSE, warning = FALSE, error = FALSE, echo = FALSE}
+komgr_doodebeemde_loc %>% 
+  ggplot() +
+  geom_histogram(aes(x = filterdepth))
+```
+
+Uit de kaart en bovenstaande figuur leiden we af dat er 5 diepere (> 2.5 m diep) peilbuizen zijn, waarvan er 4 deel uitmaken van een peilbuiskoppel (ondiep-diep). Eén peilbuiskoppel bestaat uit 2 diepere peilbuizen.
+
+* DYLP074-091 (2 diepere peilbuizen)
+* DYLP008-016
+* DYLP017-092
+
+Noot: indien meetpunten ten oosten van de spoorweg ook meegenomen worden, dan komen er nog volgende peilbuiskoppels bij:
+
+* DYLP051-050
+* DYLP053-052
 
 ## Tijdreeksen van grondwatermeetpunten
 
@@ -980,7 +1004,7 @@ aantal_doodebeemde <- komgr_doodebeemde_tijdreeks %>%
   .$n
 ```
 
-In `r aantal_doodebeemde` van de `r length(komgr_doodebeemde_loc_vec)` meetpunten in de komgrond van de Doode Beemde hebben de stijghoogten ooit eens boven maaiveld gelegen hebben.
+In `r aantal_doodebeemde` van de `r length(komgr_doodebeemde_loc_vec)` meetpunten in de komgrond van de Doode Beemde hebben de stijghoogten dus ooit eens boven maaiveld gelegen.
 
 Figuur met de tijdreeksen voor de subset van meetpunten met minstens één of meerdere stijghoogten boven maaiveld:
 
@@ -1009,9 +1033,8 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
         legend.position = "bottom") +
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
-Tijdreeksen voor meetpunten met gemeten stijghoogten hoger dan 25 cm boven maaiveld:
 
-in m-mv
+Tijdreeksen voor meetpunten met gemeten stijghoogten hoger dan 25 cm boven maaiveld, in m-mv:
 
 ```{r tijdreeks_doodebeemde_plot_bovenmaaiveld25cm_mv, message=FALSE, warning=FALSE}
 temp <- komgr_doodebeemde_tijdreeks %>% 
@@ -1039,7 +1062,7 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-Tot DYLP016:
+in m-mv, voor peilbuizen tot en met DYLP016, met vermelding van filterdiepte:
 ```{r tijdreeks_doodebeemde_plot_bovenmaaiveld25cm_mv1, message=FALSE, warning=FALSE}
 temp <- komgr_doodebeemde_tijdreeks %>% 
                   filter(mMaaiveld > 0.25 & as.numeric(str_sub(loc_code,5,7)) <= 16) %>% 
@@ -1050,7 +1073,7 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
          filter(loc_code %in% temp)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
-                colour = loc_code)) +
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"))) +
   ## non-clipping zoom
   # coord_cartesian(ylim = c(-1, 0.1),
   #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
@@ -1062,11 +1085,11 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed"),
-        legend.position = "bottom") +
+        legend.position = "right") +
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-Rest:
+in m-mv, voor peilbuizen vanaf DYLP016, met vermelding van filterdiepte:
 ```{r tijdreeks_doodebeemde_plot_bovenmaaiveld25cm_mv2, message=FALSE, warning=FALSE}
 temp <- komgr_doodebeemde_tijdreeks %>% 
                   filter(mMaaiveld > 0.25 & as.numeric(str_sub(loc_code,5,7)) > 16) %>% 
@@ -1077,7 +1100,7 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
          filter(loc_code %in% temp)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
-                colour = loc_code)) +
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"))) +
   ## non-clipping zoom
   # coord_cartesian(ylim = c(-1, 0.1),
   #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
@@ -1089,11 +1112,11 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed"),
-        legend.position = "bottom") +
+        legend.position = "right") +
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-in mTAW, tot DYLP016:
+in mTAW, voor peilbuizen tot DYLP016, met vermelding van maaiveldhoogte:
 ```{r tijdreeks_doodebeemde_plot_bovenmaaiveld25cm_taw1, message=FALSE, warning=FALSE}
 temp <- komgr_doodebeemde_tijdreeks %>% 
                   filter(mMaaiveld > 0.25 & as.numeric(str_sub(loc_code,5,7)) <= 16) %>% 
@@ -1129,7 +1152,7 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-in mTAW, rest:
+in mTAW, voor peilbuizen vanaf DYLP016, met vermelding van maaiveldhoogte:
 ```{r tijdreeks_doodebeemde_plot_bovenmaaiveld25cm_taw2, message=FALSE, warning=FALSE}
 temp <- komgr_doodebeemde_tijdreeks %>% 
                   filter(mMaaiveld > 0.25 & as.numeric(str_sub(loc_code,5,7)) > 16) %>% 
@@ -1259,18 +1282,170 @@ Samengevat kunnen we dus stellen dat de bruikbaarheid van de peilmetingcategorie
 
 ### Kweldruk en het verschil tussen stijghoogte en waterpeil
 
-Uit de metadata van de peilbuizen in de komgrond van de Doode Beemde blijkt dat alle peilbuizen minder dan 3 m diep zijn. Op basis van de analyse van de peilbuiskoppels in de komgrond van Neerijse, is het aannemelijk dat in de peilbuizen geen kweldrukken geregistreerd worden.
+Uit de metadata van de peilbuizen in de komgrond van de Doode Beemde blijkt dat de filter van een aantal peilbuizen dieper dan 2.5 m onder het maaiveld ligt. Veelal gaat het hier om peilbuizen die op dezelfde locatie ook een ondiepere tegenhanger hebben waarmee ze een zgn. peilbuiskoppel vormen (zie hoger).
 
-Hieronder een histogram van de peilbuisdiepten.
+We bekijken hieronder de tijdreeksen van de reeds vermelde peilbuiskoppels (ondiep-diep) om te kijken of er sprake is van stijghoogteverschillen tussen de diepe en ondiepe peilbuizen binnen een koppel, die dan kan duiden op een kweldruk. Bij een kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld.
 
-To do:
-* check voor eventueel aanwezige peilbuiskoppels (via x/y coördinaten?)
-
-```{r histogram peilbuisdiepte doodebeemde, message = FALSE, warning = FALSE, error = FALSE, echo = FALSE}
-komgr_doodebeemde_loc %>% 
-  ggplot() +
-  geom_histogram(aes(x = filterdepth))
+* DYLP074-091 (2 diepere peilbuizen)
+```{r peilbuiskoppel1 doodebeemde}
+ggplot(komgr_doodebeemde_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP074",
+                                "DYLP091")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_neerijse_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
 ```
+De stijghoogte overschrijdt hier slechts éénmaal het maaiveld. Deze observatie is eerder twijfelachtig. 
+
+* DYLP008-016
+```{r peilbuiskoppel2 doodebeemde}
+ggplot(komgr_doodebeemde_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP008",
+                                "DYLP016")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_neerijse_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+In de jaren 1990 lijkt er vrijwel geen sprake van een kweldruk. Vanaf 1998 stijgen de gemeten peilen echter regelmatig boven het maaiveld, en lijkt er wel een drukverschil te zijn tussen beide peilbuizen. Vanaf 2006 lijken de verschillen dan weer af te nemen, met vreemde sprongen (bv. 2010-2013) vanwege een onvolledige dataset. Raadzaam om sowieso enkele de stijghoogten van de ondiepe peilbuis (DYLP008) te gebruiken in een mogelijke validatieset voor gemodelleerde overstromingsdieptekaarten.
+
+* DYLP017-092
+```{r peilbuiskoppel3 doodebeemde}
+ggplot(komgr_doodebeemde_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP017",
+                                "DYLP092")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_neerijse_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+
+Hier worden geen overschrijdingen van het maaiveld vastgesteld, dus niet relevant.
+
+Noot: indien meetpunten ten oosten van de spoorweg ook meegenomen worden, dan komen er nog volgende peilbuiskoppels bij:
+
+* DYLP051-050
+```{r peilbuiskoppel4 doodebeemde, include=FALSE}
+ggplot(komgr_doodebeemde_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP050",
+                                "DYLP051")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_neerijse_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+
+Hier zijn wel degelijk verschillen in stijghoogte aanwezig.
+
+* DYLP053-052
+```{r peilbuiskoppel5 doodebeemde, include=FALSE}
+ggplot(komgr_doodebeemde_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP052",
+                                "DYLP053")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_neerijse_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+Hier lijken de verschillen in stijghoogte dan weer miniem.
+
+**Samengevat**: raadzaam om enkel de ondiepe peilbuizen te gebruiken (< 2.5 m)
 
 ## Oppervlaktewatermeetpunten
 
@@ -1326,7 +1501,7 @@ ggplot(komgr_doodebeemde_tijdreeks_opp) +
                 y = mTAW,
                 colour = loc_code)) +
   ## non-clipping zoom
-  coord_cartesian(xlim = c(ymd("2007-01-01"), ymd("2021-01-01"))) +
+  # coord_cartesian(xlim = c(ymd("2007-01-01"), ymd("2021-01-01"))) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
   # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
@@ -1342,7 +1517,6 @@ ggplot(komgr_doodebeemde_tijdreeks_opp) +
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-## Oppervlaktewatermeetpunten
 ## Opsplitsing naar raaien
 ### Raai 1
 #### Meetpunten:
@@ -1371,6 +1545,8 @@ ggplot(komgr_doodebeemde_tijdreeks_opp) +
 
 * hoe de peilmetingen met bepaalde categorieën uit de tijdreeksen van meetsondes verwijderen (twijfelachtig, meetartefacten, e.d.)? Die categorieën worden nu steeds weer overschreven bij hercompensatie/-kalibratie van drukmetingen, en kunnen daardoor nu niet uitgefilterd worden. Enkel bij handmatige metingen zitten ze "ingebakken" ... Die categorieën zorgen nu voor uitschieters (zowel op- of neerwaarts) die mogelijks problemen geven als we ze als zodanig aanleveren ter kalibratie van de overstromingskaarten
 * veel meetreeksen lijken te stoppen rond 2015; de oorzaak hiervan is niet geheel duidelijk: gaat het hier om meetpunten die nog wel bemeten worden, maar waarvoor de de metingen nog niet aangevuld werden in de databank, of werden er veel meetpunten effectief afgesloten in die periode?
+* komgrond Doode Beemde: het is onduidelijk of ook de meetpunten ten oosten van de spoorwegbedding tot deze komgrond moeten gerekend worden. In principe lijkt dit stuk wel hydrologisch verbonden via de doorgang onder de spoorweg (verbindingsweggetje naar Waversebaan)
+* DYLP008/016: is dit geen meetstation? Waarom werden de laatste jaren dan nog geen gevalideerde waarnemingen aangevuld in de databank?
 
 ```{r}
 tbl(watina, "FactPeilMeting") %>% 
