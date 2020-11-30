@@ -1441,7 +1441,6 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-
 ## Oppervlaktewatermeetpunten
 
 Voor de komgrond van de Doode Beemde beschikken we over 2 peilschalen die de oppervlaktewaterpeilen van de Leibeek en de Vaalbeek/Molenbeek meten (zie onderstaand kaartje). Het gaat hier evenwel om handmetingen tot eind 2014.
