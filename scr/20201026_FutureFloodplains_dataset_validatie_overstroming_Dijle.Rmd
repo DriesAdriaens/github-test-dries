@@ -1793,9 +1793,178 @@ c("DYLR004", "DYLR005", "DYLP148", "DYLP107", "DYLP117", "DYLP118", "DYLP119", "
 ## Opsplitsing naar raaien
 
 # Komgrond Leibeek West (tot E40)
+
+Deze komgrond ligt op de linkeroever van de Dijle, tussen de Stationstraat in Korbeek-Dijle in het zuiden tot de E40 snelweg in het noorden. De depressies rond Veeweide en Ormendaal worden ontwatert door de Leibeek die centraal in de komgrond in de Dijle uitmondt. De depressie rond Rotspoel (E40) ontwatert naar de komgrond van Egenhoven ten noorden van de E40 via een waterloop (Langestaart) die onder de E40 door stroomt (via pompstation?). Eigenlijk hoort het noordelijke stuk van deze komgrond dus eerder tot de komgrond van Egenhoven, maar de E40 zorgt wel voor een barrière.
+
 ## Grondwatermeetpunten
-c("DYLP131", "DYLP134", "DYLP130", "DYLP133", "DYLP135", "DYLP153", "DYLP169", "DYLP178", "DYLP176", "DYLP177", "DYLP277", "DYLP132", "DYLP200")
+
+We vragen alle meetpunten op van het type "peilbuis" (peilpuntcategorie met code "P" of "B") die gelegen zijn in de komgrond van Egenhoven in de vallei van de Dijle. De ruimtelijke selectie gebeurt ad hoc op basis van expertkennis in GIS. De metadata van deze punten wordt vervolgens opgevraagd met behulp van het R-package [`Watina`](https://inbo.github.io/watina/).
+
+Selectie van de meetpunten in de komgrond van Egenhoven:
+
+```{r}
+komgr_leibeekW_loc <- get_locs(watina,
+                     loc_vec = c("DYLP131", "DYLP134", "DYLP130", "DYLP133", "DYLP135", "DYLP153", "DYLP169", "DYLP178", "DYLP176", "DYLP177", "DYLP277", "DYLP132", "DYLP200"),
+                     loc_type = c("P", "B"),
+                     loc_validity = c("VLD", "ENT"),
+                     filterdepth_guess = TRUE,
+                     filterdepth_na = TRUE,
+                     filterdepth_range = c(0, 30))
+komgr_leibeekW_loc %>% collect() %>% knitr::kable()
+```
+
+Voor net iets meer dan de helft van de (historische) peilbuizen is de peilbuislengte, en dus ook de filterdiepte, gekend. In 4 van de 7 peilbuizen met gekende filterdiepte, zit de filter meer dan 2.5 m onder maaiveld.
+De meetpunten DYLP177 en DYLP277 vormen een peilbuiskoppel, hoewel de filterdiepten slechts ongeveer 1 m verschillen.
+
+De ligging van deze grondwatermeetpunten wordt in onderstaande figuur weergegeven, met onderscheid naar filterdiepte.
+
+```{r kaart komgrond leibeek west}
+komgr_leibeekW_loc_sf <- komgr_leibeekW_loc %>%
+  collect() %>% 
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+  st_transform(crs = 4326)
+
+leaflet() %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addCircleMarkers(
+    data = komgr_leibeekW_loc_sf %>% filter(filterdepth < 2.5),
+    label = ~loc_code, fill = FALSE, weight = 3, color = "red", opacity = 0.5,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetpunten < 2.5 m") %>% 
+  addCircleMarkers(
+    data = komgr_leibeekW_loc_sf %>% filter(filterdepth >= 2.5),
+    label = ~loc_code, fill = FALSE, weight = 3, color = "blue", opacity = 0.5,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetpunten >= 2.5 m") %>% 
+  addCircleMarkers(
+    data = komgr_leibeekW_loc_sf %>% filter(is.na(filterdepth)),
+    label = ~loc_code, fill = FALSE, weight = 3, color = "orange", opacity = 0.5,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetpunten diepte ongekend") %>%
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = c("Meetpunten < 2.5 m", "Meetpunten >= 2.5 m", "Meetpunten diepte ongekend"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
+
+Spreiding qua filterdiepte van de peilbuizen, wetende dat voor de helft geen filterdiepte bekend is:
+
+```{r histogram peilbuisdiepte leibeekW, message = FALSE, warning = FALSE, error = FALSE, echo = FALSE}
+komgr_leibeekW_loc %>% 
+  ggplot() +
+  geom_histogram(aes(x = filterdepth))
+```
+
 ## Tijdreeksen van grondwatermeetpunten
+Voor de geselecteerde grondwatermeetpunten vragen we de gevalideerde peilmetingen op (`PeilmetingStatusCode == "VLD"`), die bovendien als betrouwbaar gelden (`is.na(PeilmetingCategorie) | PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")`).
+```{r tijdreeks leibeekW}
+komgr_leibeekW_tijdreeks <-
+  komgr_leibeekW_loc %>%
+  # filter(filterdepth <= 3) %>% 
+  rename(mvTAW = soilsurf_ost) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
+                                            PeilmetingCategorieCode %in% c("SOUWA", "TBWWL"))) %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID"))
+
+# tbl(watina, "FactPeilMeting") %>%
+#   select(PeilmetingCategorieCode, PeilmetingCategorie) %>%
+#   distinct() %>%
+#   collect()
+```
+
+Onderstaande figuur geeft de tijdreeksen voor de verschillende meetpunten.
+
+```{r tijdreeks_leibeekW_plot, message=FALSE, warning=FALSE}
+ggplot(komgr_leibeekW_tijdreeks) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_leibeekW_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+  #                colour = loc_code)) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+
+Hieruit komen een aantal zaken naar voren:
+
+* sommige tijdreeksen vertonen in de periode 2002-2012 rare, niet-seizoensgebonden schommelingen en bovendien lijkt er een trend aanwezig die duidt op een globale toename van de stijghoogte in diezelfde periode. Heeft dit mogelijks te maken met een sterkere beïnvloeding van de grondwaterpeilen door de peilen van de Dijle, of misschien met de nabijheid van de grondwaterwinning die de freatische grondwaterlagen in het gebied aanboort, of nog een andere reden?
+* in heel wat van deze tijdreeksen, die bovendien allemaal uit handmatige metingen bestaan, springen de gemeten stijghoogten regelmatig boven maaiveld
+* DYLP200 vertoont die globaal stijgende trend niet, heeft duidelijke seizoenale schommelingen met buiten de zomerperiode quasi steeds stijghoogten boven het maaiveld
+
+### PeilMetingCategorie
+
+Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft of op het moment van opmeten het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
+
+Zoals uit de tijdreeksen hierboven al visueel kan opgemaakt worden, gaat het merendeel van de metingen om automatische sondemetingen. De hoge densiteit aan metingen (2/dag) en de vele kleine sprongen op korte tijd (dag/nacht) die zorgen voor een band eerder dan een lijn van punten, wijzen hierop. Aan automatische metingen worden bovenstaande labels niet toegekend omdat er geen terreinverificatie plaatsvindt op het moment dat de meting geregistreerd wordt (tenzij dan tijdens de sporadische, handmatige kalibratiemetingen).
+
+### Kweldrukken
+
+
+Uit de metadata van de peilbuizen in de komgrond van Egenhovenbos blijkt dat de peilbuizen van de meetpunten DYLP161 en DYLP162 een peilbuiskoppel vormen, met DYLP161 als diepe en DULP162 als ondiepe peilbuis.
+
+We bekijken hieronder de tijdreeksen van beide peilbuizen om te kijken of er sprake is van stijghoogteverschillen tussen beide, wat dan kan duiden op een kweldruk. Bij de aanwezigheid van een opwaartse kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld. Hoe ondieper de filter van een peilbuis, hoe beter de gemeten stijghoogten immers overeenkomen met de werkelijke grondwatertafel.
+
+```{r peilbuiskoppel1 egenhovenbos}
+ggplot(komgr_egenhoven_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP161",
+                                "DYLP162")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                # linetype = MetingTypeNaam
+                ), alpha = 0.5) +
+  ## non-clipping zoom
+  coord_cartesian(xlim = c(ymd("2010-01-01"), ymd("2014-07-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_egenhoven_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+Uit bovenstaande figuur blijkt dat de stijghoogten bij diepe filter toch minstens een 20-tal cm hoger liggen
+
+> **Samengevat**: selectie van peilbuizen met filterdiepte < 2.5 m (peilbuis met ongekende filterdiepte heeft geen stijghoogten boven maaiveld)
+
 ### PeilMetingCategorie
 ### Kweldrukken
 ### Stijghoogten boven maaiveld
@@ -1803,11 +1972,12 @@ c("DYLP131", "DYLP134", "DYLP130", "DYLP133", "DYLP135", "DYLP153", "DYLP169", "
 ## Opsplitsing naar raaien
 
 # Komgrond Egenhovenbos
+
 ## Grondwatermeetpunten
 
-We vragen alle meetpunten op van het type "peilbuis" (peilpuntcategorie met code "P" of "B") die gelegen zijn in de komgrond van Egenhoven in de vallei van de Dijle. De ruimtelijke selectie gebeurt ad hoc op basis van expertkennis in GIS. De metadata van deze punten wordt vervolgens opgevraagd met behulp van het R-package `Watina`.
+We vragen alle meetpunten op van het type "peilbuis" (peilpuntcategorie met code "P" of "B") die gelegen zijn in de komgrond van Egenhoven in de vallei van de Dijle. De ruimtelijke selectie gebeurt ad hoc op basis van expertkennis in GIS. De metadata van deze punten wordt vervolgens opgevraagd met behulp van het R-package [`Watina`](https://inbo.github.io/watina/).
 
-Selectie van de meetpunten:
+Selectie van de meetpunten in de komgrond van Egenhoven:
 
 ```{r}
 komgr_egenhoven_loc <- get_locs(watina,
@@ -2217,7 +2387,7 @@ ggplot(komgr_egenhoven_tijdreeks %>%
         legend.position = "right") +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
 ```
-De pieken in de grondwatermeetpunten komen mooi overeen met de pieken in de oppervlaktewaterpeilen van zowel de Dijle als de Langestaart. Na de aanleg van het stuw op de Dijle en zandvang in Egenhoven (2015?), lijkt die relatie verbroken. Er zijn evenwel te weinig grondwatermeetgegevens om hierover een uitspraak te kunnen doen.
+De pieken in de grondwatermeetpunten komen mooi overeen met de pieken in de oppervlaktewaterpeilen van zowel de Dijle als de Langestaart. Na de aanleg van het stuw op de Dijle en zandvang in Egenhoven (2015?), lijkt die relatie echter verbroken te zijn. Er zijn evenwel te weinig grondwatermeetgegevens na 2014 om hierover een uitspraak te kunnen doen.
 
 ## Opsplitsing naar raaien
 
@@ -2294,6 +2464,9 @@ get_locs(watina,
 get_locs(watina,
          loc_vec = c("DYLP023"),
          loc_type = c("P", "B", "S"),
+         filterdepth_guess = TRUE,
+         filterdepth_na = TRUE,
+         filterdepth_range = c(0, 30)
          ) %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
              by = c("loc_wid" = "MeetpuntWID")) %>% 
@@ -2326,8 +2499,11 @@ get_locs(watina,
 
 ```{r tijdreeks meetpunt m-mv}
 get_locs(watina,
-         loc_vec = c("DYLP023", "DYLP063", "DYLP056"),
-         loc_type = c("P", "B")
+         loc_vec = c("DYLP200", "DYLP277", "DYLP130", "DYLP178"),
+         loc_type = c("P", "B"),
+         filterdepth_guess = TRUE,
+         filterdepth_na = TRUE,
+         filterdepth_range = c(0, 30)
          ) %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
              by = c("loc_wid" = "MeetpuntWID")) %>% 
@@ -2337,12 +2513,12 @@ get_locs(watina,
   geom_hline(yintercept = 0, colour = "black") +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
-                # colour = loc_code,
-                colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)")
+                colour = loc_code,
+                # colour = paste0(loc_code, " (", round(soilsurf_ost,2), " mTAW)")
                 ),
             ) +
   ## non-clipping zoom
-  coord_cartesian(xlim = c(ymd("2010-09-01"), ymd("2011-02-01"))) +
+  # coord_cartesian(xlim = c(ymd("2010-09-01"), ymd("2011-02-01"))) +
   # geom_point(aes(x = date(Datum),
   #               y = mMaaiveld,
   #               # colour = loc_code,
@@ -2360,7 +2536,10 @@ get_locs(watina,
 ```{r tijdreeks meetpunt m-mv}
 get_locs(watina,
          loc_vec = c("DYLP023", "DYLP063", "DYLP056"),
-         loc_type = c("P", "B")
+         loc_type = c("P", "B"),
+         filterdepth_guess = TRUE,
+         filterdepth_na = TRUE,
+         filterdepth_range = c(0, 30)
          ) %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
              by = c("loc_wid" = "MeetpuntWID")) %>% 
@@ -2395,6 +2574,9 @@ get_locs(watina,
 get_locs(watina,
          loc_vec = c("DYLP005"),
          loc_type = c("P", "B", "S"),
+         filterdepth_guess = TRUE,
+         filterdepth_na = TRUE,
+         filterdepth_range = c(0, 30),
          obswells = TRUE
          ) %>%
   inner_join(tbl(watina, "DimPeilpunt") %>% 
