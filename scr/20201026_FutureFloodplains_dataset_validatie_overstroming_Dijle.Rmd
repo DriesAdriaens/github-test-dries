@@ -1916,8 +1916,8 @@ ggplot(komgr_leibeekW_tijdreeks) +
 
 Hieruit komen een aantal zaken naar voren:
 
-* sommige tijdreeksen vertonen in de periode 2002-2012 rare, niet-seizoensgebonden schommelingen en bovendien lijkt er een trend aanwezig die duidt op een globale toename van de stijghoogte in diezelfde periode. Heeft dit mogelijks te maken met een sterkere beïnvloeding van de grondwaterpeilen door de peilen van de Dijle, of misschien met de nabijheid van de grondwaterwinning die de freatische grondwaterlagen in het gebied aanboort, of nog een andere reden?
-* in heel wat van deze tijdreeksen, die bovendien allemaal uit handmatige metingen bestaan, springen de gemeten stijghoogten regelmatig boven maaiveld
+* sommige tijdreeksen vertonen in de periode 2002-2012 rare, niet-seizoensgebonden schommelingen en bovendien lijkt er een trend aanwezig die duidt op een globale toename van de stijghoogte in diezelfde periode. Heeft dit mogelijks te maken met een sterkere beïnvloeding van de grondwaterpeilen door de peilen van de Dijle dan in andere komgronden, of misschien met de nabijheid van de drinkwaterwinning die de freatische grondwaterlagen in het gebied aanboort, of nog een andere reden?
+* in heel wat van deze tijdreeksen, die bovendien allemaal uit handmatige metingen bestaan springen de gemeten stijghoogten regelmatig boven maaiveld; vanwege de grotere tijdspanne tussen opeenvolgende handmatige metingen is het evenwel mogelijk dat kortstondige overstromingen niet (nauwkeurig) geregistreerd worden 
 * DYLP200 vertoont die globaal stijgende trend niet, heeft duidelijke seizoenale schommelingen met buiten de zomerperiode quasi steeds stijghoogten boven het maaiveld
 
 ### PeilMetingCategorie
