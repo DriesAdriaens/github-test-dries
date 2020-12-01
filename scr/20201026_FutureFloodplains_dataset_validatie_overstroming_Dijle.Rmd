@@ -1209,7 +1209,9 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
 
 Hier zijn wel degelijk verschillen in stijghoogte aanwezig.
 
+
 * Peilbuiskoppel DYLP053-052
+
 ```{r peilbuiskoppel5 doodebeemde, include=FALSE}
 ggplot(komgr_doodebeemde_tijdreeks %>% 
          filter(loc_code %in% c("DYLP052",
@@ -1932,14 +1934,290 @@ Hieruit komen een aantal zaken naar voren:
 
 Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft of op het moment van opmeten het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
 
-Zoals uit de tijdreeksen hierboven al visueel kan opgemaakt worden, gaat het merendeel van de metingen om automatische sondemetingen. De hoge densiteit aan metingen (2/dag) en de vele kleine sprongen op korte tijd (dag/nacht) die zorgen voor een band eerder dan een lijn van punten, wijzen hierop. Aan automatische metingen worden bovenstaande labels niet toegekend omdat er geen terreinverificatie plaatsvindt (tenzij dan tijdens de sporadische, handmatige kalibratiemetingen).
+Zoals uit de tijdreeksen hierboven al visueel kan opgemaakt worden, gaat het merendeel van de metingen om automatische sondemetingen. De hoge densiteit aan metingen (2/dag) en de vele kleine sprongen op korte tijd (dag/nacht) die zorgen voor een band eerder dan een lijn van punten, wijzen hierop. Aan automatische metingen worden bovenstaande labels niet toegekend omdat er geen terreinverificatie plaatsvindt op het moment dat de meting geregistreerd wordt (tenzij dan tijdens de sporadische, handmatige kalibratiemetingen).
 
 ### Kweldrukken
-DYLP161 en DYLP162
+
+
+Uit de metadata van de peilbuizen in de komgrond van Egenhovenbos blijkt dat de peilbuizen van de meetpunten DYLP161 en DYLP162 een peilbuiskoppel vormen, met DYLP161 als diepe en DULP162 als ondiepe peilbuis.
+
+We bekijken hieronder de tijdreeksen van beide peilbuizen om te kijken of er sprake is van stijghoogteverschillen tussen beide, wat dan kan duiden op een kweldruk. Bij de aanwezigheid van een opwaartse kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld. Hoe ondieper de filter van een peilbuis, hoe beter de gemeten stijghoogten immers overeenkomen met de werkelijke grondwatertafel.
+
+```{r peilbuiskoppel1 egenhovenbos}
+ggplot(komgr_egenhoven_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP161",
+                                "DYLP162")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                # linetype = MetingTypeNaam
+                ), alpha = 0.5) +
+  ## non-clipping zoom
+  coord_cartesian(xlim = c(ymd("2010-01-01"), ymd("2014-07-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_egenhoven_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+Uit bovenstaande figuur blijkt dat de stijghoogten bij diepe filter toch minstens een 20-tal cm hoger liggen
+
+> **Samengevat**: selectie van peilbuizen met filterdiepte < 2.5 m (peilbuis met ongekende filterdiepte heeft geen stijghoogten boven maaiveld)
+
 ### Stijghoogten boven maaiveld
+
+Als we enkel de peilbuizen beschouwen met filterdiepte < 2.5 m én (occasionele) stijghoogten boven maaiveld, dan houden we volgende tijdreeksen over:
+
+```{r tijdreeks_egenhoven_taw1, message=FALSE, warning=FALSE}
+temp <- komgr_egenhoven_tijdreeks %>% 
+  filter(mMaaiveld > 0 & filterdepth <= 2.5) %>%
+  # filter(loc_code %in% c("DYLP126", "DYLP127", "DYLP161", "DYLP162")) %>% 
+  select(loc_code) %>% 
+  distinct() %>% 
+  pull()
+
+ggplot(komgr_egenhoven_tijdreeks %>% 
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                )) +
+  ## non-clipping zoom
+  coord_cartesian(
+  xlim = c(ymd("2006-01-01"), ymd("2021-01-01")),
+  # ylim = c(25.5,28)
+  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2006-01-01"), ymd("2020-12-31")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                ), linetype = "dashed"
+            ) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+```{r tijdreeks_egenhoven_taw2, message=FALSE, warning=FALSE}
+temp <- komgr_egenhoven_tijdreeks %>% 
+  filter(mMaaiveld > 0 & filterdepth <= 2.5) %>%
+  # filter(loc_code %in% c("DYLP126", "DYLP127", "DYLP161", "DYLP162")) %>% 
+  select(loc_code) %>% 
+  distinct() %>% 
+  pull()
+
+ggplot(komgr_egenhoven_tijdreeks %>% 
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                )) +
+  ## non-clipping zoom
+  coord_cartesian(
+  xlim = c(ymd("2006-01-01"), ymd("2021-01-01")),
+  # ylim = c(25.5,28)
+  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2006-01-01"), ymd("2020-12-31")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                ), linetype = "dashed"
+            ) +
+  facet_grid(rows = vars(loc_code)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+> **Samengevat**: selectie van peilbuizen met filterdiepte < 2.5 m (peilbuis met ongekende filterdiepte heeft geen stijghoogten boven maaiveld) én gemeten stijghoogten boven maaiveld
 
 ## Oppervlaktewatermeetpunten
 
+Volgens de WATINA databank lijken er geen peilschalen aanwezig te zijn in Egenhovenbos. Daarom raadplegen we de gegevens over oppervlaktewaterstanden via [Waterinfo.be](waterinfo.be).
+
+We zoeken met trefwoord "Egenhoven" in de lijst met meetstations waar waterstanden opgemeten worden.
+
+```{r}
+library(wateRinfo)
+
+# supported_variables("nl")
+
+get_stations(variable_name = "waterstand") %>% 
+  filter(grepl("Egenhoven", station_name)) %>% 
+  arrange(station_no) %>% 
+  knitr::kable()
+
+```
+
+Ligging van de meetstations:
+
+```{r kaart meetstations egenhoven}
+
+leaflet(get_stations(variable_name = "waterstand") %>% 
+          filter(grepl("Egenhoven", station_name)) %>% 
+          st_as_sf(coords = c("station_longitude", "station_latitude"))) %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addCircleMarkers(
+    label = ~paste0(station_name, "\n", station_no), fill = FALSE, weight = 3,
+    color = "red", opacity = 1,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetstations") %>% 
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = c("Meetstations"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
+
+De meetstations K08_011 en K08_012 lijken relevant. We selecteren de waterstanden stroomopwaarts de kunstwerken omdat die wellicht het best de waterstanden ter hoogte van de meetpunten benaderen (Hopw).
+
+Nu moeten we nog kijken welke waterstandsvariabelen juist allemaal opgemeten worden per meetstation.
+
+```{r}
+get_variables("K08_012") %>% 
+  filter(parametertype_name == "H" & grepl("Hopw", stationparameter_name)) %>% 
+  knitr::kable()
+```
+Omdat de grondwatermetingen ook een tijdsresolutie van 1 dag hebben, en de maximale waarde wellicht het meest bepalend is voor de grondwaterstanden, kiezen we hier voor "DagMax" voor beide meetstations. Dat levert voor meetstation K08_011 `ts_id = 24980042` (Zijloop) op, en voor meetstation K08_012 `ts_id = 31429042` (Dijle). Op basis van deze id's vragen we de tijdreeksen op tussen 2000 en 2020.
+
+Preview dataset:
+
+```{r}
+K08_011_timeseries <- get_timeseries_tsid("24980042", from = "2000-01-01", to = "2020-12-01") %>% 
+  mutate(station_no = "K08_011_Langestaart")
+K08_012_timeseries <- get_timeseries_tsid("31429042", from = "2000-01-01", to = "2020-12-01") %>% 
+  mutate(station_no = "K08_012_Dijle")
+K08_timeseries <- rbind(K08_011_timeseries, K08_012_timeseries)
+head(K08_timeseries)
+```
+Tijdreeksen:
+
+```{r}
+ggplot(K08_timeseries %>% filter(Value > 20)) +
+  geom_line(aes(Timestamp, Value, colour = factor(station_no, levels = c("K08_012_Dijle", "K08_011_Langestaart")))) +
+  labs(colour = NULL)
+```
+Peilen van de Dijle ter hoogte van meetstation K08_012, samen met de tijdreeksen van de grondwatermeetpunten:
+
+```{r}
+temp <- komgr_egenhoven_tijdreeks %>% 
+  filter(mMaaiveld > 0 & filterdepth <= 2.5) %>%
+  # filter(loc_code %in% c("DYLP126", "DYLP127", "DYLP161", "DYLP162")) %>% 
+  select(loc_code) %>% 
+  distinct() %>% 
+  pull()
+
+ggplot(komgr_egenhoven_tijdreeks %>% 
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                )) +
+  ## non-clipping zoom
+  coord_cartesian(
+  xlim = c(ymd("2006-01-01"), ymd("2021-01-01")),
+  # ylim = c(25.5,28)
+  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2006-01-01"), ymd("2020-12-31")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                ), linetype = "dashed"
+            ) +
+  geom_line(data = K08_timeseries %>% filter(Value > 20 & station_no == "K08_012_Dijle"),
+            aes(date(Timestamp), Value, 
+                linetype = factor(station_no,
+                                  levels = c("K08_012_Dijle",
+                                             "K08_011_Langestaart"))),
+            alpha = 0.25) +
+  facet_grid(rows = vars(loc_code)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+```
+
+Peilen van de loop Langestaart ter hoogte van meetstation K08_011, samen met de tijdreeksen van de grondwatermeetpunten:
+
+```{r}
+temp <- komgr_egenhoven_tijdreeks %>% 
+  filter(mMaaiveld > 0 & filterdepth <= 2.5) %>%
+  # filter(loc_code %in% c("DYLP126", "DYLP127", "DYLP161", "DYLP162")) %>% 
+  select(loc_code) %>% 
+  distinct() %>% 
+  pull()
+
+ggplot(komgr_egenhoven_tijdreeks %>% 
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                )) +
+  ## non-clipping zoom
+  coord_cartesian(
+  xlim = c(ymd("2006-01-01"), ymd("2021-01-01")),
+  # ylim = c(25.5,28)
+  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2006-01-01"), ymd("2020-12-31")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                ), linetype = "dashed"
+            ) +
+  geom_line(data = K08_timeseries %>% filter(Value > 20 & station_no == "K08_011_Langestaart"),
+            aes(date(Timestamp), Value, 
+                linetype = factor(station_no,
+                                  levels = c("K08_012_Dijle",
+                                             "K08_011_Langestaart"))),
+            alpha = 0.25) +
+  facet_grid(rows = vars(loc_code)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+```
+De pieken in de grondwatermeetpunten komen mooi overeen met de pieken in de oppervlaktewaterpeilen van zowel de Dijle als de Langestaart. Na de aanleg van het stuw op de Dijle en zandvang in Egenhoven (2015?), lijkt die relatie verbroken. Er zijn evenwel te weinig grondwatermeetgegevens om hierover een uitspraak te kunnen doen.
 
 ## Opsplitsing naar raaien
 
