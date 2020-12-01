@@ -1923,14 +1923,24 @@ ggplot(komgr_egenhoven_tijdreeks) +
 
 Hieruit komen een aantal zaken naar voren:
 
-* de stijghoogten komen zeer kort, maar wel zeer hoog boven het maaiveld uit, met uitgesproken pieken; na te gaan of dit samengaat met piekdebieten in omliggende waterlopen, waaronder uiteraard de Dijle zelf (zie Oppervlaktewatermeetpunten) 
-* de metingen concentreren zich vooral tussen 2010 en 2014; na 2014 zijn er enkel voor DYLP126 nog metingen vanaf 2019; wat is hier de reden juist voor, en zijn er misschien nog ontbrekende meetgegevens?
+* de stijghoogten komen weliswaar zeer kort, maar wel zeer hoog boven het maaiveld uit, met uitgesproken pieken; na te gaan of dit samengaat met piekdebieten in omliggende waterlopen, waaronder uiteraard de Dijle zelf (zie Oppervlaktewatermeetpunten) 
+* de metingen concentreren zich vooral tussen 2010 en 2014; na 2014 zijn er enkel voor meetpunt DYLP126 nog metingen vanaf 2019; wat is hier de reden juist voor, en zijn er misschien nog ontbrekende meetgegevens? Voor DYLP127 staat er nog een meetreeks tussen sept 2016 en juli 2019 op "ingegeven" (dus nog niet gevalideerde meetgegevens; evenwel geen schijnbare rariteiten); onduidelijk of er voor DYLP161 en DYLP162 nog meetgegevens zouden zijn
+* in vergelijking met de periode 2010-2014 lijken zowel de hoogste als laagste grondwaterstanden tot ongeveer een halve meter lager te liggen in 2019 en (deels) 2020; we beschikken enkel voor meetpunt DYLP126 over recente meetgegevens, maar de vraag is of dit een systematische grondwaterstandsdaling is door menselijk ingrijpen, dan wel een gevolg van enkele extreem droge jaren. De vraag is of dit ook tot uiting komt in de overige meetpunten waarvoor er geen recente meetgegevens voorhanden zijn
+* peilbuiskoppel DYLP161-162 (diep-ondiep): hier lijkt alleszins sprake van een kweldruk; het koppel ligt dan ook aan de rand van de vallei, en de diepe peilbuis zit ongeveer 2 m dieper dan de ondiepe; de stijghoogte in de diepere peilbuis ligt systematisch ongeveer 40-45 cm hoger dan in de ondiepe peilbuis
 
 ### PeilMetingCategorie
+
+Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft of op het moment van opmeten het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
+
+Zoals uit de tijdreeksen hierboven al visueel kan opgemaakt worden, gaat het merendeel van de metingen om automatische sondemetingen. De hoge densiteit aan metingen (2/dag) en de vele kleine sprongen op korte tijd (dag/nacht) die zorgen voor een band eerder dan een lijn van punten, wijzen hierop. Aan automatische metingen worden bovenstaande labels niet toegekend omdat er geen terreinverificatie plaatsvindt (tenzij dan tijdens de sporadische, handmatige kalibratiemetingen).
+
 ### Kweldrukken
 DYLP161 en DYLP162
 ### Stijghoogten boven maaiveld
+
 ## Oppervlaktewatermeetpunten
+
+
 ## Opsplitsing naar raaien
 
 # Komgrond template
