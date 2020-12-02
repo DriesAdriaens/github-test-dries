@@ -1686,7 +1686,7 @@ Hieruit komen een aantal zaken naar voren:
 
 ### Peilmeting met labels die wijzen op effectieve overstromingen
 
-Zoals uit de tijdreeksen hierboven al bleek, blijven de stijghoogten vrijwel steeds onder maaiveldhoogte. Aan de weinige metingen met stijghoogten boven maaiveld werd nergens een label (peilmetingcategorie) toegekend kregen dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Deze labels worden trouwens enkel toegekend aan manuele metingen, en dus niet aan automatische (sonde-)metingen.
+Zoals uit de tijdreeksen hierboven al bleek, blijven de stijghoogten vrijwel steeds onder maaiveldhoogte. Aan de weinige metingen met stijghoogten boven maaiveld werd nergens een label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Deze labels worden trouwens enkel toegekend aan manuele metingen, en dus niet aan automatische (sonde-)metingen.
 
 ### Kweldruk en het verschil tussen stijghoogte en waterpeil
 Aangezien er geen peilbuiskoppels aanwezig zijn in deze komgrond, is het ook niet mogelijk om een kweldruk aan te tonen op basis van meetgegevens.
@@ -1918,39 +1918,35 @@ Hieruit komen een aantal zaken naar voren:
 
 * sommige tijdreeksen vertonen in de periode 2002-2012 rare, niet-seizoensgebonden schommelingen en bovendien lijkt er een trend aanwezig die duidt op een globale toename van de stijghoogte in diezelfde periode. Heeft dit mogelijks te maken met een sterkere beïnvloeding van de grondwaterpeilen door de peilen van de Dijle dan in andere komgronden, of misschien met de nabijheid van de drinkwaterwinning die de freatische grondwaterlagen in het gebied aanboort, of nog een andere reden?
 * in heel wat van deze tijdreeksen, die bovendien allemaal uit handmatige metingen bestaan springen de gemeten stijghoogten regelmatig boven maaiveld; vanwege de grotere tijdspanne tussen opeenvolgende handmatige metingen is het evenwel mogelijk dat kortstondige overstromingen niet (nauwkeurig) geregistreerd worden 
-* DYLP200 vertoont die globaal stijgende trend niet, heeft duidelijke seizoenale schommelingen met buiten de zomerperiode quasi steeds stijghoogten boven het maaiveld
+* DYLP200 vertoont geen globaal stijgende trend met onduidelijke seizoenale schommelingen, in tegenstelling tot tijdreeksen van andere meetpunten; de tijdreeks vertoont daarentegen duidelijke seizoenale schommelingen met buiten de zomerperiode bovendien stijghoogten die quasi continu tot boven het maaiveld reiken; die filterdiepte (2.45 m) doet alvast niet vermoeden dat hier sprake is van een kweldruk
 
-### PeilMetingCategorie
+### Peilmeting met labels die wijzen op effectieve overstromingen
 
-Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft of op het moment van opmeten het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
+Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd. In de komgrond Leibeek West werden echter geen metingen gedaan waaraan dit label werd toegekend.
 
-Zoals uit de tijdreeksen hierboven al visueel kan opgemaakt worden, gaat het merendeel van de metingen om automatische sondemetingen. De hoge densiteit aan metingen (2/dag) en de vele kleine sprongen op korte tijd (dag/nacht) die zorgen voor een band eerder dan een lijn van punten, wijzen hierop. Aan automatische metingen worden bovenstaande labels niet toegekend omdat er geen terreinverificatie plaatsvindt op het moment dat de meting geregistreerd wordt (tenzij dan tijdens de sporadische, handmatige kalibratiemetingen).
+### Kweldruk en het verschil tussen stijghoogte en waterpeil
 
-### Kweldrukken
+We bekijken hieronder de tijdreeksen van het reeds vermelde peilbuiskoppel DYLP177-DYLP277 (ondiep-diep) om te kijken of er sprake is van stijghoogteverschillen tussen de diepe en ondiepe peilbuizen binnen dit koppel, die dan kunnen duiden op een kweldruk. Bij een kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld.
 
-
-Uit de metadata van de peilbuizen in de komgrond van Egenhovenbos blijkt dat de peilbuizen van de meetpunten DYLP161 en DYLP162 een peilbuiskoppel vormen, met DYLP161 als diepe en DULP162 als ondiepe peilbuis.
-
-We bekijken hieronder de tijdreeksen van beide peilbuizen om te kijken of er sprake is van stijghoogteverschillen tussen beide, wat dan kan duiden op een kweldruk. Bij de aanwezigheid van een opwaartse kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld. Hoe ondieper de filter van een peilbuis, hoe beter de gemeten stijghoogten immers overeenkomen met de werkelijke grondwatertafel.
-
-```{r peilbuiskoppel1 egenhovenbos}
-ggplot(komgr_egenhoven_tijdreeks %>% 
-         filter(loc_code %in% c("DYLP161",
-                                "DYLP162")) %>% 
+* DYLP177-DYLP277 (2 diepere peilbuizen)
+```{r peilbuiskoppel1 leibeekW}
+ggplot(komgr_leibeekW_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP177",
+                                "DYLP277")) %>% 
          inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
-                # linetype = MetingTypeNaam
-                ), alpha = 0.5) +
+                linetype = MetingTypeNaam)) +
   ## non-clipping zoom
-  coord_cartesian(xlim = c(ymd("2010-01-01"), ymd("2014-07-01"))
-                  ) +
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
   # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
   # ylim(-1, 0.1) +
-  # geom_point(data = komgr_egenhoven_tijdreeks %>% 
+  # geom_point(data = komgr_leikbeekW_tijdreeks %>% 
   #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
   #            aes(x = date(Datum),
   #                y = mMaaiveld,
@@ -1961,12 +1957,8 @@ ggplot(komgr_egenhoven_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL) 
   
 ```
-Uit bovenstaande figuur blijkt dat de stijghoogten bij diepe filter toch minstens een 20-tal cm hoger liggen
+Er is een verschil in stijghoogte vast te stellen. Het verschil is vooral uitgesproken bij hoge stijghoogten in beide peilbuizen. In de peilbuis met de diepere filter (DYLP277) werden dan stijghoogten opgemeten die tot meer dan 25 cm hoger liggen dan in de peilbuis met een ondiepere filter (DYLP177).
 
-> **Samengevat**: selectie van peilbuizen met filterdiepte < 2.5 m (peilbuis met ongekende filterdiepte heeft geen stijghoogten boven maaiveld)
-
-### PeilMetingCategorie
-### Kweldrukken
 ### Stijghoogten boven maaiveld
 ## Oppervlaktewatermeetpunten
 ## Opsplitsing naar raaien
@@ -2104,10 +2096,9 @@ Hieruit komen een aantal zaken naar voren:
 
 Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft of op het moment van opmeten het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
 
-Zoals uit de tijdreeksen hierboven al visueel kan opgemaakt worden, gaat het merendeel van de metingen om automatische sondemetingen. De hoge densiteit aan metingen (2/dag) en de vele kleine sprongen op korte tijd (dag/nacht) die zorgen voor een band eerder dan een lijn van punten, wijzen hierop. Aan automatische metingen worden bovenstaande labels niet toegekend omdat er geen terreinverificatie plaatsvindt op het moment dat de meting geregistreerd wordt (tenzij dan tijdens de sporadische, handmatige kalibratiemetingen).
+Zoals uit de tijdreeksen hierboven al visueel kan opgemaakt worden, gaat het merendeel van de metingen om automatische sondemetingen. De hoge densiteit aan metingen (2/dag) en de vele kleine sprongen op korte tijd (dag/nacht) die zorgen voor een band eerder dan een lijn van punten, wijzen hierop. Aan automatische metingen worden bovenstaande labels niet toegekend omdat er geen terreinverificatie plaatsvindt op het moment dat de meting geregistreerd wordt (tenzij dan tijdens de sporadische, handmatige kalibratiemetingen). In de komgrond van Egenhoven werden geen manuele metingen geregistreerd met de vermelding dat het maaiveld of de peilbuis onder water stond op het moment van opmeting.
 
 ### Kweldrukken
-
 
 Uit de metadata van de peilbuizen in de komgrond van Egenhovenbos blijkt dat de peilbuizen van de meetpunten DYLP161 en DYLP162 een peilbuiskoppel vormen, met DYLP161 als diepe en DULP162 als ondiepe peilbuis.
 
