@@ -21,6 +21,7 @@ library(stringr)
 library(tidyr)
 library(sf)
 library(leaflet)
+library(wateRinfo)
 ```
 
 ```{r connection}
@@ -1888,7 +1889,7 @@ komgr_leibeekW_tijdreeks <-
 #   collect()
 ```
 
-Onderstaande figuur geeft de tijdreeksen voor de verschillende meetpunten.
+Onderstaande figuren geven de tijdreeksen voor de verschillende meetpunten, met onderscheid naar informatie over de filterdiepte (gekend/niet gekend, diep of ondiep).
 
 ```{r tijdreeks_leibeekW_plot, message=FALSE, warning=FALSE}
 ggplot(komgr_leibeekW_tijdreeks) +
@@ -1913,8 +1914,8 @@ ggplot(komgr_leibeekW_tijdreeks) +
   geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed"),
-        legend.position = "bottom") +
-  labs(x = "Datum", y = "m-mv", colour = NULL)
+        legend.position = "bottom", legend.box = "vertical") +
+  labs(x = "Datum", y = "m-mv", colour = "Meetpunt", linetype = "filterdiepte")
 ```
 ```{r tijdreeks_leibeekW_plot2, message=FALSE, warning=FALSE}
 ggplot(komgr_leibeekW_tijdreeks) +
@@ -1940,7 +1941,7 @@ ggplot(komgr_leibeekW_tijdreeks) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed"),
         legend.position = "bottom", legend.box = "vertical") +
-  labs(x = "Datum", y = "m-mv", colour = NULL)
+  labs(x = "Datum", y = "m-mv", colour = "Meetpunt", linetype = "filterdiepte")
 ```
 
 Hieruit komen een aantal zaken naar voren:
@@ -1952,21 +1953,21 @@ Hieruit komen een aantal zaken naar voren:
 * DYLP200 vertoont geen globaal stijgende trend met onduidelijke seizoenale schommelingen, in tegenstelling tot de tijdreeksen van sommige andere meetpunten; de tijdreeks vertoont daarentegen duidelijke seizoenale schommelingen met buiten de zomerperiode bovendien stijghoogten die quasi continu tot boven het maaiveld reiken; die filterdiepte (2.45 m) doet alvast niet vermoeden dat hier sprake is van een kweldruk
 
 Samengevat:
-* De peilbuizen met *ondiepe* filters tonen aan dat de grondwaterpeilen voor het grootste deel van het jaar rond of boven het maaiveld schommelen (allen gesitueerd in de depressie van Rotspoel). Peilen boven maaiveld wijzen hier dus niet per se op overstromingen, maar dus eerder op grondwater dat (langdurig) boven maaiveld staat.
-* De *overige peilbuizen* zijn allemaal uitgerust met diepe filters. Voor die peilbuizen is het onduidelijk in welke mate de gemeten stijghoogten overeenstemmen met het effectieve grondwaterpeil, dan wel dat ze een overschatting ervan geven.
+* De peilbuizen met *ondiepe filters* tonen aan dat de grondwaterpeilen voor het grootste deel van het jaar rond of boven het maaiveld schommelen (allen gesitueerd in de depressie van Rotspoel). Peilen boven maaiveld wijzen hier dus niet per se op overstromingen, maar eerder op grondwater dat (langdurig) boven maaiveld staat.
+* De overige peilbuizen zijn allemaal uitgerust met *diepe filters*. Voor die peilbuizen is het onduidelijk in welke mate de gemeten stijghoogten overeenstemmen met het effectieve grondwaterpeil, dan wel dat ze een overschatting ervan geven.
 * Het is belangrijk op te merken dat alle diepe peilbuizen (zeer) dicht tegen de pompinstallaties van de drinkwaterwinning van Korbeek-Dijle gelegen zijn.  
 
 ### Peilmeting met labels die wijzen op effectieve overstromingen
 
 Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
 
-In de komgrond Leibeek West werden echter geen metingen gedaan waaraan dit label werd toegekend.
+In de komgrond Leibeek West werden echter geen metingen gedaan waaraan dit label werd toegekend. Voor de (handmatige) metingen met stijghoogten boven maaiveld hebben we dus geen uitsluitsel of op die momenten het omringend maaiveld ook effectief onder water stond.
 
 ### Kweldruk en het verschil tussen stijghoogte en waterpeil
 
 We bekijken hieronder de tijdreeksen van het reeds vermelde peilbuiskoppel DYLP177-DYLP277 (ondiep-diep) om te kijken of er sprake is van stijghoogteverschillen tussen de diepe en ondiepe peilbuizen binnen dit koppel, die dan kunnen duiden op een kweldruk. Bij een kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld. 
 
-In dit geval zijn beide peilbuizen van het koppel uitgerust met een relatief diepe filter, nl. resp. op een diepte van 5 en 6 m. Aangezien de metingen aantonen dat de grondwatertafel ter hoogte van de meetpunten wellicht niet veel verder dan 1 m onder maaiveld zakt, zouden minder diepe peilbuizen volstaan om de freatische grondwatertafel op te meten. De gemeten stijghoogten in DYLP177 en DYLP277 zullen door de hogere drukken op grotere diepte dus hoger liggen dan de effectieve grondwatertafel.
+In dit geval zijn beide peilbuizen van het koppel echter uitgerust met een relatief diepe filter, nl. resp. op een diepte van 5 en 6 m. Aangezien de metingen aantonen dat de grondwatertafel ter hoogte van de meetpunten wellicht niet veel verder dan 1 m onder maaiveld zakt, zouden minder diepe peilbuizen in principe volstaan om de freatische grondwatertafel op te volgen. De gemeten stijghoogten in DYLP177 en DYLP277 zullen door de hogere drukken op grotere diepte dus alvast hoger liggen dan de effectieve grondwatertafel.
 
 * DYLP177-DYLP277 (2 diepere peilbuizen)
 ```{r peilbuiskoppel1 leibeekW}
@@ -1997,11 +1998,178 @@ ggplot(komgr_leibeekW_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL) 
   
 ```
-Er is een verschil in stijghoogte vast te stellen. Het verschil is vooral uitgesproken bij hoge stijghoogten in beide peilbuizen. In de peilbuis met de diepere filter (DYLP277) werden dan stijghoogten opgemeten die tot meer dan 25 cm hoger liggen dan in de peilbuis met een ondiepere filter (DYLP177).
+Er is een verschil in stijghoogte vast te stellen. Het verschil is vooral uitgesproken bij hoge stijghoogten in beide peilbuizen (najaar-voorjaar). In de peilbuis met de diepere filter (DYLP277) worden dan stijghoogten opgemeten die tot meer dan 25 cm hoger liggen dan in de peilbuis met een ondiepere filter (DYLP177). In de periode 2005-2007 is dat dan weer niet het geval en blijven de stijghoogten van de diepere filter onder die van de ondiepere filter. Daarnaast zakt de stijghoogte van de diepe filter in verschillende jaren ook onder die van de ondiepe, met name op momenten dat de stijghoogten in beide peilbuizen op het laagste niveau staan (zomerperiode).
+De stijghoogten reageren hier uiteraard op veranderingen in grondwatervoeding doorheen het jaar, maar vermoedelijk ook op de pompdebieten van de grondwaterwinning. De algehele stijging van de opgemeten peilen vanaf 2008 houdt hier wellicht ook verband mee.
 
 ### Stijghoogten boven maaiveld
+
+De finale vraag is hier welke stijghoogten boven maaiveld indicatief zijn voor overstromingen ter hoogte van het maaiveld.
+
+Het eerste probleem is dat:
+* veel peilbuizen in deze komgrond uitgerust zijn met diepe filters (>2.5 m onder maaiveld) waardoor een mogelijke kweldruk aanleiding kan geven tot een overschatting van de effectieve grondwatertafel. Door gebrek aan peilbuiskoppels waarin de stijghoogten in peilbuizen met zowel een diepe als een ondiepe filter worden opgemeten, is het moeilijk om een kweldruk uit te sluiten. Het vermoeden is echter dat de stijghoogten van de huidige diepere peilbuizen niet zondermeer gebruik worden als indicatie voor overstromingen ter hoogte van het maaiveld
+* de ondiepe peilbuizen wijzen op stijghoogten die een groot deel van het jaar boven maaiveld liggen. Deze peilbuizen liggen in een depressie (Rotspoel) waar de stijghoogten boven maaiveld wijzen op stagnerend grondwater, of beter gezegd grondwater dat langdurig boven het maaiveld staat. De peilen boven maaiveld wijzen hier dus niet zozeer op (tijdelijke) overstromingen die vooral door oppervlaktewater veroorzaakt worden.
+
 ## Oppervlaktewatermeetpunten
+
+Om de waarschijnlijkheid te verifiëren dat ter hoogte van de meetpunten de gemeten stijghoogten boven maaiveld wijzen op effectieve overstromingen met oppervlaktewater, kunnen we visueel checken of deze metingen overeenkomen met momenten waarop het oppervlaktewaterpeil ook sterk toenam. Die momenten zijn veelal kortstondig van aard (pieken in de tijdreeksen).
+
+In de komgrond van Leibeek West zijn er echter geen peilschalen aanwezig in de WATINA databank. Op [waterinfo.be](waterinfo.be) zijn er wel waterstandsmetingen beschikbaar voor de Dijle (t.h.v. Stationstraat in Korbeek-Dijle, dus aan zuidrand van komgrond; stationnr. L08_097) en op de waterloop Langestaart ter hoogte van het pompstation (Egenhoven/Zijloop C/pompstation, noordgrens van komgrond; stationnr. K08_010)
+
+```{r}
+# supported_variables("nl")
+
+get_stations(variable_name = "waterstand") %>% 
+  filter(grepl("Dijle", station_name) | grepl("Egenhoven", station_name)) %>% 
+  arrange(station_no) %>% 
+  knitr::kable()
+
+```
+
+Ligging van de meetstations:
+
+```{r kaart meetstations egenhoven}
+
+leaflet(get_stations(variable_name = "waterstand") %>% 
+          filter(station_no %in% c("L08_097", "K08_010")) %>% 
+          st_as_sf(coords = c("station_longitude", "station_latitude"))) %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addCircleMarkers(
+    label = ~paste0(station_name, "\n", station_no), fill = FALSE, weight = 3,
+    color = "red", opacity = 1,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetstations") %>% 
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = c("Meetstations"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
+
+Nu moeten we nog kijken welke waterstandsvariabelen juist allemaal opgemeten worden per meetstation.
+
+```{r}
+get_variables("L08_097") %>% 
+  filter(parametertype_name == "H") %>% 
+  knitr::kable()
+```
+Omdat de grondwatermetingen ook een tijdsresolutie van 1 dag hebben, en de maximale waarde wellicht het meest bepalend is voor de grondwaterstanden, kiezen we hier voor "DagMax" voor beide meetstations. Dat levert voor meetstation K08_010 `ts_id = 24940042` (Zijloop) op, en voor meetstation K08_097 `ts_id = 3840042` (Dijle). Op basis van deze id's vragen we de tijdreeksen op tussen 2000 en 2020.
+
+Preview dataset:
+
+```{r}
+K08_010_timeseries <- get_timeseries_tsid("24940042", from = "2000-01-01", to = "2020-12-01") %>% 
+  mutate(station_no = "K08_010_Langestaart")
+K08_097_timeseries <- get_timeseries_tsid("3840042", from = "2000-01-01", to = "2020-12-01") %>% 
+  mutate(station_no = "K08_097_Dijle")
+K08_timeseries <- rbind(K08_010_timeseries, K08_097_timeseries)
+head(K08_timeseries)
+```
+Tijdreeksen:
+
+```{r}
+ggplot(K08_timeseries) +
+  geom_line(aes(Timestamp, Value, colour = factor(station_no, levels = c("K08_097_Dijle", "K08_010_Langestaart")))) +
+  labs(colour = NULL)
+```
+Peilen van de Dijle ter hoogte van meetstation K08_097, samen met de tijdreeksen van de grondwatermeetpunten met stijghoogten boven maaiveld:
+
+```{r}
+temp <- komgr_leibeekW_tijdreeks %>% 
+  filter(mMaaiveld > 0
+         # & filterdepth <= 2.5
+         ) %>%
+select(loc_code) %>% 
+  distinct() %>% 
+  pull()
+
+ggplot(komgr_leibeekW_tijdreeks %>% 
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                )) +
+  ## non-clipping zoom
+  # coord_cartesian(
+  # xlim = c(ymd("2000-01-01"), ymd("2021-01-01")),
+  # # ylim = c(25.5,28)
+  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2006-01-01"), ymd("2020-12-31")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                ), linetype = "dashed"
+            ) +
+  geom_line(data = K08_timeseries %>% filter(station_no == "K08_097_Dijle"),
+            aes(date(Timestamp), Value, 
+                linetype = factor(station_no,
+                                  levels = c("K08_097_Dijle",
+                                             "K08_010_Langestaart"))),
+            alpha = 0.25) +
+  facet_grid(rows = vars(loc_code)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+```
+
+Noch voor de diepe, noch voor de ondiepe grondwatermeetpunten is er een duidelijke samenhang terug te vinden tussen de oppervlaktewaterpeilen van de Dijle en de stijghoogten ter hoogte van de grondwatermeetpunten.
+
+Peilen van de waterloop Langestaart ter hoogte van meetstation K08_010, samen met de tijdreeksen van de grondwatermeetpunten; dit is enkel relevant voor de meetpunten DYLP200 en DYLP132:
+
+```{r}
+ggplot(komgr_leibeekW_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP200", "DYLP132"))) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                )) +
+  ## non-clipping zoom
+  # coord_cartesian(
+  # xlim = c(ymd("2000-01-01"), ymd("2021-01-01")),
+  # # ylim = c(25.5,28)
+  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2006-01-01"), ymd("2020-12-31")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                ), linetype = "dashed"
+            ) +
+  geom_line(data = K08_timeseries %>% filter(station_no == "K08_010_Langestaart"),
+            aes(date(Timestamp), Value, 
+                linetype = factor(station_no,
+                                  levels = c("K08_097_Dijle",
+                                             "K08_010_Langestaart"))),
+            alpha = 0.25) +
+  facet_grid(rows = vars(loc_code)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+```
+
+Ook hier is nauwelijks
+
 ## Opsplitsing naar raaien
+Niet van toepassing
 
 # Komgrond Egenhovenbos
 
@@ -2261,8 +2429,6 @@ Volgens de WATINA databank lijken er geen peilschalen aanwezig te zijn in Egenho
 We zoeken met trefwoord "Egenhoven" in de lijst met meetstations waar waterstanden opgemeten worden.
 
 ```{r}
-library(wateRinfo)
-
 # supported_variables("nl")
 
 get_stations(variable_name = "waterstand") %>% 
