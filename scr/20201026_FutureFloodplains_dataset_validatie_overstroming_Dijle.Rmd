@@ -1868,7 +1868,7 @@ komgr_leibeekO_loc %>%
   geom_histogram(aes(x = filterdepth))
 ```
 
-<!-- Peilbuiskoppels? -->
+Er lijken geen peilbuiskoppels aanwezig te zijn in deze komgrond.
 
 ## Tijdreeksen van grondwatermeetpunten
 
@@ -2029,16 +2029,28 @@ ggplot(komgr_leibeekO_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = "Meetpunt", linetype = "filterdiepte")
 ```
 
+<!-- Hieruit komen een aantal zaken naar voren: -->
 
+* vermoedelijk sterke kweldruk 
+    * in DYLP107 en DYLP117: vanwege ligging net onderaan de steilrand van vallei --> hoge kweldruk met dus stijghoogten die hoger liggen dan effectief grondwaterpeil
+    * DYLP171: zeer diepe filter
+* sterke veranderingen in stijghoogten tussen verschillende meetperioden (na onderbreking van metingen):
+    * DYLP171: zeer diepe filter --> stijghoogten komen niet overeen met grondwaterpeil; bovendien grote verandering in gemeten stijghoogten tussen 2010-2013 en vanaf 2017: vanwaar die grote sprong?
+    * DYLP121: grote verandering in stijghoogten in 2000-2001 vs in 2006-2008: vanwaar die verandering? Zie ook DYLP171, want beide meetpunten liggen dicht bij elkaar langs de Leibeek, tussen de Dijle en de Vijvers van Oud-Heverlee; veranderingen in beheer van de Leibeek (ruiming, opstuwing, aantakking Dijle)?
 
+### Peilmeting met labels die wijzen op effectieve overstromingen
 
+Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
 
+In de komgrond Leibeek Oost werden echter geen metingen gedaan waaraan dit label werd toegekend. Voor de (handmatige) metingen met stijghoogten boven maaiveld hebben we dus geen uitsluitsel of op die momenten het omringend maaiveld ook effectief onder water stond.
 
-Hieruit komen een aantal zaken naar voren:
-### PeilMetingCategorie
 ### Kweldrukken
+Er zijn geen peilbuiskoppels aanwezig in deze komgrond.
+
 ### Stijghoogten boven maaiveld
+
 ## Oppervlaktewatermeetpunten
+
 ## Opsplitsing naar raaien
 
 # Komgrond Leibeek West (tot E40)
