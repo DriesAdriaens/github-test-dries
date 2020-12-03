@@ -1873,7 +1873,9 @@ Voor de geselecteerde grondwatermeetpunten vragen we de gevalideerde peilmetinge
 komgr_leibeekW_tijdreeks <-
   komgr_leibeekW_loc %>%
   # filter(filterdepth <= 3) %>% 
-  rename(mvTAW = soilsurf_ost) %>% 
+  rename(mvTAW = soilsurf_ost) %>%
+  mutate(filterdiepte_01 = ifelse(is.na(filterdepth), "niet gekend", "gekend"),
+         filterdiepte_clas = ifelse(filterdepth < 2.5, "< 2.5 m", ">= 2.5 m")) %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
              by = c("loc_wid" = "MeetpuntWID")) %>% 
   filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
@@ -1892,7 +1894,8 @@ Onderstaande figuur geeft de tijdreeksen voor de verschillende meetpunten.
 ggplot(komgr_leibeekW_tijdreeks) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
-                colour = loc_code)) +
+                colour = loc_code,
+                linetype = filterdiepte_01)) +
   ## non-clipping zoom
   # coord_cartesian(ylim = c(-1, 0.1),
   #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
@@ -1913,20 +1916,57 @@ ggplot(komgr_leibeekW_tijdreeks) +
         legend.position = "bottom") +
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
+```{r tijdreeks_leibeekW_plot2, message=FALSE, warning=FALSE}
+ggplot(komgr_leibeekW_tijdreeks) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = loc_code,
+                linetype = filterdiepte_clas)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_leibeekW_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+  #                colour = loc_code)) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom", legend.box = "vertical") +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
 
 Hieruit komen een aantal zaken naar voren:
 
-* sommige tijdreeksen vertonen in de periode 2002-2012 rare, niet-seizoensgebonden schommelingen en bovendien lijkt er een trend aanwezig die duidt op een globale toename van de stijghoogte in diezelfde periode. Heeft dit mogelijks te maken met een sterkere beïnvloeding van de grondwaterpeilen door de peilen van de Dijle dan in andere komgronden, of misschien met de nabijheid van de drinkwaterwinning die de freatische grondwaterlagen in het gebied aanboort, of nog een andere reden?
-* in heel wat van deze tijdreeksen, die bovendien allemaal uit handmatige metingen bestaan springen de gemeten stijghoogten regelmatig boven maaiveld; vanwege de grotere tijdspanne tussen opeenvolgende handmatige metingen is het evenwel mogelijk dat kortstondige overstromingen niet (nauwkeurig) geregistreerd worden 
-* DYLP200 vertoont geen globaal stijgende trend met onduidelijke seizoenale schommelingen, in tegenstelling tot tijdreeksen van andere meetpunten; de tijdreeks vertoont daarentegen duidelijke seizoenale schommelingen met buiten de zomerperiode bovendien stijghoogten die quasi continu tot boven het maaiveld reiken; die filterdiepte (2.45 m) doet alvast niet vermoeden dat hier sprake is van een kweldruk
+* voor de peilbuizen waarvan de filterdiepte niet gekend is, zijn de tijdreeksen allemaal oud (2000-2001) en bovendien zeer kort (minder dan één hydrologisch jaar)
+* er zijn slechts drie meetpunten met een filterdiepte < 2.5 m; de tijdreeks van DYLP130 is bovendien erg kort, en de overige twee meetpunten (DYLP200 en DYLP132) liggen in dezelfde depressie (Rotspoel, langs E40)
+* DYLP176 (diepe filter) vertoont in de periode 2002-2012 rare, niet-seizoensgebonden schommelingen en bovendien lijkt er een trend aanwezig die duidt op een globale toename van de stijghoogte in diezelfde periode. Heeft dit mogelijks te maken met een sterkere beïnvloeding van de grondwaterpeilen door de peilen van de Dijle dan in andere komgronden, of misschien met de nabijheid van de drinkwaterwinning die de freatische grondwaterlagen in het gebied aanboort, of nog een andere reden?
+* in heel wat van deze tijdreeksen, die bovendien allemaal uit handmatige metingen bestaan, springen de gemeten stijghoogten regelmatig boven maaiveld; vanwege de grotere tijdspanne tussen opeenvolgende handmatige metingen is het evenwel mogelijk dat kortstondige overstromingen niet altijd (nauwkeurig) geregistreerd werden 
+* DYLP200 vertoont geen globaal stijgende trend met onduidelijke seizoenale schommelingen, in tegenstelling tot de tijdreeksen van sommige andere meetpunten; de tijdreeks vertoont daarentegen duidelijke seizoenale schommelingen met buiten de zomerperiode bovendien stijghoogten die quasi continu tot boven het maaiveld reiken; die filterdiepte (2.45 m) doet alvast niet vermoeden dat hier sprake is van een kweldruk
+
+Samengevat:
+* De peilbuizen met *ondiepe* filters tonen aan dat de grondwaterpeilen voor het grootste deel van het jaar rond of boven het maaiveld schommelen (allen gesitueerd in de depressie van Rotspoel). Peilen boven maaiveld wijzen hier dus niet per se op overstromingen, maar dus eerder op grondwater dat (langdurig) boven maaiveld staat.
+* De *overige peilbuizen* zijn allemaal uitgerust met diepe filters. Voor die peilbuizen is het onduidelijk in welke mate de gemeten stijghoogten overeenstemmen met het effectieve grondwaterpeil, dan wel dat ze een overschatting ervan geven.
+* Het is belangrijk op te merken dat alle diepe peilbuizen (zeer) dicht tegen de pompinstallaties van de drinkwaterwinning van Korbeek-Dijle gelegen zijn.  
 
 ### Peilmeting met labels die wijzen op effectieve overstromingen
 
-Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd. In de komgrond Leibeek West werden echter geen metingen gedaan waaraan dit label werd toegekend.
+Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
+
+In de komgrond Leibeek West werden echter geen metingen gedaan waaraan dit label werd toegekend.
 
 ### Kweldruk en het verschil tussen stijghoogte en waterpeil
 
-We bekijken hieronder de tijdreeksen van het reeds vermelde peilbuiskoppel DYLP177-DYLP277 (ondiep-diep) om te kijken of er sprake is van stijghoogteverschillen tussen de diepe en ondiepe peilbuizen binnen dit koppel, die dan kunnen duiden op een kweldruk. Bij een kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld.
+We bekijken hieronder de tijdreeksen van het reeds vermelde peilbuiskoppel DYLP177-DYLP277 (ondiep-diep) om te kijken of er sprake is van stijghoogteverschillen tussen de diepe en ondiepe peilbuizen binnen dit koppel, die dan kunnen duiden op een kweldruk. Bij een kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld. 
+
+In dit geval zijn beide peilbuizen van het koppel uitgerust met een relatief diepe filter, nl. resp. op een diepte van 5 en 6 m. Aangezien de metingen aantonen dat de grondwatertafel ter hoogte van de meetpunten wellicht niet veel verder dan 1 m onder maaiveld zakt, zouden minder diepe peilbuizen volstaan om de freatische grondwatertafel op te meten. De gemeten stijghoogten in DYLP177 en DYLP277 zullen door de hogere drukken op grotere diepte dus hoger liggen dan de effectieve grondwatertafel.
 
 * DYLP177-DYLP277 (2 diepere peilbuizen)
 ```{r peilbuiskoppel1 leibeekW}
