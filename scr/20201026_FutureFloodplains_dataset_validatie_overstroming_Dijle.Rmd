@@ -922,6 +922,7 @@ Uit de kaart en bovenstaande figuur leiden we af dat er 8 (5 indien deel van de 
 * DYLP074-091 (2 diepere peilbuizen)
 * DYLP008-016
 * DYLP017-092
+* DYLP006-DYLP015 (2 ondiepe peilbuizen)
 
 Indien de meetpunten ten oosten van de spoorweg ook meegenomen worden, dan komen er nog volgende peilbuiskoppels bij:
 
@@ -1175,6 +1176,38 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
 ```
 
 Hier worden geen overschrijdingen van het maaiveld vastgesteld, dus niet relevant.
+
+* DYLP006-DYLP015
+```{r}
+ggplot(komgr_doodebeemde_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP006",
+                                "DYLP015")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_neerijse_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+
+Nauwelijks verschillen in stijghoogte. Het verschil in filterdiepte is dan ook beperkt.
 
 Noot: indien meetpunten ten oosten van de spoorweg ook meegenomen worden, dan komen er nog volgende peilbuiskoppels bij:
 
@@ -2428,6 +2461,7 @@ In de komgrond Leibeek Oost werden echter geen metingen gedaan waaraan dit label
 Er zijn geen peilbuiskoppels aanwezig in deze komgrond, op basis waarvan een kweldruk aangetoond kan worden en zo een verdere selectie kan plaatsvinden van meetpunten/peilbuizen waarvan de tijdreeksen in aanmerking komen om gemodelleerde overstromingen/overstromingsdiepten te kalibreren.
 
 ### Stijghoogten boven maaiveld
+Zie Tijdreeksen van grondwatermeetpunten; reeds beperkt tot reeksen met stijghoogten boven maaiveld.
 
 ## Oppervlaktewatermeetpunten
 
@@ -2730,7 +2764,6 @@ ggplot(komgr_leibeekO_tijdreeks %>%
 Eveneens weinig interactie.
 
 ## Opsplitsing naar raaien
-
 
 
 # Komgrond Egenhovenbos
