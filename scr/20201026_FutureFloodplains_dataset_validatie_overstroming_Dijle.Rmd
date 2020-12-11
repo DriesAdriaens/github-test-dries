@@ -34,7 +34,7 @@ watina <- connect_watina()
 
 Voor het project Future Floodplains worden de overstromingen in de alluviale vallei van de Dijle gemodelleerd (werkpakket 1, KULeuven). Voor de validatie van de overstromingskaarten voor de actuele toestand is er nood aan effectief gemeten waterstanden tijdens overstromingen. De vraag is of er op basis van de grondwatermeetpunten (en evt. oppervlaktewatermeetpunten) uit de WATINA databank dergelijke meetgegevens op een betrouwbare manier aangeleverd kunnen worden.
 
-Onderstaand document verkent welke gegegens eventueel in aanmerking komen als dataset ter validatie van de overstromingskaarten.
+Onderstaand document verkent welke gegevens eventueel in aanmerking komen als dataset ter validatie van de overstromingskaarten.
 
 # Aanpak
 
@@ -43,16 +43,14 @@ Onderstaand document verkent welke gegegens eventueel in aanmerking komen als da
   + gebruik maken van manuele metingen met specifieke labels (zgn. peilmetingcategorieën) die wijzen op effectieve overstromingen
   + uitsluiten van diepere peilbuizen waar een eventuele kweldruk tot peilen boven maaiveld kan leiden die niet overeenstemmen met waterpeilen tijdens overstromingen
   + checken van locatie van peilbuizen; meer kans op kweldruk aan de steilrand van de vallei
-* groeperen van meetpunten in relevante raaien, veelal dwars georiënteerd op vallei
+* desgevallend groeperen van meetpunten in relevante raaien, veelal dwars georiënteerd op vallei
 * eventueel relatie bekijken met aanwezige peilmetingen van oppervlaktewater (peilschalen)
 
 We bekijken dit per komgrond.
 
 # Komgrond Neerijse
 
-Figuur invoegen? Of blijkt dat uit kaartjes met grondwatermeetpunten hieronder?
-
-Het gaat hier om de komgrond ten westen van de Dijle ter hoogte van Neerijse, meer bepaald tussen de Neerijsebaan in het zuiden en de samenvloeiing van IJse en Dijle in het noorden. Deze komgrond wordt afgewaterd door de Leigracht die het gebied van zuid naar noord doormidden snijdt. De waterberging van deze komgrond wordt voornamelijk aangesproken door opstuwing van de Leigracht via de monding van de Ijse bij hoogwaterpeilen in de Dijle. De mate van opstuwing kan gestuurd worden via schotten op het stuw tussen Leigracht en Ijse.
+Het gaat hier om de komgrond ten westen van de Dijle ter hoogte van Neerijse, meer bepaald tussen de Neerijsebaan in het zuiden en de samenvloeiing van IJse en Dijle in het noorden. Deze komgrond wordt afgewaterd door de Leigracht die het gebied van zuid naar noord doormidden snijdt. De waterberging van deze komgrond wordt voornamelijk aangesproken door opstuwing van de Leigracht via de monding van de Ijse, bij hoogwaterpeilen in de Dijle. De mate van opstuwing kan gestuurd worden via schotten op het stuw tussen Leigracht en Ijse.
 
 ## Grondwatermeetpunten
 
@@ -120,7 +118,7 @@ komgr_neerijse_tijdreeks <-
 
 Onderstaande figuur geeft de tijdreeksen voor de verschillende meetpunten.
 
-```{r tijdreeks_plot, message=FALSE, warning=FALSE}
+```{r tijdreeks_plot_neerijse, message=FALSE, warning=FALSE}
 komgr_neerijse_tijdreeks_plot <- ggplot(komgr_neerijse_tijdreeks) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
@@ -133,11 +131,6 @@ komgr_neerijse_tijdreeks_plot <- ggplot(komgr_neerijse_tijdreeks) +
   ## clipping zoom
   # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
   # ylim(-1, 0.1) +
-  # geom_point(data = komgr_neerijse_tijdreeks %>% 
-  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
-  #            aes(x = date(Datum),
-  #                y = mMaaiveld,
-  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   geom_point(data = komgr_neerijse_tijdreeks %>% 
                filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
              aes(x = date(Datum),
@@ -156,12 +149,12 @@ Hieruit komen een aantal zaken naar voren:
 
 * de duur van de tijdreeksen varieert uiteraard per meetpunt. Niet alle meetpunten worden/werden even lang bemeten
 * sinds 1998 lijken de tijdreeksen meer frequent het maaiveld te overschrijden, wat kan wijzen op meer frequente overstromingen; de veelheid aan meetpunten maakt het in de figuur echter moeilijk om te zien of dat te wijten is aan de opstart van een reeks nieuwe meetpunten, dan wel of het effectief om een toename van de stijghoogten gaat, met dan mogelijks ook een toename van de frequentie van overstromingen
-* oudere metingen gebeurden veelal manueel; pas later werden de automatische meetsondes geïntroduceerd. Die laatste het voordeel hebben dat ze elke dag 2 metingen registreren en daardoor beter in staat zijn tijdelijke overstromingen te detecteren dan met manuele metingen, die in het beste geval slechts om de 14 dagen gebeuren
+* oudere metingen gebeurden veelal manueel; pas later werden de automatische meetsondes geïntroduceerd. Die laatste hebben het voordeel dat ze elke dag 2 metingen registreren en daardoor beter in staat zijn tijdelijke overstromingen te detecteren dan met manuele metingen. Die laatste gebeuren in het beste geval slechts om de 14 dagen
 * veel meetreeksen lijken te stoppen rond 2015; de oorzaak hiervan is niet geheel duidelijk: gaat het hier om meetpunten die nog wel bemeten worden, maar waarvoor de de metingen nog niet aangevuld werden in de databank, of werden er veel meetpunten effectief afgesloten in die periode?
 
 We kunnen uit deze lijst de meetpunten selecteren met peilen boven maaiveld. Dat levert onderstaande subset op:
 
-```{r meetpunten met peilen boven maaiveld}
+```{r meetpunten met peilen boven maaiveld neerijse}
 komgr_neerijse_tijdreeks %>% 
   filter(mMaaiveld >= 0) %>% 
   select(loc_code) %>% 
@@ -170,7 +163,7 @@ komgr_neerijse_tijdreeks %>%
   knitr::kable()
 ```
 
-```{r boven maaiveld}
+```{r boven maaiveld neerijse}
 aantal <- komgr_neerijse_tijdreeks %>% 
   filter(mMaaiveld >= 0) %>% 
   select(loc_code) %>% 
@@ -180,11 +173,11 @@ aantal <- komgr_neerijse_tijdreeks %>%
   .$n
 ```
 
-Het gaat dan nog steeds om `r aantal` van de `r length(komgr_neerijse_loc_vec)` meetpunten in de komgrond van Neerijse. In veel van de meetpunten stegen de stijghoogten dus minstens één of meerdere keren boven het maaiveld uit in de meetperiode.
+Het gaat dan nog steeds om `r aantal` van de `r length(komgr_neerijse_loc_vec)` meetpunten in de komgrond van Neerijse. In veel van de meetpunten stegen de stijghoogten dus minstens één of meerdere keren boven het maaiveld uit gedurende de meetperiode.
 
 ### Peilmeting met labels die wijzen op effectieve overstromingen
 
-Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
+Aan sommige *manuele* metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft of het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
 
 Dergelijke metingen werden vastgesteld bij de volgende meetpunten:
 
@@ -231,9 +224,9 @@ ggplot(komgr_neerijse_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-De betreffende metingen lijken sterk geclusterd in de tijd. Wat meer ingezoomd op de periode met deze metingen levert dat onderstaande figuur op, met opsplitsing naar de twee verschillende peilmetingcategorieën.
+De betreffende metingen lijken sterk geclusterd in de tijd. Wat meer ingezoomd op de periode met deze metingen levert dat onderstaande figuur op, met opsplitsing naar de twee verschillende peilmetingcategorieën en opgave van de filterdiepte van elke peilbuis.
 
-```{r "maaiveld overstroomd tijdreeks ingezoomd"}
+```{r maaiveld overstroomd tijdreeks ingezoomd neerijse}
 temp <- komgr_neerijse_tijdreeks %>% 
                   filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")) %>% 
                   select(loc_code) %>% 
@@ -269,9 +262,9 @@ ggplot(komgr_neerijse_tijdreeks %>%
 
 Enkele opmerkingen bij bovenstaande figuur:
 
-* Het is opmerkelijk dat heel wat van de peilmetingen met categorie "maaiveld onder water" toch grondwaterpeilen aangeven ónder maaiveld (tot > 5 cm soms) terwijl je hier toch net peilen bóven maaiveld zou verwachten. Mogelijks wijst dat erop dat het overstromingswater van elders afkomstig is (oppervlaktewater dus), en de peilen van oppervlakte- en grondwater -alvast tijdelijk- niet altijd overeenstemmen?
-* De periode met beide peilmetingcategorieën is uitgesproken kort, net zoals het aantal meetpunten met dergelijke metingen. Wellicht worden deze categorieën niet systematisch genoteerd en toegekend aan handmatige meting in de databank. De lagere frequentie van handmatige metingen doet ook de kans dalen dat op het moment van opmeting het maaiveld net overstroomd is, zeker als de overstromingen eerder kortstondig van aard zijn
-* DYLP047 en DYLP099 zijn resp. een diepe en ondiepe peilbuis op eenzelfde locatie. Het verschil in stijghoogte loopt in de winterperiode op tot meer dan 25 cm. Die vaststelling wijst alvast op een aanzienlijke kweldruk. De diepere peilbuis (DYLP047) geeft dus alvast niet de stand van de werkelijke watertafel weer en de peilen boven maaiveld wijzen dus zeker niet altijd op een overstroming. De metingen uit de tijdreeks van de ondiepe peilbuis van meetpunt DYLP099 zijn wellicht beter geschikt om dergelijke events aan te tonen. Helaas werd voor beide meetpunten enkel aan de allerlaatste meetwaarden de categorie "maaiveld onder water" toegekend (2019; zie onderstaande tabel) ...
+* Het is opmerkelijk dat heel wat van de peilmetingen met categorie "maaiveld onder water" toch grondwaterpeilen aangeven ónder maaiveld (tot > 5 cm soms) terwijl je hier toch net peilen bóven maaiveld zou verwachten. Mogelijks wijst dat erop dat het overstromingswater van elders afkomstig is (oppervlaktewater dus), en de peilen van oppervlakte- en grondwater -alvast tijdelijk- niet altijd overeenstemmen? En misschien speelt hier ook de nauwkeurigheid een rol (van peilmeting zelf en herrekening naar peil t.o.v. maaiveld)?
+* De periode met beide peilmetingcategorieën is uitgesproken kort, net zoals het aantal meetpunten met dergelijke metingen. Wellicht worden deze categorieën niet systematisch genoteerd en toegekend aan handmatige meting in de databank. De lagere frequentie van handmatige metingen doet ook de kans dalen dat op het moment van opmeting het maaiveld net overstroomd wordt, zeker als de overstromingen eerder kortstondig van aard zijn
+* DYLP047 en DYLP099 zijn resp. een diepe en ondiepe peilbuis op eenzelfde locatie. Het verschil in stijghoogte loopt in de winterperiode op tot meer dan 25 cm. Die vaststelling wijst alvast op een aanzienlijke kweldruk. De diepere peilbuis (DYLP047) geeft dus alvast niet de stand van de werkelijke watertafel weer en de peilen boven maaiveld wijzen dus zeker niet altijd op een overstroming. De metingen uit de tijdreeks van de ondiepe peilbuis van meetpunt DYLP099 zijn wellicht beter geschikt om dergelijke events aan te tonen. Helaas werd voor beide meetpunten enkel aan de allerlaatste meetwaarden (kalibratiemetingen?) de categorie "maaiveld onder water" toegekend (2019; zie onderstaande tabel) ...
 
 ```{r peilmetingen SOUWA TBWWL}
 komgr_neerijse_tijdreeks %>% 
@@ -284,11 +277,11 @@ Samengevat kunnen we dus stellen dat de bruikbaarheid van de peilmetingcategorie
 
 ### Kweldruk en het verschil tussen stijghoogte en waterpeil
 
-Uit de voorgaande tijdreeksen van een zgn. peilbuiskoppel (peilbuizen met verschillende filterdiepte op eenzelfde locatie, bv. het koppel DYLP047-099 zoals beschreven hierboven) blijkt alvast dat de peilen die er gemeten worden afhankelijk zijn van de filterdiepte. Hoe dieper de filter van een peilbuis, hoe groter de kans dat de gemeten peilen in de buis (stijghoogten) hoger liggen dan in een peilbuis met een filter op geringere diepte. De druk in diepere grondwaterlagen ligt immers veelal hoger. Dat zorgt voor een opwaartse druk en dito beweging in het grondwater. Als de stijghoogten hoger liggen in de diepe dan in de ondiepe peilbuis binnen een peilbuiskoppel, dan spreken we van kwel(druk).
+Uit de voorgaande tijdreeksen van een zgn. peilbuiskoppel (peilbuizen met verschillende filterdiepte op eenzelfde locatie, bv. het koppel DYLP047-099 zoals beschreven hierboven) blijkt alvast dat de peilen die er gemeten worden afhankelijk zijn van de filterdiepte. Hoe dieper de filter van een peilbuis, hoe groter de kans dat de gemeten peilen in de buis (stijghoogten) hoger liggen dan in een peilbuis met een filter op geringere diepte. De druk in diepere grondwaterlagen ligt immers veelal hoger. Dat zorgt voor een opwaartse druk en dito beweging in het grondwater. Als de stijghoogten hoger liggen in een peilbuis met een diepe filter dan bij een ondiepe filter binnen een peilbuiskoppel, dan spreken we van kwel(druk).
 
 Een stijghoogte boven maaiveld betekent echter niet dat het (grond)waterpeil zich ook boven maaiveld bevindt. Grondwater kan lateraal wegvloeien terwijl het onder het maaiveld blijft en/of het kan gedraineerd worden van zodra het aan de oppervlakte komt, via greppels en grachten. Hoe dan ook zullen -althans in het grondwatersysteem van de Dijlevallei- de peilen in ondiepe peilbuizen de werkelijke grondwatertafel beter benaderen dan die van diepe peilbuizen.
 
-Van eventuele peilbuiskoppels selecteren we dus best de meest ondiepe peilbuis om peilen te selecteren die kunnen wijzen op een effectieve overstroming van het maaiveld.
+Van eventuele peilbuiskoppels selecteren we dus best de peilbuis met kleinste filterdiepte om peilen te selecteren die kunnen wijzen op een effectieve overstroming van het maaiveld. Uiteraard is de absolute filterdiepte ook van belang (zie verder).
 
 We kunnen dus best checken of het verschil in stijghoogte ook terug te vinden is bij andere diepe(re) peilbuizen of peilbuiskoppels. Hiervoor kijken we eerst naar de verdeling qua filterdiepten op basis van al de aanwezige peilbuizen:
 
@@ -298,7 +291,7 @@ komgr_neerijse_loc %>%
   geom_histogram(aes(x = filterdepth))
 ```
 
-Uit bovenstaande figuur kunnen we dan kiezen om alle peilbuizen dieper dan 3 m als "diep" te beschouwen. Het gaat om deze peilbuizen:
+Uit bovenstaande figuur kunnen we dan kiezen om alle filterdiepten groter dan 3 m als "diep" te beschouwen. Het gaat dan om deze peilbuizen:
 
 ```{r diepe peilbuizen}
 komgr_neerijse_loc %>% 
@@ -467,7 +460,7 @@ ggplot(komgr_neerijse_tijdreeks %>%
   
 ```
 
-Uit bovenstaande figuren blijkt dat de stijghoogten in de diepere buizen systematisch minstens 20 cm hoger liggen dan in de ondiepe buizen van de peilbuiskoppels. Het verschil is het grootst voor de koppels DYLP170-DYLP174 en DYLP095-DYLP098, met verschillen die tot 50 cm bedragen. Voor het koppel DYLP047-DYLP099 liggen de verschillen lager, maar schommelen toch nog steeds rond de 20 cm.
+Uit bovenstaande figuren blijkt dat de stijghoogten in de diepere buizen systematisch minstens 20 cm hoger liggen dan in de ondiepe buizen van de peilbuiskoppels. Het verschil is het grootst voor de koppels DYLP170-DYLP174 en DYLP095-DYLP098, met verschillen die tot 50 cm bedragen. Voor het koppel DYLP047-DYLP099 liggen de verschillen lager, maar schommelen toch nog steeds rond de 20 cm. De verschillen houden bovendien aan doorheen het jaar, en lijken dus niet seizoensgebonden te zijn.
 
 Op basis van deze vaststellingen is het aannemelijk dat ook voor de diepere peilbuizen zónder ondiepe tegenhanger (DYLP2*) de gemeten peilen (stijghoogten) niet overeen zullen stemmen met de grondwatertafel. Hun tijdreeksen staan hieronder afgebeeld.
 
@@ -539,7 +532,7 @@ komgr_neerijse_tijdreeks_plot
 
 ## Oppervlaktewatermeetpunten
 
-Samenhang tussen grondwaterstanden en oppervlaktewaterstanden, en meer specifiek dan de samenhang tussen pieken in beide typen waterstanden.
+Hier bekijken we de samenhang tussen grondwaterstanden en oppervlaktewaterstanden, en meer specifiek dan het gelijktijdig optreden van pieken in beide typen waterstanden.
 
 Voor de komgrond van Neerijse beschikken we over 2 peilschalen die de oppervlaktewaterpeilen van de Dijle en de Leigracht meten (zie onderstaand kaartje). De peilschaal op de Dijle ter hoogte van de Reigerstraat wordt evenwel niet langer bemeten.
 
