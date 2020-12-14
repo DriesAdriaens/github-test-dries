@@ -6,6 +6,11 @@ output:
   html_document:
     code_folding: hide
     toc: TRUE
+    toc_float: TRUE
+    toc_depth: 4
+    number_sections: TRUE
+    fig_width: 8
+    fig_height: 5.7
 ---
 
 ```{r setup, include=FALSE}
@@ -65,6 +70,8 @@ komgr_neerijse_loc <- get_locs(watina,
                      loc_vec = komgr_neerijse_loc_vec,
                      loc_type = c("P", "B"),
                      loc_validity = c("VLD", "ENT"),
+                     filterdepth_guess = TRUE,
+                     filterdepth_na = TRUE,
                      filterdepth_range = c(0, 30))
 komgr_neerijse_loc %>% collect() %>% knitr::kable()
 ```
@@ -532,7 +539,7 @@ komgr_neerijse_tijdreeks_plot
 
 ## Oppervlaktewatermeetpunten
 
-Hier bekijken we de samenhang tussen grondwaterstanden en oppervlaktewaterstanden, en meer specifiek dan het gelijktijdig optreden van pieken in beide typen waterstanden.
+Hier bekijken we waar in de komgrond er tijdreeksen beschikbaar zijn van oppervlaktewatermetingen, zodat we de samenhang tussen grondwaterstanden en oppervlaktewaterstanden kunnen bekijken, en meer specifiek dan het gelijktijdig optreden van pieken in beide typen waterstanden.
 
 Voor de komgrond van Neerijse beschikken we over 2 peilschalen die de oppervlaktewaterpeilen van de Dijle en de Leigracht meten (zie onderstaand kaartje). De peilschaal op de Dijle ter hoogte van de Reigerstraat wordt evenwel niet langer bemeten.
 
@@ -605,7 +612,6 @@ ggplot(komgr_neerijse_tijdreeks_opp) +
 We bekijken de samenhang tussen grond- en oppervlaktewaterpeilen bij de bespreking van de verschillende raaien.
 
 ## Opsplitsing naar raaien
-Met bespreking van samenhang tussen oppervlakte- en grondwaterpeilen?
 
 ### Raai 1
 
@@ -643,7 +649,7 @@ leaflet(komgr_neerijse_raai1_locs %>%
                                                direction = "right", opacity = 1)) %>% 
   addMiniMap(toggleDisplay = TRUE, zoomLevelOffset = -5, minimized = TRUE) %>% 
   addLayersControl(
-    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb", "DTM"),
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
     overlayGroups = "Meetpunten",
     options = layersControlOptions(collapsed = FALSE))
 ```
@@ -717,6 +723,7 @@ get_locs(watina, loc_vec = c("DYLP085", "DYLP087","DYLP090", "DYLS102", "DYLS002
 ```
 
 Uit bovenstaande figuur blijkt alvast het volgende:
+
 * van het begin van de metingen (1991) tot midden 2000 stijgt het peil van de Leigracht systematisch; rond 2000 werd de Leigracht aangetakt aan de Ijse ter hoogte van de monding in de Dijle en werd de sifon onder de Ijse er verwijderd
 * de pieken in de stijghoogten vallen samen met pieken in de oppervlaktewaterstanden van de Leigracht; vooral zichtbaar vanaf de start van de hoogfrequente metingen van de peilen van de Leigracht (DYLS102); dat wijst er op dat er overstromingen plaatsvinden via het oppervlaktewater vanuit de Leigracht (na opstuwing door hoge waterpeilen in de Dijle vanwege aantakking ter hoogte van IJsemonding); de vraag is of de gemeten stijghoogten op het moment van die overstromingen overeenstemmen met de waterpeilen van de overstromingen ...
 
@@ -754,7 +761,7 @@ get_locs(watina, loc_vec = c("DYLP085", "DYLP087","DYLP090", "DYLS102", "DYLS002
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-Als we ermee rekening houden dat de peilmetingen van de Leigracht een eind stroomafwaarts gebeuren, en dus in absolute hoogte wat lager liggen dan de peilen van de Leigracht ter hoogte van de betreffende grondwatermeetpunten (zie figuur), dan is het zeer waarschijnlijk dat de stijghoogten overeenstemmen met de waterpeilen van de Leigracht tijdens overstromingen (die hier dus vanuit de Leigracht optreden).
+Als we ermee rekening houden dat de peilmetingen van de Leigracht een eind stroomafwaarts gebeuren (DYLS002 en DYLS102), en dus in absolute hoogte wat lager liggen dan de peilen van de Leigracht ter hoogte van de betreffende grondwatermeetpunten (zie figuur), dan is het zeer waarschijnlijk dat de stijghoogten overeenstemmen met de waterpeilen van de Leigracht tijdens overstromingen (die hier dus vanuit de Leigracht optreden).
 
 ### Raai 2
 
@@ -911,11 +918,19 @@ DYLP072 lijkt in een lokale depressie te liggen.
 
 ## Finale selectie grondwatermeetpunten en -metingen
 
-Selectiecriteria meetpunt
-* metingen boven maaiveld,
-* diepte peilbuis (< 3 m),
-* ruimtelijke ligging
-* andere?
+Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 3 m.
+De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+
+```{r}
+meetpunten_sel <- komgr_neerijse_loc %>% filter(filterdepth < 3) %>% collect()
+```
+
+
+<!-- Selectiecriteria meetpunt -->
+<!-- * metingen boven maaiveld, -->
+<!-- * diepte peilbuis (< 3 m), -->
+<!-- * ruimtelijke ligging -->
+<!-- * andere? -->
 
 <!-- Selectiecriteria metingen -->
 <!-- * PeilMetingCategorie -->
@@ -950,13 +965,15 @@ komgr_doodebeemde_loc <- get_locs(watina,
                      loc_vec = komgr_doodebeemde_loc_vec,
                      loc_type = c("P", "B"),
                      loc_validity = c("VLD", "ENT"),
+                     filterdepth_guess = TRUE,
+                     filterdepth_na = TRUE,
                      filterdepth_range = c(0, 30))
 komgr_doodebeemde_loc %>% collect() %>% knitr::kable()
 ```
 
 De ligging van deze grondwatermeetpunten wordt in onderstaande figuur weergegeven.
 
-```{r kaart komgrond neerijse}
+```{r kaart komgrond doodebeemde}
 komgr_doodebeemde_loc_sf <- komgr_doodebeemde_loc %>%
   collect() %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
@@ -1367,7 +1384,7 @@ Op basis van bovenstaande kunnen we uit de globale lijst van meetpunten die meet
 
 Dat levert onderstaande subset op:
 
-```{r meetpunten met peilen boven maaiveld doodebeemde}
+```{r meetpunten met peilen boven maaiveld doodebeemde2}
 komgr_doodebeemde_loc_fltrd <- komgr_doodebeemde_tijdreeks %>% 
   filter(mMaaiveld > 0 & filterdepth <= 2.5) %>% 
   select(loc_code) %>% 
@@ -1781,6 +1798,15 @@ komgr_doodebeemde_raai1_locs %>%
 
 Het lijkt alvast dat de peilen van de Leibeek nauw samenhangen met veel van de stijghoogten in de peilbuizen op het moment van zowel hoge als lage beekpeilen. In die optiek lijken alvast voor de peilbuizen met ondiepe filter de metingen boven maaiveld indicatief voor de effectieve waterstanden op het moment van overstromingen in de komgrond van de Doode Beemde. 
 
+## Finale selectie grondwatermeetpunten en -metingen
+
+Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 2.5 m.
+De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+
+```{r}
+meetpunten_sel <- rbind(meetpunten_sel, komgr_doodebeemde_loc %>% filter(filterdepth <= 2.5) %>% collect())
+```
+
 # Komgrond Langerodevijver
 Het gaat hier om de komgrond tussen Ijse en Ruwaal, op de westelijke oever van de Dijle, die wordt doorsneden door de Leigracht. Aangezien de Leigracht onderbroken werd ter hoogte van de Ijse functioneert deze komgrond onafhankelijk van de zuidelijk gelegen komgrond van Neerijse.
 
@@ -1905,7 +1931,7 @@ ggplot(komgr_langerode_tijdreeks) +
 ```
 Wat meer ingezoomd op het bereik tussen -1 en 0 m m-mv:
 
-```{r tijdreeks_langerode_plot, message=FALSE, warning=FALSE}
+```{r tijdreeks_langerode_plot2, message=FALSE, warning=FALSE}
 ggplot(komgr_langerode_tijdreeks) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
@@ -1948,7 +1974,7 @@ Aangezien er geen peilbuiskoppels aanwezig zijn in deze komgrond, is het ook nie
 ### Stijghoogten boven maaiveld
 In de volgende meetpunten is er sprake van één of meer tijdstippen waarop de stijghoogte boven maaiveld lag (n = aantal metingen met stijghoogte boven maaiveld; max = maximum stijghoogte boven maaiveld).
 
-```{r meetpunten met peilen boven maaiveld doodebeemde}
+```{r meetpunten met peilen boven maaiveld langerode}
 komgr_langerode_loc_fltrd <- komgr_langerode_tijdreeks %>% 
   filter(mMaaiveld > 0) %>% 
   group_by(loc_code) %>% 
@@ -1999,7 +2025,7 @@ ggplot(komgr_langerode_tijdreeks %>%
 ```
 Meer focus op periode sinds 2006:
 
-```{r tijdreeks_langerode_west_plot_bovenmaaiveld, message=FALSE, warning=FALSE}
+```{r tijdreeks_langerode_west_plot_bovenmaaiveld2, message=FALSE, warning=FALSE}
 ggplot(komgr_langerode_tijdreeks %>% 
          filter(loc_code %in% komgr_langerode_loc_fltrd_vec)) +
   geom_line(aes(x = date(Datum),
@@ -2035,6 +2061,15 @@ DYLS013? Samenhang met peilen boven maaiveld in grondwatermeetpunten DYLP109 en 
 
 ## Opsplitsing naar raaien
 Niet relevant?
+
+## Finale selectie grondwatermeetpunten en -metingen
+
+Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 2.5 m.
+De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+
+```{r}
+meetpunten_sel <- rbind(meetpunten_sel, komgr_langerode_loc %>% filter(filterdepth <= 2.5) %>% collect())
+```
 
 # Komgrond Leibeek West (tot E40)
 
@@ -2254,6 +2289,7 @@ De stijghoogten reageren hier uiteraard op veranderingen in grondwatervoeding do
 De finale vraag is hier welke stijghoogten boven maaiveld indicatief zijn voor overstromingen ter hoogte van het maaiveld.
 
 Problemen/pijnpunten bij de meetpunten in de komgrond van Leibeek West:
+
 * veel peilbuizen in deze komgrond uitgerust zijn met diepe filters (>2.5 m onder maaiveld) waardoor een mogelijke kweldruk aanleiding kan geven tot een overschatting van de effectieve grondwatertafel. Door gebrek aan peilbuiskoppels waarin de stijghoogten in peilbuizen met zowel een diepe als een ondiepe filter worden opgemeten, is het moeilijk om een kweldruk uit te sluiten. Het vermoeden is echter dat de stijghoogten van de huidige diepere peilbuizen niet zondermeer gebruik kunnen worden als indicatie voor overstromingen ter hoogte van het maaiveld
 * de ondiepe peilbuizen wijzen op stijghoogten die een groot deel van het jaar boven maaiveld liggen. Deze peilbuizen liggen in een depressie (Rotspoel) waar de stijghoogten boven maaiveld wijzen op stagnerend grondwater, of beter gezegd grondwater dat langdurig boven het maaiveld staat. De peilen boven maaiveld wijzen hier dus niet zozeer op (tijdelijke) overstromingen die vooral door oppervlaktewater veroorzaakt worden.
 
@@ -2419,6 +2455,10 @@ Ook op basis van deze figuur is er nauwelijks een interactie terug te vinden tus
 ## Opsplitsing naar raaien
 Niet van toepassing
 
+## Finale selectie grondwatermeetpunten en -metingen
+
+Uit bovenstaande screening besluiten we dat er in de komgrond van Langerode geen meetpunten zijn die metingen bevatten die bruikbaar zijn om gemodelleerde overstromingsdiepten te kalibreren.
+
 # Komgrond Leibeek Oost (tot E40)
 
 Deze komgrond ligt op de rechteroever van de Dijle en strekt zich uit van de Vaalbeek/Molenbeek in het zuiden tot aan de E40 in het noorden. De Leibeek doorsnijdt deze komgrond van zuid naar noord en ontspringt in de komgrond van de Doode Beemde (zie elders). Net na de Vijvers van Oud-Heverlee mondt ze uit in de Dijle. De komgrond wordt quasi integraal aangeduid als *effectief overstromingsgevoelig gebied*.
@@ -2561,7 +2601,7 @@ ggplot(komgr_leibeekO_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = "Meetpunt", linetype = "filterdiepte")
 ```
 
-```{r tijdreeks_leibeekO_plotZ, message=FALSE, warning=FALSE}
+```{r tijdreeks_leibeekO_plotZ2, message=FALSE, warning=FALSE}
 temp <- komgr_leibeekO_tijdreeks %>% 
   filter(mMaaiveld > 0 & loc_code %in% komgr_leibeekO_Z_loc_vec) %>% 
   select(loc_code) %>% 
@@ -2597,7 +2637,7 @@ ggplot(komgr_leibeekO_tijdreeks %>%
 
 Ten noorden van Stationstraat:
 
-```{r tijdreeks_leibeekO_plotZ, message=FALSE, warning=FALSE}
+```{r tijdreeks_leibeekO_plotN, message=FALSE, warning=FALSE}
 temp <- komgr_leibeekO_tijdreeks %>% 
   filter(mMaaiveld > 0 & loc_code %in% komgr_leibeekO_N_loc_vec) %>% 
   select(loc_code) %>% 
@@ -2631,7 +2671,7 @@ ggplot(komgr_leibeekO_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = "Meetpunt", linetype = "filterdiepte")
 ```
 
-```{r tijdreeks_leibeekO_plotZ2, message=FALSE, warning=FALSE}
+```{r tijdreeks_leibeekO_plotN2, message=FALSE, warning=FALSE}
 temp <- komgr_leibeekO_tijdreeks %>% 
   filter(mMaaiveld > 0 & loc_code %in% komgr_leibeekO_N_loc_vec) %>% 
   select(loc_code) %>% 
@@ -2989,6 +3029,16 @@ ggplot(komgr_leibeekO_tijdreeks %>%
 Eveneens weinig interactie.
 
 ## Opsplitsing naar raaien
+Niet relevant?
+
+## Finale selectie grondwatermeetpunten en -metingen
+
+Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een (gekende) filterdiepte van minder dan 2.5 m.
+De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+
+```{r}
+meetpunten_sel <- rbind(meetpunten_sel, komgr_leibeekO_loc %>% filter(filterdepth <= 2.5) %>% collect())
+```
 
 
 # Komgrond Egenhovenbos
@@ -3415,19 +3465,49 @@ De pieken in de grondwatermeetpunten komen mooi overeen met de pieken in de oppe
 ## Opsplitsing naar raaien
 Niet relevant
 
-# Komgrond template
-## Grondwatermeetpunten
-## Tijdreeksen van grondwatermeetpunten
-### PeilMetingCategorie
-### Kweldrukken
-### Stijghoogten boven maaiveld
-## Oppervlaktewatermeetpunten
-## Opsplitsing naar raaien
-### Raai 1
-#### Meetpunten:
-#### Ligging:
-#### Tijdreeksen:
-#### Samenhang grond- en oppervlaktewaterpeilen
+## Finale selectie grondwatermeetpunten en -metingen
+
+Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 2.5 m.
+De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+
+```{r}
+meetpunten_sel <- rbind(meetpunten_sel, komgr_egenhoven_loc %>% filter(filterdepth <= 2.5) %>% collect())
+```
+
+# Finale dataset met selectie meetpunten en metingen
+
+Enkel de metingen boven maaiveld, of alle beschikbare metingen voor de geselecteerde meetpunten?
+
+```{r}
+peilmetingen_sel_Dijle <- 
+  get_locs(watina,
+           loc_vec = meetpunten_sel %>% select(loc_code) %>% pull(),
+           loc_type = c("P", "B"),
+           loc_validity = c("VLD", "ENT"),
+           filterdepth_guess = TRUE,
+           filterdepth_na = TRUE,
+           filterdepth_range = c(0, 30)) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
+                                            PeilmetingCategorieCode %in% c("SOUWA", "TBWWL"))) %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID"))
+```
+
+
+<!-- # Komgrond template -->
+<!-- ## Grondwatermeetpunten -->
+<!-- ## Tijdreeksen van grondwatermeetpunten -->
+<!-- ### PeilMetingCategorie -->
+<!-- ### Kweldrukken -->
+<!-- ### Stijghoogten boven maaiveld -->
+<!-- ## Oppervlaktewatermeetpunten -->
+<!-- ## Opsplitsing naar raaien -->
+<!-- ### Raai 1 -->
+<!-- #### Meetpunten: -->
+<!-- #### Ligging: -->
+<!-- #### Tijdreeksen: -->
+<!-- #### Samenhang grond- en oppervlaktewaterpeilen -->
 
 # To do
 
@@ -3488,7 +3568,7 @@ get_locs(watina,
   )
 ```
 
-```{r tijdreeks meetpunt mTAW, warning = FALSE}
+```{r klad tijdreeks meetpunt mTAW, warning = FALSE}
 get_locs(watina,
          loc_vec = c("DYLP023"),
          loc_type = c("P", "B", "S"),
@@ -3525,7 +3605,7 @@ get_locs(watina,
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-```{r tijdreeks meetpunt m-mv}
+```{r klad tijdreeks meetpunt m-mv}
 get_locs(watina,
          loc_vec = c("DYLP200", "DYLP277", "DYLP130", "DYLP178"),
          loc_type = c("P", "B"),
@@ -3561,7 +3641,7 @@ get_locs(watina,
         legend.position = "right") +
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
-```{r tijdreeks meetpunt m-mv}
+```{r klad tijdreeks meetpunt m-mv 2}
 get_locs(watina,
          loc_vec = c("DYLP023", "DYLP063", "DYLP056"),
          loc_type = c("P", "B"),
@@ -3598,7 +3678,7 @@ get_locs(watina,
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-```{r tijdreeks peilpunt mTAW, warning = FALSE}
+```{r klad tijdreeks peilpunt mTAW, warning = FALSE}
 get_locs(watina,
          loc_vec = c("DYLP005"),
          loc_type = c("P", "B", "S"),
