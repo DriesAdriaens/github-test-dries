@@ -5,6 +5,12 @@ date: "26-10-2020"
 output:
   html_document:
     code_folding: hide
+    toc: TRUE
+    toc_float: TRUE
+    toc_depth: 4
+    number_sections: TRUE
+    fig_width: 8
+    fig_height: 5.7
 ---
 
 ```{r setup, include=FALSE}
@@ -35,9 +41,18 @@ locaties <- get_locs(watina,
                      area_codes = "MOM",
                      loc_type = c("P"),
                      loc_validity = c("VLD", "ENT"),
+                     filterdepth_guess = TRUE,
+                     filterdepth_na = TRUE,
                      filterdepth_range = c(0, 30))
 locaties %>% collect() %>% knitr::kable()
 ```
+
+```{r}
+locaties %>% 
+  ggplot() +
+  geom_histogram(aes(x = filterdepth))
+```
+
 
 # Raaien
 
@@ -85,25 +100,34 @@ tijdreeks <- tijdreeks %>%
 ### Kaart
 
 ```{r kaart_raai_1}
-locs_transect1 <- locs %>% 
+leaflet(data = locs %>% 
   filter(transect_nr == 1) %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
-  st_transform(crs = 4326)
-
-leaflet(data = locs_transect1) %>%
-  addTiles() %>% 
-  # addProviderTiles("OpenTopoMap") %>% 
-  addCircleMarkers(label = locs_transect1$loc_code, fill = FALSE, weight = 3, color = "red",
+  st_transform(crs = 4326)) %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
              labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
                                          direction = "right", opacity = 0.75)) %>% 
-  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = "Meetpunten",
+    options = layersControlOptions(collapsed = FALSE)
+  )
 ```
 
 ### Tijdreeks
 
 ```{r tijdreeks_raai_1, message=FALSE, warning=FALSE}
-plot_tijdreeks_trans_mom_1 <- ggplot(tijdreeks %>% 
-                           filter(transect_nr == 1)) +
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 1)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -119,8 +143,6 @@ plot_tijdreeks_trans_mom_1 <- ggplot(tijdreeks %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "m-mv", colour = NULL)
-  
-plot_tijdreeks_trans_mom_1
 ```
 
 ## Raai 2
@@ -128,25 +150,34 @@ plot_tijdreeks_trans_mom_1
 ### Kaart
 
 ```{r kaart_raai_2}
-locs_transect2 <- locs %>% 
+leaflet(data = locs %>% 
   filter(transect_nr == 2) %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
-  st_transform(crs = 4326)
-
-leaflet(data = locs_transect2) %>%
-  addTiles() %>% 
-  # addProviderTiles("OpenTopoMap") %>% 
-  addCircleMarkers(label = locs_transect2$loc_code, fill = FALSE, weight = 3, color = "red",
+  st_transform(crs = 4326)) %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
              labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
                                          direction = "right", opacity = 0.75)) %>% 
-  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = "Meetpunten",
+    options = layersControlOptions(collapsed = FALSE)
+  )
 ```
 
 ### Tijdreeks
 
 ```{r tijdreeks_raai_2, message=FALSE, warning=FALSE}
-plot_tijdreeks_trans_mom_2 <- ggplot(tijdreeks %>% 
-                           filter(transect_nr == 2)) +
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 2)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -162,8 +193,6 @@ plot_tijdreeks_trans_mom_2 <- ggplot(tijdreeks %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "m-mv", colour = NULL)
-  
-plot_tijdreeks_trans_mom_2
 ```
 
 ## Raai 3
@@ -171,25 +200,34 @@ plot_tijdreeks_trans_mom_2
 ### Kaart
 
 ```{r kaart_raai_3}
-locs_transect3 <- locs %>% 
+leaflet(data = locs %>% 
   filter(transect_nr == 3) %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
-  st_transform(crs = 4326)
-
-leaflet(data = locs_transect3) %>%
-  addTiles() %>% 
-  # addProviderTiles("OpenTopoMap") %>% 
-  addCircleMarkers(label = locs_transect3$loc_code, fill = FALSE, weight = 3, color = "red",
+  st_transform(crs = 4326)) %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
              labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
                                          direction = "right", opacity = 0.75)) %>% 
-  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = "Meetpunten",
+    options = layersControlOptions(collapsed = FALSE)
+  )
 ```
 
 ### Tijdreeks
 
 ```{r tijdreeks_raai_3, message=FALSE, warning=FALSE}
-plot_tijdreeks_trans_mom_3 <- ggplot(tijdreeks %>% 
-                           filter(transect_nr == 3)) +
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 3)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -205,8 +243,6 @@ plot_tijdreeks_trans_mom_3 <- ggplot(tijdreeks %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "m-mv", colour = NULL)
-  
-plot_tijdreeks_trans_mom_3
 ```
 
 ## Raai 4
@@ -214,24 +250,33 @@ plot_tijdreeks_trans_mom_3
 ### Kaart
 
 ```{r kaart_raai_4}
-locs_transect4 <- locs %>% 
+leaflet(data = locs %>% 
   filter(transect_nr == 4) %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
-  st_transform(crs = 4326)
-
-leaflet(data = locs_transect4) %>%
-  addTiles() %>% 
-  # addProviderTiles("OpenTopoMap") %>% 
-  addCircleMarkers(label = locs_transect4$loc_code, fill = FALSE, weight = 3, color = "red",
+  st_transform(crs = 4326)) %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
              labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
                                          direction = "right", opacity = 0.75)) %>% 
-  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5)
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = "Meetpunten",
+    options = layersControlOptions(collapsed = FALSE)
+  )
 ```
 
 ### Tijdreeks
 
 ```{r tijdreeks_raai_4, message=FALSE, warning=FALSE}
-plot_tijdreeks_trans_mom_4 <- ggplot(tijdreeks %>% 
+ggplot(tijdreeks %>% 
                            filter(transect_nr == 4)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
@@ -248,7 +293,5 @@ plot_tijdreeks_trans_mom_4 <- ggplot(tijdreeks %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "m-mv", colour = NULL)
-  
-plot_tijdreeks_trans_mom_4
 ```
 
