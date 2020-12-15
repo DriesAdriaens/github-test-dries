@@ -1990,7 +1990,7 @@ Hieruit komen een aantal zaken naar voren:
 Zoals uit de tijdreeksen hierboven al bleek, blijven de stijghoogten vrijwel steeds onder maaiveldhoogte. Aan de weinige metingen met stijghoogten boven maaiveld werd nergens een label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Deze labels worden trouwens enkel toegekend aan manuele metingen, en dus niet aan automatische (sonde-)metingen.
 
 ### Kweldruk en het verschil tussen stijghoogte en waterpeil
-Aangezien er geen peilbuiskoppels aanwezig zijn in deze komgrond, is het ook niet mogelijk om een kweldruk aan te tonen op basis van meetgegevens.
+Aangezien er geen peilbuiskoppels aanwezig zijn in deze komgrond, is het ook niet mogelijk om een kweldruk aan te tonen op basis van meetgegevens. Tussen de meetpunten DYLP222 en DYLP223, op een afstand van ongeveer 50 m van elkaar gelegen, zit er wel een stijghoogteverschil van ongeveer 20 cm. DYLP223 heeft een filter die ongeveer 80 cm lager zit dan die van DYLP222, maar DYLP223 ligt ook  topografisch wel ongeveer een meter lager in de vallei. Normaal zou je een hogere kweldruk verwachten in de punten meer aan de rand van de vallei.
 
 ### Stijghoogten boven maaiveld
 In de volgende meetpunten is er sprake van één of meer tijdstippen waarop de stijghoogte boven maaiveld lag (n = aantal metingen met stijghoogte boven maaiveld; max = maximum stijghoogte boven maaiveld).
@@ -2078,28 +2078,28 @@ ggplot(komgr_langerode_tijdreeks %>%
 **Samengevat**: DYLP101 en DYLP102 zijn oude meetreeksen waarvan de bruikbaarheid/betrouwbaarheid onduidelijk is. De filterdiepten van DYLP109 en DYLP223 liggen onder de 3 m, en ook gezien hun ligging is er weinig indicatie dat de kweldruk dermate is dat de gemeten stijghoogten sterk zouden afwijken van de effectieve grondwatertafel of overstromingsdiepte ter hoogte van de meetpunten? De stijghoogten boven maaiveld blijven bovendien steeds beperkt (max 9 cm).
 
 ## Oppervlaktewatermeetpunten
-DYLS013? Samenhang met peilen boven maaiveld in grondwatermeetpunten DYLP109 en DYLP223?
+Het is onduidelijk of en hoe het deel van de Leigracht in de komgrond van Langerode in contact staat met de Dijle net stroomopwaarts de brug in Korbeek-Dijle. Er zijn geen peilmetingen op de Leigracht zelf. DYLS013 bevat louter enkele eenmalige metingen in oktober 2002.
 
-<!-- Om de waarschijnlijkheid te verifiëren dat ter hoogte van de meetpunten de gemeten stijghoogten boven maaiveld wijzen op effectieve overstromingen met oppervlaktewater, kunnen we visueel checken of deze metingen overeenkomen met momenten waarop het oppervlaktewaterpeil ook sterk toenam. Die momenten zijn veelal kortstondig van aard (pieken in de tijdreeksen). -->
+Ter info kunnen we de meetreeks van de Dijle ter hoogte van de brug van Korbeek-Dijle weergeven, en kijken of de piekwaterstanden indicatief zijn voor de momenten waarop de stijghoogten boven maaiveld komen in de grondwatermeetpunten.
 
-<!-- In de komgrond van Leibeek West zijn er echter geen peilschalen aanwezig in de WATINA databank. Op [waterinfo.be](waterinfo.be) zijn er wel waterstandsmetingen beschikbaar voor de Dijle (t.h.v. Stationstraat in Korbeek-Dijle, dus aan zuidrand van komgrond; stationnr. L08_097) en op de waterloop Langestaart ter hoogte van het pompstation (Egenhoven/Zijloop C/pompstation, noordgrens van komgrond; stationnr. K08_010) -->
+Zoeken van het betreffende meetstation op waterinfo.be op basis van "Korbeek-Dijle":
 
 ```{r}
 # supported_variables("nl")
 
 get_stations(variable_name = "waterstand") %>%
-  filter(grepl("Langerode", station_name) | grepl("Leigracht", station_name)) %>%
+  filter(grepl("Korbeek-Dijle", station_name)) %>%
   arrange(station_no) %>%
   knitr::kable()
 
 ```
 
-Ligging van de meetstations:
+Verifiëren van de ligging van het betreffende meetstation (L08_097):
 
 ```{r kaart meetstations leibeekW}
 
 leaflet(get_stations(variable_name = "waterstand") %>%
-          filter(station_no == "L08_11A") %>%
+          filter(grepl("Korbeek-Dijle", station_name)) %>%
           st_as_sf(coords = c("station_longitude", "station_latitude"))) %>%
   addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
               options = WMSTileOptions(format = "image/png", transparent = TRUE),
@@ -2123,122 +2123,74 @@ leaflet(get_stations(variable_name = "waterstand") %>%
   )
 ```
 
-Nu moeten we nog kijken welke waterstandsvariabelen juist allemaal opgemeten worden per meetstation.
+Opvragen van de waterstandsvariabelen die opgemeten of berekend worden voor dit meetstation:
 
 ```{r message=FALSE}
-get_variables("L08_11A") %>%
+get_variables("L08_097") %>%
   filter(parametertype_name == "H") %>%
   knitr::kable()
 ```
-Omdat de grondwatermetingen ook een tijdsresolutie van 1 dag hebben (indien sondemetingen althans), en de maximale waarde wellicht het meest bepalend is voor de grondwaterstanden, kiezen we hier voor "DagMax". Dat levert voor meetstation K08_001 `ts_id = 24783042` op. Op basis van deze id's vragen we de tijdreeksen op tussen 2000 en 2020.
+Omdat de grondwatermetingen ook een tijdsresolutie van 1 dag hebben (indien sondemetingen althans), en de maximale waarde wellicht het meest bepalend is voor de grondwaterstanden, kiezen we hier voor "DagMin" en "DagMax". Dat levert voor meetstation L08_097 resp. `ts_id = 3841042` en `ts_id = 3840042` op. Op basis van deze id's vragen we de tijdreeksen op tussen 2000 en 2020.
 
-Preview dataset:
-
-```{r}
-L08_11A_timeseries <- get_timeseries_tsid("4082042", from = "2000-01-01", to = "2020-12-01")
-```
 Tijdreeks:
 
 ```{r message=FALSE}
 ggplot() +
-  geom_line(data = get_timeseries_tsid("4083042", from = "2000-01-01", to = "2020-12-01"), aes(date(ymd_hms(Timestamp)), Value, colour = "L08_11A_min"), alpha = 0.5) +
-  geom_line(data = get_timeseries_tsid("4082042", from = "2000-01-01", to = "2020-12-01"), aes(date(ymd_hms(Timestamp)), Value, colour = "L08_11A_max"), alpha = 0.5) +
-geom_line(data = get_locs(watina, loc_vec = c("DYLS102"), loc_type = c("S")) %>%
-            inner_join(tbl(watina, "FactPeilMeting"),
-                       by = c("loc_wid" = "MeetpuntWID")) %>%
-            filter(PeilmetingStatusCode == "VLD") %>%
-            inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")),
-          aes(x = date(Datum),
-              y = mTAW, colour = "DYLS102"), alpha = 0.5) +
-  labs(colour = NULL, x = "Datum", y = "Waterstand (dagmaximum, mTAW)")
+  geom_line(data = get_timeseries_tsid("3841042", from = "2000-01-01", to = "2020-12-01"),
+            aes(date(ymd_hms(Timestamp)), Value, colour = "L08_097_dagmin"), alpha = 0.5) +
+  geom_line(data = get_timeseries_tsid("3840042", from = "2000-01-01", to = "2020-12-01"),
+            aes(date(ymd_hms(Timestamp)), Value, colour = "L08_097_dagmax"), alpha = 0.5) +
+  # geom_line(data = get_locs(watina, loc_vec = c("DYLS102"), loc_type = c("S")) %>%
+  #             inner_join(tbl(watina, "FactPeilMeting"),
+  #                        by = c("loc_wid" = "MeetpuntWID")) %>%
+  #             filter(PeilmetingStatusCode == "VLD") %>%
+  #             inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")),
+  #           aes(x = date(Datum),
+  #               y = mTAW, colour = "DYLS102"), alpha = 0.5) +
+  # coord_cartesian(xlim = c(ymd("2015-01-01"), ymd("2016-01-01"))) +
+  labs(colour = NULL, x = "Datum", y = "Waterstand Dijle (mTAW)")
 ```
-<!-- Peilen van de Dijle ter hoogte van meetstation K08_097, samen met de tijdreeksen van de grondwatermeetpunten met stijghoogten boven maaiveld: -->
+Dagmaxima van de Dijle ter hoogte van Korbeek-Dijle, samen met de tijdreeksen van de grondwatermeetpunten met stijghoogten die boven maaiveld uit komen in de komgrond van Langerode.
+```{r}
+temp <- komgr_langerode_tijdreeks %>%
+  filter(mMaaiveld > 0
+         # & filterdepth <= 2.5
+         ) %>%
+select(loc_code) %>%
+  distinct() %>%
+  pull()
 
-<!-- ```{r} -->
-<!-- temp <- komgr_leibeekW_tijdreeks %>%  -->
-<!--   filter(mMaaiveld > 0 -->
-<!--          # & filterdepth <= 2.5 -->
-<!--          ) %>% -->
-<!-- select(loc_code) %>%  -->
-<!--   distinct() %>%  -->
-<!--   pull() -->
-
-<!-- ggplot(komgr_leibeekW_tijdreeks %>%  -->
-<!--          filter(loc_code %in% temp)) + -->
-<!--   geom_line(aes(x = date(Datum), -->
-<!--                 y = mTAW, -->
-<!--                 # colour = loc_code, -->
-<!--                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)") -->
-<!--                 )) + -->
-<!--   ## non-clipping zoom -->
-<!--   # coord_cartesian( -->
-<!--   # xlim = c(ymd("2000-01-01"), ymd("2021-01-01")), -->
-<!--   # # ylim = c(25.5,28) -->
-<!--   # ) + -->
-<!--   scale_x_date(date_breaks = "year", date_labels = "%Y") + -->
-<!--   ## clipping zoom -->
-<!--   # xlim(ymd("2006-01-01"), ymd("2020-12-31")) + -->
-<!--   # ylim(-1, 0.1) + -->
-<!--   geom_line(aes(x = date(Datum), -->
-<!--                 y = mvTAW, -->
-<!--                 # colour = loc_code, -->
-<!--                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)") -->
-<!--                 ), linetype = "dashed" -->
-<!--             ) + -->
-<!--   geom_line(data = K08_timeseries %>% filter(station_no == "K08_097_Dijle"), -->
-<!--             aes(date(Timestamp), Value,  -->
-<!--                 linetype = factor(station_no, -->
-<!--                                   levels = c("K08_097_Dijle", -->
-<!--                                              "K08_010_Langestaart"))), -->
-<!--             alpha = 0.25) + -->
-<!--   facet_grid(rows = vars(loc_code)) + -->
-<!--   theme(axis.text.x = element_text(angle = 90, vjust = 0.5), -->
-<!--         panel.grid.minor.x = element_line(linetype = "dashed"), -->
-<!--         legend.position = "right") + -->
-<!--   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL) -->
-<!-- ``` -->
-
-<!-- Noch voor de diepe, noch voor de ondiepe grondwatermeetpunten is er een duidelijke samenhang terug te vinden tussen de oppervlaktewaterpeilen van de Dijle en de stijghoogten ter hoogte van de grondwatermeetpunten. -->
-
-<!-- Peilen van de waterloop Langestaart ter hoogte van meetstation K08_010, samen met de tijdreeksen van de grondwatermeetpunten; dit is enkel relevant voor de meetpunten DYLP200 en DYLP132: -->
-
-<!-- ```{r message=FALSE} -->
-<!-- ggplot(komgr_leibeekW_tijdreeks %>%  -->
-<!--          filter(loc_code %in% c("DYLP200", "DYLP132"))) + -->
-<!--   geom_line(aes(x = date(Datum), -->
-<!--                 y = mTAW, -->
-<!--                 # colour = loc_code, -->
-<!--                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)") -->
-<!--                 )) + -->
-<!--   ## non-clipping zoom -->
-<!--   # coord_cartesian( -->
-<!--   # xlim = c(ymd("2000-01-01"), ymd("2021-01-01")), -->
-<!--   # # ylim = c(25.5,28) -->
-<!--   # ) + -->
-<!--   scale_x_date(date_breaks = "year", date_labels = "%Y") + -->
-<!--   ## clipping zoom -->
-<!--   # xlim(ymd("2006-01-01"), ymd("2020-12-31")) + -->
-<!--   # ylim(-1, 0.1) + -->
-<!--   geom_line(aes(x = date(Datum), -->
-<!--                 y = mvTAW, -->
-<!--                 # colour = loc_code, -->
-<!--                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)") -->
-<!--                 ), linetype = "dashed" -->
-<!--             ) + -->
-<!--   geom_line(data = K08_timeseries %>% filter(station_no == "K08_010_Langestaart"), -->
-<!--             aes(date(Timestamp), Value,  -->
-<!--                 linetype = factor(station_no, -->
-<!--                                   levels = c("K08_097_Dijle", -->
-<!--                                              "K08_010_Langestaart"))), -->
-<!--             alpha = 0.25) + -->
-<!--   facet_grid(rows = vars(loc_code)) + -->
-<!--   theme(axis.text.x = element_text(angle = 90, vjust = 0.5), -->
-<!--         panel.grid.minor.x = element_line(linetype = "dashed"), -->
-<!--         legend.position = "right") + -->
-<!--   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL) -->
-<!-- ``` -->
-
-<!-- Ook op basis van deze figuur is er nauwelijks een interactie terug te vinden tussen de gemeten stijghoogten boven maaiveld enerzijds en de (pieken in) oppervlaktewaterstanden anderzijds. De afwezigheid van hoge pieken in de tijdreeksen met stijghoogten doet vermoeden dat er dus nauwelijks invloed is van de oppervlaktewaterstanden op de grondwaterstanden ter hoogte van DYLP132 en DYLP200. De pieken in oppervlaktewaterstanden dringen dus niet door tot bij de betreffende meetpunten vanwege fysieke barières of omdat het om te kortstondige pieken gaat die niet geregistreerd werden door de sondes in de grondwatermeetpunten. -->
+ggplot(komgr_langerode_tijdreeks %>%
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                )) +
+  ## non-clipping zoom
+  # coord_cartesian(
+  # xlim = c(ymd("2000-01-01"), ymd("2021-01-01")),
+  # # ylim = c(25.5,28)
+  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2006-01-01"), ymd("2020-12-31")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                ), linetype = "dashed"
+            ) +
+  geom_line(data = get_timeseries_tsid("3840042", from = "1993-01-01", to = "2020-12-01"),
+            aes(date(ymd_hms(Timestamp)), Value, linetype = "Dijle L08_097_dagmax"), alpha = 0.25) +
+  facet_grid(rows = vars(loc_code)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+```
+Het lijkt er niet op de er een uitgesproken relatie is tussen de peilen van de Dijle enerzijds en de stijghoogten boven maaiveld in de grondwatermeetpunten. Stijghoogten boven maaiveld zijn schaars in deze komgrond. Recente overstromingen lijken zich ook te beperken tot een smalle band (ong. 100 m) rondom de Leigracht zelf.
 
 ## Opsplitsing naar raaien
 Niet relevant?
