@@ -2190,7 +2190,57 @@ ggplot(komgr_langerode_tijdreeks %>%
         legend.position = "right") +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
 ```
-Het lijkt er niet op de er een uitgesproken relatie is tussen de peilen van de Dijle enerzijds en de stijghoogten boven maaiveld in de grondwatermeetpunten. Stijghoogten boven maaiveld zijn schaars in deze komgrond. Recente overstromingen lijken zich ook te beperken tot een smalle band (ong. 100 m) rondom de Leigracht zelf.
+Het lijkt er niet op de er een uitgesproken relatie is tussen de peilen van de Dijle enerzijds en de stijghoogten boven maaiveld in de grondwatermeetpunten in de komgrond van Langerode. Stijghoogten boven maaiveld zijn schaars in deze komgrond. Recente overstromingen lijken zich ook te beperken tot een smalle band (ong. 100 m) rondom de Leigracht zelf (cfr. recent overstroomde gebieden in onderstaand kaartje).
+
+```{r}
+komgr_langerode_loc_sf <- komgr_langerode_loc %>%
+  collect() %>% 
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+  st_transform(crs = 4326)
+
+leaflet() %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addWMSTiles("https://inspirepub.waterinfo.be/arcgis/services/Overstromingsgevoelige_gebieden_2017/MapServer/WMSServer?",
+              layers = "0",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 0.5),
+              group = "Overstromingsgevoelig") %>% 
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/VMM/wms?",
+              layers = "RecOvstrGeb",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 0.5),
+              group = "Recent overstroomd") %>% 
+  hideGroup("Recent overstroomd") %>% 
+  addCircleMarkers(
+    data = komgr_langerode_loc_sf %>% filter(filterdepth < 2.5),
+    label = ~loc_code, fill = FALSE, weight = 3, color = "red", opacity = 0.5,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetpunten < 2.5 m") %>% 
+  addCircleMarkers(
+    data = komgr_langerode_loc_sf %>% filter(filterdepth >= 2.5),
+    label = ~loc_code, fill = FALSE, weight = 3, color = "blue", opacity = 0.5,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetpunten >= 2.5 m") %>% 
+  addCircleMarkers(
+    data = komgr_langerode_loc_sf %>% filter(is.na(filterdepth)),
+    label = ~loc_code, fill = FALSE, weight = 3, color = "orange", opacity = 0.5,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetpunten diepte ongekend") %>%
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = c("Overstromingsgevoelig", "Recent overstroomd", "Meetpunten < 2.5 m", "Meetpunten >= 2.5 m", "Meetpunten diepte ongekend"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
 
 ## Opsplitsing naar raaien
 Niet relevant?
