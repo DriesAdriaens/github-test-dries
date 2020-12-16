@@ -1,7 +1,7 @@
 ---
 title: "Dataset validatie overstromingen - Dijle"
 author: "Dries Adriaens"
-date: "26-10-2020"
+date: "16-12-2020"
 output:
   html_document:
     code_folding: hide
@@ -2096,7 +2096,7 @@ get_stations(variable_name = "waterstand") %>%
 
 Verifiëren van de ligging van het betreffende meetstation (L08_097):
 
-```{r kaart meetstations leibeekW}
+```{r kaart meetstations langerode}
 
 leaflet(get_stations(variable_name = "waterstand") %>%
           filter(grepl("Korbeek-Dijle", station_name)) %>%
@@ -2950,7 +2950,7 @@ leaflet(komgr_leibeekO_loc_S) %>%
     group = "Peilschalen") %>%
   addLegend(position = "bottomleft", title = "Noord/Zuid",
             pal = pal, values = ~NZ, opacity = 1) %>%
-  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addMiniMap(toggleDisplay = TRUE, zoomLevelOffset = -5) %>% 
   addLayersControl(
     baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
     overlayGroups = c("Peilschalen"),
@@ -3651,28 +3651,90 @@ De pieken in de grondwatermeetpunten komen mooi overeen met de pieken in de oppe
 ## Opsplitsing naar raaien
 Niet relevant
 
-## Finale selectie grondwatermeetpunten en -metingen
 
-Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 2.5 m.
-De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+# Komgrond Leigracht Oost
+
+## Grondwatermeetpunten
 
 ```{r}
-meetpunten_sel <- rbind(meetpunten_sel, komgr_egenhoven_loc %>% filter(filterdepth <= 2.5) %>% collect())
+komgr_leigrachtO_loc <- get_locs(watina,
+                     loc_vec = c("DYLP011", "DYLP157", "DYLP010", "DYLB058", "DYLP030", "DYLP032", "DYLP044", "DYLP045", "DYLP058", "DYLP060", "DYLP061", "DYLP067", "DYLP068", "DYLP094", "DYLP096", "DYLP154", "DYLP155", "DYLP156", "DYLP003", "DYLP001", "DYLP002", "DYLP057"),
+                     loc_type = c("P", "B"),
+                     loc_validity = c("VLD", "ENT"),
+                     filterdepth_guess = TRUE,
+                     filterdepth_na = TRUE,
+                     filterdepth_range = c(0, 30))
+komgr_leigrachtO_loc %>% collect() %>% knitr::kable()
 ```
 
-# Finale dataset met selectie meetpunten en metingen
-
-Enkel de metingen boven maaiveld, of alle beschikbare metingen voor de geselecteerde meetpunten?
+Voor één van de peilbuizen is de peilbuislengte, en dus ook de filterdiepte, niet gekend.
 
 ```{r}
-peilmetingen_sel_Dijle <- 
-  get_locs(watina,
-           loc_vec = meetpunten_sel %>% select(loc_code) %>% pull(),
-           loc_type = c("P", "B"),
-           loc_validity = c("VLD", "ENT"),
-           filterdepth_guess = TRUE,
-           filterdepth_na = TRUE,
-           filterdepth_range = c(0, 30)) %>% 
+komgr_leigrachtO_loc_sf <- komgr_leigrachtO_loc %>%
+  collect() %>% 
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+  st_transform(crs = 4326)
+
+leaflet() %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addCircleMarkers(
+    data = komgr_leigrachtO_loc_sf %>% filter(filterdepth < 2.5),
+    label = ~loc_code, fill = FALSE, weight = 3, color = "red", opacity = 0.5,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetpunten < 2.5 m") %>% 
+  addCircleMarkers(
+    data = komgr_leigrachtO_loc_sf %>% filter(filterdepth >= 2.5),
+    label = ~loc_code, fill = FALSE, weight = 3, color = "blue", opacity = 0.5,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetpunten >= 2.5 m") %>% 
+  addCircleMarkers(
+    data = komgr_leigrachtO_loc_sf %>% filter(is.na(filterdepth)),
+    label = ~loc_code, fill = FALSE, weight = 3, color = "orange", opacity = 0.5,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.5),
+    group = "Meetpunten diepte ongekend") %>%
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = c("Meetpunten < 2.5 m", "Meetpunten >= 2.5 m", "Meetpunten diepte ongekend"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
+
+Spreiding qua filterdiepte van de peilbuizen, wetende dat voor de helft geen filterdiepte bekend is:
+
+```{r message = FALSE, warning = FALSE, error = FALSE, echo = FALSE}
+komgr_leigrachtO_loc %>% 
+  ggplot() +
+  geom_histogram(aes(x = filterdepth), binwidth = 0.10)
+```
+Op basis van bovenstaand kaartje kunnen we de volgende peilbuiskoppels onderscheiden:
+
+* diep (>2.5m) - ondiep (<=2.5m):
+    + DYLP045 - DYLP044
+    + DYLP032 - DYLP003
+    + DYLP068 - DYLP096
+* diep (>>2.5m) - diep (>2.5m):
+    + DYLP067 - DYLP094
+    + DYLP061 - DYLP060
+
+## Tijdreeksen van grondwatermeetpunten
+
+Voor de geselecteerde grondwatermeetpunten vragen we de gevalideerde peilmetingen op (`PeilmetingStatusCode == "VLD"`), die bovendien als betrouwbaar gelden (`is.na(PeilmetingCategorie) | PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")`).
+```{r tijdreeks leigrachtO}
+komgr_leigrachtO_tijdreeks <-
+  komgr_leigrachtO_loc %>%
+  # filter(filterdepth <= 3) %>% 
+  rename(mvTAW = soilsurf_ost) %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
              by = c("loc_wid" = "MeetpuntWID")) %>% 
   filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
@@ -3680,6 +3742,338 @@ peilmetingen_sel_Dijle <-
   inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID"))
 ```
 
+Onderstaande figuur geeft de tijdreeksen voor de verschillende meetpunten.
+
+```{r tijdreeks_leigrachtO_plot, message=FALSE, warning=FALSE}
+ggplot(komgr_leigrachtO_tijdreeks) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_egenhoven_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+  #                colour = loc_code)) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+
+### Peilmeting met labels die wijzen op effectieve overstromingen
+
+Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft of op het moment van opmeten het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
+
+### Peilmeting met labels die wijzen op effectieve overstromingen
+
+Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
+
+Dergelijke metingen werden vastgesteld bij één enkel meetpunt:
+
+```{r maaiveld overstroomd leigrachtO}
+komgr_leigrachtO_tijdreeks %>% 
+  filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")) %>% 
+  select(loc_code) %>% 
+  distinct() %>%
+  inner_join(komgr_leigrachtO_loc, by = "loc_code") %>% 
+  knitr::kable()
+```
+
+Voor de overige meetpunten met stijghoogten boven maaiveld, is er dus geen absolute zekerheid dat de watertafel effectief boven maaiveld stond op het moment van opmeting, en er dus effectief sprake was van een overstroming, dan wel dat er (tijdelijk) een hogere/verhoogde kweldruk aanwezig was.
+
+De tijdreeksen voor de meetpunten met bovengenoemde peilmetingcategorieën zitten vervat in onderstaande figuur, met aanduiding van de betreffende metingen (zwarte punten).
+
+```{r maaiveld overstroomd tijdreeks leigrachtO}
+temp <- komgr_leigrachtO_tijdreeks %>% 
+                  filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")) %>% 
+                  select(loc_code) %>% 
+                  distinct() %>% 
+                  pull()
+
+ggplot(komgr_leigrachtO_tijdreeks %>% 
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  # coord_cartesian(
+  #   ylim = c(-1, 0.1),
+  #   xlim = c(ymd("2013-01-01"), ymd("2015-01-01"))) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_point(data = komgr_leigrachtO_tijdreeks %>% 
+               filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+             aes(x = date(Datum),
+                 y = mMaaiveld)) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+
+Concreet gaat het hier om één enkele manuele meting waaraan het label "SOUWA" werd toegekend.
+```{r peilmetingen SOUWA TBWWL leigrachtO}
+komgr_leigrachtO_tijdreeks %>% 
+  filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")) %>% 
+  select(loc_code, obswell_state, Datum, mMaaiveld, PeilmetingCategorie, PeilmetingCategorieCode) %>% 
+  knitr::kable()
+```
+
+**Samengevat**: we kunnen dus stellen dat de bruikbaarheid van de peilmetingcategorieën die wijzen op effectieve overstromingen, eerder beperkt is vanwege (1) het beperkt aantal meetpunten waaraan ze toegekend werden en (2) hierdoor ook de beperkte ruimtelijke spreiding van deze bevestiging, maar zeker ook door (3) de beperkte periode waarin, en dus metingen waaraan ze blijkbaar toegekend werden. Wellicht zijn deze categorieën ook van toepassing op metingen voor andere meetpunten, maar werden ze er niet systematisch geregistreerd.
+
+### Kweldruk en het verschil tussen stijghoogte en waterpeil
+
+We onderscheiden de volgende peilbuiskoppels in de komgrond van de Leigracht Oost:
+
+* diep (>2.5m) - ondiep (<=2.5m):
+    + DYLP045 - DYLP044
+    + DYLP032 - DYLP003
+    + DYLP068 - DYLP096
+* diep (>>2.5m) - diep (>2.5m):
+    + DYLP067 - DYLP094
+    + DYLP061 - DYLP060
+
+We bekijken hieronder de tijdreeksen van beide peilbuizen per koppel om te kijken of er sprake is van stijghoogteverschillen tussen beide, wat dan kan duiden op een kweldruk. Bij de aanwezigheid van een opwaartse kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe (<2.5-3 m) peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld. Hoe ondieper de filter van een peilbuis, hoe beter de gemeten stijghoogten immers overeenkomen met de werkelijke grondwatertafel.
+
+* DYLP045 - DYLP044
+
+```{r peilbuiskoppel1 LeigrachtO}
+ggplot(komgr_leigrachtO_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP045",
+                                "DYLP044")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam
+                ), alpha = 0.5) +
+  ## non-clipping zoom
+  # coord_cartesian(xlim = c(ymd("2010-01-01"), ymd("2014-07-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.75),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+
+Uit bovenstaande figuur blijkt dat de stijghoogten bij diepe filter toch minstens een 15 à 20-tal cm hoger liggen. De stijghoogten bij de diepe filter overschrijden quasi jaarlijks de maaiveldhoogte, terwijl dat bij de ondiepe filter niet het geval is.
+
+* DYLP032 - DYLP003
+
+```{r peilbuiskoppel2 LeigrachtO}
+ggplot(komgr_leigrachtO_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP032",
+                                "DYLP003")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam
+                ), alpha = 0.5) +
+  ## non-clipping zoom
+  # coord_cartesian(xlim = c(ymd("2010-01-01"), ymd("2014-07-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.75),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+
+Ook hier overschrijden de stijghoogten in de diepere filter quasi jaarlijks de maaiveldhoogte, terwijl die frequentie voor de ondiepe filter veel lager ligt. De stijghoogteverschillen lopen op tot meer dan 20 cm. 
+
+DYLP068 - DYLP096
+
+```{r peilbuiskoppel3 LeigrachtO}
+ggplot(komgr_leigrachtO_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP068",
+                                "DYLP096")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam
+                ), alpha = 0.5) +
+  ## non-clipping zoom
+  # coord_cartesian(xlim = c(ymd("2010-01-01"), ymd("2014-07-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.75),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+
+Geen overschrijding van maaiveld. Minder eenduidig, maar het stijghoogteverschil is alleszins minder uitgesproken dan in voorgaande peilbuiskoppels.
+
+* DYLP067 - DYLP094
+
+```{r peilbuiskoppel4 LeigrachtO}
+ggplot(komgr_leigrachtO_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP067",
+                                "DYLP094")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam
+                ), alpha = 0.5) +
+  ## non-clipping zoom
+  # coord_cartesian(xlim = c(ymd("2010-01-01"), ymd("2014-07-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.75),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+
+Geen overschrijding van maaiveld. Groter stijghoogteverschil (tot 75 cm!) bij lagere stijghoogten (drogere perioden).
+
+* DYLP061 - DYLP060
+
+```{r peilbuiskoppel5 LeigrachtO}
+ggplot(komgr_leigrachtO_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP061",
+                                "DYLP060")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam
+                ), alpha = 0.5) +
+  ## non-clipping zoom
+  # coord_cartesian(xlim = c(ymd("2010-01-01"), ymd("2014-07-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.75),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+
+Geen overschrijding van maaiveld. Het stijghoogteverschil is het grootst (tot 75 cm!) bij lagere stijghoogten, dus in de drogere perioden van het jaar. Het verschil is dan weer te verwaarlozen in de natste perioden van het jaar.
+
+**Samengevat**: selectie van peilbuizen met filterdiepte < 2.5 m lijkt aangewezen
+
+### Stijghoogten boven maaiveld
+
+Als we enkel de peilbuizen beschouwen met filterdiepte < 2.5 m én (occasionele) stijghoogten boven maaiveld, dan houden we volgende tijdreeksen over:
+
+```{r tijdreeks_leigrachtO_mv1, message=FALSE, warning=FALSE}
+temp <- komgr_leigrachtO_tijdreeks %>% 
+  filter(mMaaiveld > 0 & filterdepth <= 2.5) %>%
+  select(loc_code) %>% 
+  distinct() %>% 
+  pull()
+
+ggplot(komgr_leigrachtO_tijdreeks %>% 
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                )) +
+  ## non-clipping zoom
+  # coord_cartesian(
+  # xlim = c(ymd("2006-01-01"), ymd("2021-01-01")),
+  # ylim = c(25.5,28)
+  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2006-01-01"), ymd("2020-12-31")) +
+  # ylim(-1, 0.1) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+
+```{r tijdreeks_leigrachtO_taw1, message=FALSE, warning=FALSE}
+temp <- komgr_leigrachtO_tijdreeks %>% 
+  filter(mMaaiveld > 0 & filterdepth <= 2.5) %>%
+  select(loc_code) %>% 
+  distinct() %>% 
+  pull()
+
+ggplot(komgr_leigrachtO_tijdreeks %>% 
+         filter(loc_code %in% temp)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                )) +
+  ## non-clipping zoom
+  # coord_cartesian(
+  # xlim = c(ymd("2006-01-01"), ymd("2021-01-01")),
+  # ylim = c(25.5,28)
+  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2006-01-01"), ymd("2020-12-31")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                # colour = loc_code,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")
+                ), linetype = "dashed"
+            ) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+**Samengevat**: selectie van peilbuizen met filterdiepte < 2.5 m én gemeten stijghoogten boven maaiveld
+
+## Oppervlaktewatermeetpunten
+<!-- ? -->
+
+## Opsplitsing naar raaien
+Niet van toepassing
+
+## Finale selectie grondwatermeetpunten en -metingen
+
+Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 2.5 m.
+De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+
+```{r}
+meetpunten_sel <- rbind(meetpunten_sel, komgr_leigrachtO_loc %>% filter(filterdepth <= 2.5) %>% collect())
+```
 
 <!-- # Komgrond template -->
 <!-- ## Grondwatermeetpunten -->
@@ -3694,6 +4088,114 @@ peilmetingen_sel_Dijle <-
 <!-- #### Ligging: -->
 <!-- #### Tijdreeksen: -->
 <!-- #### Samenhang grond- en oppervlaktewaterpeilen -->
+
+# Finale dataset met selectie meetpunten en metingen
+
+```{r}
+meetpunten_sel_gr_mv <- 
+  get_locs(watina, loc_vec = meetpunten_sel %>% 
+           select(loc_code) %>% 
+           pull(),
+         loc_type = c("P", "B")) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
+                                            PeilmetingCategorieCode %in% c("SOUWA", "TBWWL"))) %>% 
+  filter(mMaaiveld > 0) %>% 
+  select(loc_code) %>% 
+  distinct() %>%
+  collect() %>% 
+  inner_join(meetpunten_sel, by = "loc_code")
+```
+
+```{r}
+meetpunten_sel_def <- 
+  meetpunten_sel %>% 
+  full_join(meetpunten_sel_gr_mv %>% 
+              mutate(gr_mv = 1)) %>% 
+  mutate(gr_mv = ifelse(is.na(gr_mv), 0, 1))
+```
+
+In totaal levert de selectie `r nrow(meetpunten_sel_def)` meetpunten op, waarvan er `r nrow(meetpunten_sel_gr_mv)` zijn met (gevalideerde) stijghoogten boven maaiveld (zie veld "gr_mv").
+
+```{r}
+meetpunten_sel_def %>% knitr::kable()
+```
+
+Overzichtskaartje hiervan:
+
+```{r}
+pal_gr_mv <- colorFactor(palette = c("red", "blue"), domain = meetpunten_sel_def$gr_mv) 
+
+leaflet(meetpunten_sel_def %>% 
+          st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+          st_transform(crs = 4326)) %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>% 
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Ortho_VL_winter") %>% 
+  addWMSTiles("https://inspirepub.waterinfo.be/arcgis/services/Overstromingsgevoelige_gebieden_2017/MapServer/WMSServer?",
+              layers = "0",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 0.5),
+              group = "Overstromingsgevoelig") %>% 
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/VMM/wms?",
+              layers = "RecOvstrGeb",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 0.5),
+              group = "Recent overstroomd") %>% 
+  addCircleMarkers(
+    data = get_locs(watina, area_codes = "DYL",
+                    loc_type = c("P", "B", "S"),
+                    filterdepth_guess = TRUE,
+                    filterdepth_range = c(0,30),
+                    filterdepth_na = TRUE
+                    ) %>% 
+      collect() %>%
+      anti_join(meetpunten_sel_def) %>%
+      filter(!is.na(x) |!is.na(y)) %>% 
+      st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
+      st_transform(crs = 4326),
+    label = ~loc_code, 
+    fill = FALSE, weight = 3, color = "grey", opacity = 0.5,
+    labelOptions = labelOptions(noHide = FALSE,
+                                textOnly = FALSE,
+                                direction = "right", opacity = 0.75),
+    group = "Meetpunten overig") %>% 
+  addCircleMarkers(
+    label = ~loc_code, 
+    fill = FALSE, weight = 3, color = ~pal_gr_mv(gr_mv), opacity = 0.5,
+    labelOptions = labelOptions(noHide = FALSE,
+                                textOnly = FALSE,
+                                direction = "right", opacity = 0.75),
+    group = "Meetpunten selectie") %>% 
+  # addMiniMap(toggleDisplay = TRUE, zoomLevelOffset = -5) %>% 
+  hideGroup(c("Recent overstroomd", "Overstromingsgevoelig", "Meetpunten overig")) %>% 
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = c("Overstromingsgevoelig", "Recent overstroomd",
+                      "Meetpunten selectie", "Meetpunten overig"),
+    options = layersControlOptions(collapsed = FALSE)) %>% 
+  addLegend(pal = pal_gr_mv, values = ~gr_mv, title = "metingen boven mv",
+            group = "Meetpunten selectie")
+```
+
+Vraag of de dataset enkel de metingen boven maaiveld moet bevatten, dan wel alle beschikbare metingen, voor de geselecteerde meetpunten.
+
+```{r eval=FALSE}
+dataset_kal_overstr_dijle <- 
+  get_locs(watina, loc_vec = meetpunten_sel %>% 
+             # filter(gr_mv == 1) %>% 
+             select(loc_code) %>% 
+             pull(),
+           loc_type = c("P", "B")) %>% 
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
+                                            PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")))
+```
 
 # Openstaande vragen
 
@@ -3711,14 +4213,6 @@ tbl(watina, "FactPeilMeting") %>%
 
 
 <!-- # Klad -->
-
-```{r}
-get_locs(watina,
-         loc_vec = c("DYLS013"),
-         loc_type = "S") %>% collect() %>% 
-  st_as_sf()
-```
-
 
 <!-- ```{r} -->
 <!-- get_locs(watina, loc_type = c("P", "B"), -->
