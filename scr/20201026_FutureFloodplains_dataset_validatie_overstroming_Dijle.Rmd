@@ -5,12 +5,15 @@ date: "16-12-2020"
 output:
   html_document:
     code_folding: hide
-    toc: TRUE
-    toc_float: TRUE
+    toc: yes
+    toc_float: yes
     toc_depth: 4
-    number_sections: TRUE
+    number_sections: yes
     fig_width: 8
     fig_height: 5.7
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
 ---
 
 ```{r setup, include=FALSE}
@@ -29,7 +32,7 @@ library(leaflet)
 library(wateRinfo)
 ```
 
-```{r connection}
+```{r}
 watina <- connect_watina()
 # library(inbodb)
 # con <- connect_inbo_dbase("D0025_00_Watina")
@@ -56,6 +59,12 @@ We bekijken dit per komgrond.
 # Komgrond Neerijse
 
 Het gaat hier om de komgrond ten westen van de Dijle ter hoogte van Neerijse, meer bepaald tussen de Neerijsebaan in het zuiden en de samenvloeiing van IJse en Dijle in het noorden. Deze komgrond wordt afgewaterd door de Leigracht die het gebied van zuid naar noord doormidden snijdt. De waterberging van deze komgrond wordt voornamelijk aangesproken door opstuwing van de Leigracht via de monding van de Ijse, bij hoogwaterpeilen in de Dijle. De mate van opstuwing kan gestuurd worden via schotten op het stuw tussen Leigracht en Ijse.
+
+```{r include=FALSE}
+watina <- connect_watina()
+# library(inbodb)
+# con <- connect_inbo_dbase("D0025_00_Watina")
+```
 
 ## Grondwatermeetpunten
 
@@ -129,7 +138,8 @@ komgr_neerijse_tijdreeks <-
   rename(mvTAW = soilsurf_ost) %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
              by = c("loc_wid" = "MeetpuntWID")) %>% 
-  filter(PeilmetingStatusCode == "VLD") %>% 
+  filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
+                                            PeilmetingCategorieCode %in% c("SOUWA", "TBWWL"))) %>% 
   inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID"))
 
 # tbl(watina, "FactPeilMeting") %>%
@@ -936,11 +946,6 @@ DYLP072 lijkt in een lokale depressie te liggen.
 Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 3 m.
 De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
 
-```{r}
-meetpunten_sel <- komgr_neerijse_loc %>% filter(filterdepth < 3) %>% collect()
-```
-
-
 <!-- Selectiecriteria meetpunt -->
 <!-- * metingen boven maaiveld, -->
 <!-- * diepte peilbuis (< 3 m), -->
@@ -960,6 +965,12 @@ komgr_doodebeemde_O_incl <- 1
 
 
 Noot: het is onduidelijk of ook de meetpunten ten oosten van de spoorwegbedding tot deze komgrond moeten gerekend worden. In principe lijkt dit stuk wel hydrologisch verbonden via de doorgang onder de spoorweg (verbindingsweggetje naar Waversebaan). Indien mee te nemen: `komgr_doodebeemde_O_incl <- 1`. Nu: `r komgr_doodebeemde_O_incl`.
+
+```{r include=FALSE}
+watina <- connect_watina()
+# library(inbodb)
+# con <- connect_inbo_dbase("D0025_00_Watina")
+```
 
 ## Grondwatermeetpunten
 
@@ -1824,12 +1835,14 @@ Het lijkt alvast dat de peilen van de Leibeek nauw samenhangen met veel van de s
 Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 2.5 m.
 De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
 
-```{r}
-meetpunten_sel <- rbind(meetpunten_sel, komgr_doodebeemde_loc %>% filter(filterdepth <= 2.5) %>% collect())
-```
-
 # Komgrond Langerodevijver
 Het gaat hier om de komgrond tussen Ijse en Ruwaal, op de westelijke oever van de Dijle, die wordt doorsneden door de Leigracht. Aangezien de Leigracht onderbroken werd ter hoogte van de Ijse functioneert deze komgrond onafhankelijk van de zuidelijk gelegen komgrond van Neerijse.
+
+```{r include=FALSE}
+watina <- connect_watina()
+# library(inbodb)
+# con <- connect_inbo_dbase("D0025_00_Watina")
+```
 
 ## Grondwatermeetpunten
 
@@ -2250,13 +2263,15 @@ Niet relevant?
 Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 3 m.
 De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
 
-```{r}
-meetpunten_sel <- rbind(meetpunten_sel, komgr_langerode_loc %>% filter(filterdepth <= 3) %>% collect())
-```
-
 # Komgrond Leibeek West (tot E40)
 
 Deze komgrond ligt op de linkeroever van de Dijle, tussen de Stationstraat in Korbeek-Dijle in het zuiden tot de E40 snelweg in het noorden. De depressies rond Veeweide en Ormendaal worden ontwatert door de Leibeek die centraal in de komgrond in de Dijle uitmondt. De depressie rond Rotspoel (E40) ontwatert naar de komgrond van Egenhoven ten noorden van de E40 via een waterloop (Langestaart) die onder de E40 door stroomt (via pompstation?). Eigenlijk hoort het noordelijke stuk van deze komgrond dus eerder tot de komgrond van Egenhoven, maar de E40 zorgt wel voor een barrière.
+
+```{r include=FALSE}
+watina <- connect_watina()
+# library(inbodb)
+# con <- connect_inbo_dbase("D0025_00_Watina")
+```
 
 ## Grondwatermeetpunten
 
@@ -2640,12 +2655,18 @@ Niet van toepassing
 
 ## Finale selectie grondwatermeetpunten en -metingen
 
-Uit bovenstaande screening besluiten we dat er in de komgrond van Langerode geen meetpunten zijn die metingen bevatten die bruikbaar zijn om gemodelleerde overstromingsdiepten te kalibreren.
+Uit bovenstaande screening besluiten we dat er in de komgrond van Leibeek West geen meetpunten zijn die metingen bevatten die bruikbaar zijn om gemodelleerde overstromingsdiepten te kalibreren.
 
 # Komgrond Leibeek Oost (tot E40)
 
 Deze komgrond ligt op de rechteroever van de Dijle en strekt zich uit van de Vaalbeek/Molenbeek in het zuiden tot aan de E40 in het noorden. De Leibeek doorsnijdt deze komgrond van zuid naar noord en ontspringt in de komgrond van de Doode Beemde (zie elders). Net na de Vijvers van Oud-Heverlee mondt ze uit in de Dijle. De komgrond wordt quasi integraal aangeduid als *effectief overstromingsgevoelig gebied*.
 Ter hoogte van de Stationstraat in Korbeek-Dijle kan de komgrond evt. opgedeeld worden in een zuidelijk en een noordelijk deel. De oeverwallen van de Dijle in het noordelijk deel zijn minder uitgesproken dan in het zuidelijk deel.
+
+```{r include=FALSE}
+watina <- connect_watina()
+# library(inbodb)
+# con <- connect_inbo_dbase("D0025_00_Watina")
+```
 
 ## Grondwatermeetpunten
 
@@ -2897,7 +2918,7 @@ Hieruit komen een aantal zaken naar voren:
 * sterke veranderingen in stijghoogten tussen verschillende meetperioden (na onderbreking van metingen):
     * DYLP171: zeer diepe filter --> stijghoogten komen niet overeen met grondwaterpeil; bovendien grote verandering in gemeten stijghoogten tussen 2010-2013 en vanaf 2017: vanwaar die grote sprong?
     * DYLP121: grote verandering in stijghoogten in 2000-2001 vs in 2006-2008: vanwaar die verandering? Zie ook DYLP171, want beide meetpunten liggen dicht bij elkaar langs de Leibeek, tussen de Dijle en de Vijvers van Oud-Heverlee; veranderingen in beheer van de Leibeek (ruiming, opstuwing, aantakking Dijle)?
-    * DYLP224 (langs Leibeek, nabij DYLP121): grote sprong met plots veel lagere stijghoogten vanaf 2013
+    * DYLP224 (langs Leibeek, nabij DYLP121): grote sprong met plots veel lagere stijghoogten vanaf 2013?
 
 ### Peilmeting met labels die wijzen op effectieve overstromingen
 
@@ -3221,16 +3242,17 @@ Niet relevant?
 Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een (gekende) filterdiepte van minder dan 2.5 m.
 De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
 
-```{r}
-meetpunten_sel <- rbind(meetpunten_sel, komgr_leibeekO_loc %>% filter(filterdepth <= 2.5) %>% collect())
-```
-
-
 # Komgrond Egenhovenbos
 
 De komgrond van Egenhoven ligt op de linkeroever van de Dijle en wordt begrensd door de E40 autosnelweg aan de zuidrand en de oude tramdijk die de oostrand vormt. Die tramdijk doorkruist de vallei van noord naar zuid en wordt in het midden doorsneden door de Dijle. Daar bevindt zich ook het kunstwerk waarmee het peil van de Dijle kan geregeld worden en waarmee de bovenstroomse buffercapaciteit van het stroomopwaartse valleigedeelte kan aangesproken worden bij hoge debieten. Hiermee kan het risico op overstromingen stroomafwaarts, ter hoogte van de stad Leuven, verminderd worden.
 Het noordelijke deel van het huidige Egenhovenbos bestond eind 18de eeuw uit een complex van visvijvers dat bij het Jezuïetenklooster hoorde.
 Deze komgrond hangt topografisch  samen met het deel van de vallei net ten zuiden de E40, eveneens op de linkeroever van de Dijle. Een beek die onder de autosnelweg door stroomt, verbindt beide delen en ontwatert het zuidelijk deel.
+
+```{r include=FALSE}
+watina <- connect_watina()
+# library(inbodb)
+# con <- connect_inbo_dbase("D0025_00_Watina")
+```
 
 ## Grondwatermeetpunten
 
@@ -3651,8 +3673,17 @@ De pieken in de grondwatermeetpunten komen mooi overeen met de pieken in de oppe
 ## Opsplitsing naar raaien
 Niet relevant
 
+## Finale selectie grondwatermeetpunten en -metingen
+
+selectie van peilbuizen met filterdiepte < 2.5 m (peilbuis met ongekende filterdiepte heeft geen stijghoogten boven maaiveld) én gemeten stijghoogten boven maaiveld.
 
 # Komgrond Leigracht Oost
+
+```{r include=FALSE}
+watina <- connect_watina()
+# library(inbodb)
+# con <- connect_inbo_dbase("D0025_00_Watina")
+```
 
 ## Grondwatermeetpunten
 
@@ -3773,10 +3804,6 @@ ggplot(komgr_leigrachtO_tijdreeks) +
 ### Peilmeting met labels die wijzen op effectieve overstromingen
 
 Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft of op het moment van opmeten het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
-
-### Peilmeting met labels die wijzen op effectieve overstromingen
-
-Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd.
 
 Dergelijke metingen werden vastgesteld bij één enkel meetpunt:
 
@@ -4071,10 +4098,6 @@ Niet van toepassing
 Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 2.5 m.
 De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
 
-```{r}
-meetpunten_sel <- rbind(meetpunten_sel, komgr_leigrachtO_loc %>% filter(filterdepth <= 2.5) %>% collect())
-```
-
 <!-- # Komgrond template -->
 <!-- ## Grondwatermeetpunten -->
 <!-- ## Tijdreeksen van grondwatermeetpunten -->
@@ -4092,11 +4115,23 @@ meetpunten_sel <- rbind(meetpunten_sel, komgr_leigrachtO_loc %>% filter(filterde
 # Finale dataset met selectie meetpunten en metingen
 
 ```{r}
+meetpunten_sel <- rbind(
+  komgr_neerijse_loc %>% filter(filterdepth <= 3) %>% collect(),
+  komgr_doodebeemde_loc %>% filter(filterdepth <= 2.5) %>% collect(),
+  komgr_langerode_loc %>% filter(filterdepth <= 3) %>% collect(),
+  # niets voor leibeekW ...
+  komgr_leibeekO_loc %>% filter(filterdepth <= 2.5) %>% collect(),
+  komgr_egenhoven_loc %>% filter(filterdepth <= 2.5) %>% collect(),
+  komgr_leigrachtO_loc %>% filter(filterdepth <= 2.5) %>% collect()
+)
+```
+
+```{r}
 meetpunten_sel_gr_mv <- 
   get_locs(watina, loc_vec = meetpunten_sel %>% 
-           select(loc_code) %>% 
-           pull(),
-         loc_type = c("P", "B")) %>% 
+             select(loc_code) %>% 
+             pull(),
+           loc_type = c("P", "B")) %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
              by = c("loc_wid" = "MeetpuntWID")) %>% 
   filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
@@ -4108,7 +4143,7 @@ meetpunten_sel_gr_mv <-
   inner_join(meetpunten_sel, by = "loc_code")
 ```
 
-```{r}
+```{r message=FALSE}
 meetpunten_sel_def <- 
   meetpunten_sel %>% 
   full_join(meetpunten_sel_gr_mv %>% 
@@ -4124,7 +4159,7 @@ meetpunten_sel_def %>% knitr::kable()
 
 Overzichtskaartje hiervan:
 
-```{r}
+```{r message=FALSE}
 pal_gr_mv <- colorFactor(palette = c("red", "blue"), domain = meetpunten_sel_def$gr_mv) 
 
 leaflet(meetpunten_sel_def %>% 
@@ -4158,14 +4193,13 @@ leaflet(meetpunten_sel_def %>%
       filter(!is.na(x) |!is.na(y)) %>% 
       st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
       st_transform(crs = 4326),
-    label = ~loc_code, 
-    fill = FALSE, weight = 3, color = "grey", opacity = 0.5,
+    label = ~loc_code, fill = FALSE, weight = 3, color = "grey", opacity = 0.5,
     labelOptions = labelOptions(noHide = FALSE,
                                 textOnly = FALSE,
                                 direction = "right", opacity = 0.75),
     group = "Meetpunten overig") %>% 
   addCircleMarkers(
-    label = ~loc_code, 
+    label = ~loc_code,
     fill = FALSE, weight = 3, color = ~pal_gr_mv(gr_mv), opacity = 0.5,
     labelOptions = labelOptions(noHide = FALSE,
                                 textOnly = FALSE,
@@ -4182,7 +4216,7 @@ leaflet(meetpunten_sel_def %>%
             group = "Meetpunten selectie")
 ```
 
-Vraag of de dataset enkel de metingen boven maaiveld moet bevatten, dan wel alle beschikbare metingen, voor de geselecteerde meetpunten.
+Vraag of de dataset enkel de (normale, gevalideerde) metingen boven maaiveld moet bevatten, dan wel alle beschikbare metingen, voor de geselecteerde meetpunten. En hoe afwijkende sondemetingen er nog uitgefilterd kunnen worden.
 
 ```{r eval=FALSE}
 dataset_kal_overstr_dijle <- 
@@ -4211,6 +4245,9 @@ tbl(watina, "FactPeilMeting") %>%
   knitr::kable()
 ```
 
+<!-- # To do -->
+
+<!-- *  -->
 
 <!-- # Klad -->
 
