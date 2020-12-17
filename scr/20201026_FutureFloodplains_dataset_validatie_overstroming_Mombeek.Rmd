@@ -105,7 +105,7 @@ leaflet(data = locs %>%
   hideGroup("Recent overstroomd") %>% 
   addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = ~pal(loc_typecode),
              labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
-                                         direction = "right", opacity = 0.75),
+                                         direction = "right", opacity = 0.50),
              group = "Meetpunten") %>% 
   addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
   addLayersControl(
@@ -124,23 +124,28 @@ tijdreeks <-
   locaties %>% 
   rename(mvTAW = soilsurf_ost) %>% 
   inner_join(tbl(watina, "FactPeilMeting"), by = c("loc_wid" = "MeetpuntWID")) %>% 
+  filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
+                                            PeilmetingCategorieCode %in% c("SOUWA", "TBWWL"))) %>% 
   inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>% 
-  dplyr::collect()
-
-tijdreeks <- tijdreeks %>% 
-  left_join(transects, by = "loc_code")
+  collect() %>% 
+  left_join(transects, by = "loc_code") %>% 
+  group_by(loc_code) %>% 
+  mutate(gr_mv = ifelse(max(mMaaiveld) > 0 & loc_typecode != "S", 1, 0))
 ```
 
 Meetpunten met tijdreeksen met stijghoogten boven maaiveld:
 
 ```{r}
-tijdreeks %>% 
-  filter(mMaaiveld > 0) %>% 
-  select(loc_code) %>% 
-  distinct() %>% 
-  left_join(transects, by = "loc_code") %>% 
+locs <- locs %>% 
+  left_join(tijdreeks %>% 
+              filter(gr_mv == 1) %>% 
+              select(loc_code, gr_mv) %>%
+              distinct(),
+            by = "loc_code")
+locs %>% filter(gr_mv == 1) %>% 
+  select(loc_code, transect_nr) %>%
+  arrange(transect_nr, loc_code) %>% 
   knitr::kable()
-loc
 ```
 
 
@@ -148,7 +153,10 @@ loc
 
 ### Kaart
 
+Grote cirkels voor meetpunten met stijghoogten boven maaiveld.
 ```{r kaart_raai_1}
+pal <- colorFactor(palette = c("red", "blue"), domain = locs$loc_typecode)
+
 leaflet(data = locs %>% 
   filter(transect_nr == 1) %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
@@ -159,20 +167,24 @@ leaflet(data = locs %>%
   addTiles(group = "OSM") %>%
   addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
               layers = "Ortho",
-              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
               group = "Ortho_VL_winter") %>% 
-  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
-             labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
-                                         direction = "right", opacity = 0.75)) %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, 
+                   color = ~pal(loc_typecode),
+                   radius = ~ifelse(is.na(gr_mv), 5, 10),
+                   labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                               direction = "right", opacity = 0.5)) %>% 
   addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
   addLayersControl(
     baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
     overlayGroups = "Meetpunten",
-    options = layersControlOptions(collapsed = FALSE)
-  )
+    options = layersControlOptions(collapsed = FALSE)) %>% 
+  addLegend(#pal = pal, values = ~loc_typecode,
+            colors = c("red", "blue"), labels = c("grondwater", "oppervlaktewater"),
+            group = "Meetpunten", title = "Meetpunttype")
 ```
 
-### Tijdreeks
+### Tijdreeksen
 
 m-mv
 
@@ -270,7 +282,10 @@ ggplot(tijdreeks %>%
 
 ### Kaart
 
+Grote cirkels voor meetpunten met stijghoogten boven maaiveld.
 ```{r kaart_raai_2}
+pal <- colorFactor(palette = c("red", "blue"), domain = locs$loc_typecode)
+
 leaflet(data = locs %>% 
   filter(transect_nr == 2) %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
@@ -283,24 +298,30 @@ leaflet(data = locs %>%
               layers = "Ortho",
               options = WMSTileOptions(format = "image/png", transparant = TRUE),
               group = "Ortho_VL_winter") %>% 
-  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
-             labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
-                                         direction = "right", opacity = 0.75)) %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, 
+                   color = ~pal(loc_typecode),
+                   radius = ~ifelse(is.na(gr_mv), 5, 10),
+                   labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                               direction = "right", opacity = 0.5)) %>% 
   addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
   addLayersControl(
     baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
     overlayGroups = "Meetpunten",
-    options = layersControlOptions(collapsed = FALSE)
-  )
+    options = layersControlOptions(collapsed = FALSE)) %>% 
+  addLegend(#pal = pal, values = ~loc_typecode,
+            colors = c("red", "blue"), labels = c("grondwater", "oppervlaktewater"),
+            group = "Meetpunten", title = "Meetpunttype")
 ```
 
-### Tijdreeks
+### Tijdreeksen
+
+Beperkt tot tijdreeksen met stijghoogten boven maaiveld
 
 m-mv
 
 ```{r tijdreeks_raai_2, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
-         filter(transect_nr == 2)) +
+         filter(transect_nr == 2 & gr_mv == 1)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -322,7 +343,7 @@ m-mv, sinds 2017
 
 ```{r tijdreeks_raai_2_2017, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
-         filter(transect_nr == 2)) +
+         filter(transect_nr == 2 & gr_mv == 1)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -344,7 +365,7 @@ mTAW
 
 ```{r tijdreeks_raai_2_TAW, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
-         filter(transect_nr == 2)) +
+         filter(transect_nr == 2 & gr_mv == 1)) +
   geom_line(aes(x = date(Datum),
                 y = mTAW,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -366,14 +387,14 @@ ggplot(tijdreeks %>%
 
 mTAW, sinds 2017
 
-```{r tijdreeks_raai_1_TAW_2017, message=FALSE, warning=FALSE}
+```{r tijdreeks_raai_2_TAW_2017_1, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
-         filter(transect_nr == 1)) +
+         filter(transect_nr == 2 & gr_mv == 1)) +
   geom_line(aes(x = date(Datum),
                 y = mTAW,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
-  coord_cartesian(ylim = c(31, 35.25),
+  coord_cartesian(ylim = c(32.25, 34.25),
   #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
@@ -388,11 +409,93 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
+mTAW, sinds 2017, met aanduiding van tijdreeksen Mombeek
+
+```{r tijdreeks_raai_2_TAW_2017_2, message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 2 & gr_mv == 1)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(32.25, 34.75),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  geom_line(data = tijdreeks %>% filter(transect_nr == 2 & loc_code %in% c("MOMS002", "MOMS008")),
+            aes(x = date(Datum),
+                y = mTAW,
+                # linetype = loc_code
+                group = loc_code, linetype = loc_code),
+            alpha = 0.25) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Mombeek")
+```
+mTAW, sinds 2017, met aanduiding van tijdreeksen Oude Mombeek
+
+```{r tijdreeks_raai_2_TAW_2017_3, message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 2 & gr_mv == 1)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(32.25, 34.75),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  geom_line(data = tijdreeks %>% filter(transect_nr == 2 & loc_code %in% c("MOMS009")),
+            aes(x = date(Datum),
+                y = mTAW,
+                # linetype = loc_code
+                group = loc_code, linetype = loc_code),
+            alpha = 0.25) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Oude Mombeek")
+```
+Enkel de peilschalen van raai 2 (MOMS001 en MOMS009: Oude Mombeek; MOMS002 en MOMS008: Mombeek):
+```{r tijdreeks_raai_2_TAW_2017_4, message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 2 & loc_typecode == "S")) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(32.25, 34.75),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
 ## Raai 3
 
 ### Kaart
 
+Grote cirkels voor meetpunten met stijghoogten boven maaiveld.
+
 ```{r kaart_raai_3}
+pal <- colorFactor(palette = c("red", "blue"), domain = locs$loc_typecode)
+
 leaflet(data = locs %>% 
   filter(transect_nr == 3) %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
@@ -405,18 +508,22 @@ leaflet(data = locs %>%
               layers = "Ortho",
               options = WMSTileOptions(format = "image/png", transparant = TRUE),
               group = "Ortho_VL_winter") %>% 
-  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
-             labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
-                                         direction = "right", opacity = 0.75)) %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, 
+                   color = ~pal(loc_typecode),
+                   radius = ~ifelse(is.na(gr_mv), 5, 10),
+                   labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                               direction = "right", opacity = 0.5)) %>% 
   addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
   addLayersControl(
     baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
     overlayGroups = "Meetpunten",
-    options = layersControlOptions(collapsed = FALSE)
-  )
+    options = layersControlOptions(collapsed = FALSE)) %>% 
+  addLegend(#pal = pal, values = ~loc_typecode,
+            colors = c("red", "blue"), labels = c("grondwater", "oppervlaktewater"),
+            group = "Meetpunten", title = "Meetpunttype")
 ```
 
-### Tijdreeks
+### Tijdreeksen
 
 m-mv
 
@@ -514,7 +621,10 @@ ggplot(tijdreeks %>%
 
 ### Kaart
 
+Grote cirkels voor meetpunten met stijghoogten boven maaiveld.
 ```{r kaart_raai_4}
+pal <- colorFactor(palette = c("red", "blue"), domain = locs$loc_typecode)
+
 leaflet(data = locs %>% 
   filter(transect_nr == 4) %>% 
   st_as_sf(coords = c("x", "y"), crs = 31370) %>% 
@@ -527,18 +637,22 @@ leaflet(data = locs %>%
               layers = "Ortho",
               options = WMSTileOptions(format = "image/png", transparant = TRUE),
               group = "Ortho_VL_winter") %>% 
-  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = "red",
-             labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
-                                         direction = "right", opacity = 0.75)) %>% 
+  addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, 
+                   color = ~pal(loc_typecode),
+                   radius = ~ifelse(is.na(gr_mv), 5, 10),
+                   labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                               direction = "right", opacity = 0.5)) %>% 
   addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
   addLayersControl(
     baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
     overlayGroups = "Meetpunten",
-    options = layersControlOptions(collapsed = FALSE)
-  )
+    options = layersControlOptions(collapsed = FALSE)) %>% 
+  addLegend(#pal = pal, values = ~loc_typecode,
+            colors = c("red", "blue"), labels = c("grondwater", "oppervlaktewater"),
+            group = "Meetpunten", title = "Meetpunttype")
 ```
 
-### Tijdreeks
+### Tijdreeksen
 
 m-mv
 
