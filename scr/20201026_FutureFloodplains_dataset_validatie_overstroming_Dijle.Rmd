@@ -11,9 +11,7 @@ output:
     number_sections: yes
     fig_width: 8
     fig_height: 5.7
-  pdf_document:
-    toc: yes
-    toc_depth: '4'
+  
 ---
 
 ```{r setup, include=FALSE}
@@ -50,11 +48,11 @@ Onderstaand document verkent welke gegevens eventueel in aanmerking komen als da
 * kijken of meetwaarden effectief overeenstemmen met reële waterpeilen boven maaiveld
   + gebruik maken van manuele metingen met specifieke labels (zgn. peilmetingcategorieën) die wijzen op effectieve overstromingen
   + uitsluiten van diepere peilbuizen waar een eventuele kweldruk tot peilen boven maaiveld kan leiden die niet overeenstemmen met waterpeilen tijdens overstromingen
-  + checken van locatie van peilbuizen; meer kans op kweldruk aan de steilrand van de vallei
+  + checken van locatie van peilbuizen; bv. meer kans op kweldruk aan de steilrand van de vallei
 * desgevallend groeperen van meetpunten in relevante raaien, veelal dwars georiënteerd op vallei
-* eventueel relatie bekijken met aanwezige peilmetingen van oppervlaktewater (peilschalen)
+* eventueel relatie bekijken met aanwezige peilmetingen van oppervlaktewater (peilschalen) die kan wijzen op effectieve overstromingen ter hoogte van peilbuizen, waardoor er meer kans is dat de gemeten stijghoogten overeenstemmen met de waterpeilen in de overstroomde zones
 
-We bekijken dit per komgrond.
+We bekijken dit telkens per komgrond.
 
 # Komgrond Neerijse
 
@@ -964,7 +962,7 @@ komgr_doodebeemde_O_incl <- 1
 ```
 
 
-Noot: het is onduidelijk of ook de meetpunten ten oosten van de spoorwegbedding tot deze komgrond moeten gerekend worden. In principe lijkt dit stuk wel hydrologisch verbonden via de doorgang onder de spoorweg (verbindingsweggetje naar Waversebaan). Indien mee te nemen: `komgr_doodebeemde_O_incl <- 1`. Nu: `r komgr_doodebeemde_O_incl`.
+Noot: het is onduidelijk of ook de meetpunten ten oosten van de spoorwegbedding tot deze komgrond moeten gerekend worden. In principe lijkt dit stuk wel hydrologisch verbonden via de doorgang onder de spoorweg (verbindingsweggetje naar Waversebaan). Indien mee te nemen: `komgr_doodebeemde_O_incl <- 1`. Nu dus: `r komgr_doodebeemde_O_incl`.
 
 ```{r include=FALSE}
 watina <- connect_watina()
@@ -1131,9 +1129,9 @@ komgr_doodebeemde_tijdreeks %>%
   knitr::kable()
 ```
 
-Dat zijn er bijzonder weinig. Voor de overige meetpunten met stijghoogten boven maaiveld, is er dus geen absolute zekerheid dat de watertafel effectief boven maaiveld stond op het moment van opmeting, en er dus effectief sprake was van een overstroming, dan wel dat er (tijdelijk) een hogere/verhoogde kweldruk aanwezig was.
+Dat zijn er bijzonder weinig. Voor de overige meetpunten met stijghoogten boven maaiveld is er dus geen absolute zekerheid dat de watertafel effectief boven maaiveld stond op het moment van opmeting, en er dus effectief sprake was van een overstroming, dan wel dat er (tijdelijk) een hogere/verhoogde kweldruk aanwezig was.
 
-De tijdreeksen voor de meetpunten met bovengenoemde peilmetingcategorieën zitten vervat in onderstaande figuur, met aanduiding van de betreffende metingen (zwarte punten).
+De tijdreeksen voor de meetpunten met bovengenoemde peilmetingcategorieën zitten vervat in onderstaande figuur, met aanduiding van de betreffende metingen (zwarte punten). Het gaat om meetpunten met ondiepe filters (< 2.5 m).
 
 ```{r maaiveld overstroomd tijdreeks doodebeemde}
 temp <- komgr_doodebeemde_tijdreeks %>% 
@@ -1199,6 +1197,8 @@ Enkele opmerkingen bij bovenstaande figuur:
 
 * De periode met beide peilmetingcategorieën is uitgesproken kort, net zoals het aantal meetpunten met dergelijke metingen. Wellicht worden deze categorieën niet systematisch genoteerd en toegekend aan handmatige meting in de databank. De lagere frequentie van handmatige metingen doet ook de kans dalen dat op het moment van opmeting het maaiveld net overstroomd is, zeker als de overstromingen eerder kortstondig van aard zijn
 
+Hieronder de betreffende metingen:
+
 ```{r peilmetingen SOUWA TBWWL doodebeemde}
 komgr_doodebeemde_tijdreeks %>% 
   filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")) %>% 
@@ -1212,7 +1212,7 @@ komgr_doodebeemde_tijdreeks %>%
 
 Uit de metadata van de peilbuizen in de komgrond van de Doode Beemde blijkt dat de filter van een aantal peilbuizen dieper dan 2.5 m onder het maaiveld ligt. Veelal gaat het hier om peilbuizen die op dezelfde locatie ook een ondiepere tegenhanger hebben waarmee ze een zgn. peilbuiskoppel vormen (zie hoger).
 
-We bekijken hieronder de tijdreeksen van de reeds vermelde peilbuiskoppels (ondiep-diep) om te kijken of er sprake is van stijghoogteverschillen tussen de diepe en ondiepe peilbuizen binnen een koppel, die dan kan duiden op een kweldruk. Bij een kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld.
+We bekijken hieronder de tijdreeksen van de reeds vermelde peilbuiskoppels (ondiep-diep) om te kijken of er sprake is van stijghoogteverschillen tussen de diepe en ondiepe peilbuizen binnen een koppel, die dan kan duiden op een kweldruk. Bij een kweldruk is het alvast wenselijk om enkel de stijghoogten van de ondiepe peilbuis te gebruiken om een idee te krijgen van effectieve overstromingshoogten van het maaiveld. De figuren vermelden de filterdiepte.
 
 * DYLP074-091 (2 diepere peilbuizen)
 ```{r peilbuiskoppel1 doodebeemde}
@@ -1243,7 +1243,8 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL) 
   
 ```
-De stijghoogte overschrijdt hier slechts éénmaal het maaiveld. Deze observatie is eerder twijfelachtig. 
+
+De stijghoogte overschrijdt hier slechts éénmaal het maaiveld. Deze observatie is eerder twijfelachtig, gezien de overeenkomstige meetwaarde in de ondiepere filter. 
 
 * DYLP008-016
 ```{r peilbuiskoppel2 doodebeemde}
@@ -1274,7 +1275,8 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL) 
   
 ```
-In de jaren 1990 lijkt er vrijwel geen sprake van een kweldruk. Vanaf 1998 stijgen de gemeten peilen echter regelmatig boven het maaiveld, en lijkt er wel een drukverschil te zijn tussen beide peilbuizen. Vanaf 2006 (nieuwe peilpuntversie met diepere filter?) lijken de verschillen dan weer af te nemen, met vreemde sprongen (bv. 2010-2013) vanwege een onvolledige dataset. Raadzaam om sowieso enkel de stijghoogten van de ondiepe peilbuis (DYLP008) te gebruiken in een mogelijke validatieset voor gemodelleerde overstromingsdieptekaarten.
+
+In de jaren 1990 lijkt er vrijwel geen sprake van een kweldruk. Vanaf 1998 stijgen de gemeten peilen echter regelmatig boven het maaiveld, en lijkt er wel een drukverschil te zijn tussen beide peilbuizen. Vanaf 2006 (nieuwe peilpuntversie met diepere filter?) lijken de verschillen dan weer af te nemen, met vreemde sprongen (bv. 2010-2013) vanwege een onvolledige dataset. Het is raadzaam om sowieso enkel de stijghoogten van de ondiepe peilbuis (DYLP008) te gebruiken in een mogelijke validatieset voor gemodelleerde overstromingsdieptekaarten.
 
 * DYLP017-092
 ```{r peilbuiskoppel3 doodebeemde}
@@ -1306,7 +1308,39 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   
 ```
 
-Hier worden geen overschrijdingen van het maaiveld vastgesteld, dus niet relevant.
+Hier worden geen overschrijdingen van het maaiveld vastgesteld, dus niet relevant. Bovendien lijken de verschillen tussen de stijghoogten in beide peilbuizen eerder beperkt tot onbestaande.
+
+Meer toegespitst op de periode met parallelle metingen op beide filterdiepten:
+```{r peilbuiskoppel3_bis doodebeemde}
+ggplot(komgr_doodebeemde_tijdreeks %>% 
+         filter(loc_code %in% c("DYLP017",
+                                "DYLP092")) %>% 
+         inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID")) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(filterdepth,1), " m-mv)"),
+                linetype = MetingTypeNaam)) +
+  ## non-clipping zoom
+  coord_cartesian(#ylim = c(-1, 0.1),
+                  xlim = c(ymd("1999-01-01"), ymd("2015-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2013-07-01"), ymd("2015-01-01")) +
+  # ylim(-1, 0.1) +
+  # geom_point(data = komgr_neerijse_tijdreeks %>% 
+  #              filter(PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")),
+  #            aes(x = date(Datum),
+  #                y = mMaaiveld,
+  #                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"), legend.position = "right") +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  
+```
+
+Beide filters werden blijkbaar ook niet altijd synchroon opgemeten.
 
 * DYLP006-DYLP015
 ```{r}
@@ -1338,12 +1372,12 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   
 ```
 
-Nauwelijks verschillen in stijghoogte. Het verschil in filterdiepte is dan ook beperkt.
+Nauwelijks verschillen in stijghoogte. Het verschil in filterdiepte is dan ook beperkt. Vreemde uitschieter boven maaiveld eind 2010.
 
 Noot: indien meetpunten ten oosten van de spoorweg ook meegenomen worden, dan komen er nog volgende peilbuiskoppels bij:
 
 * DYLP051-050
-```{r peilbuiskoppel4 doodebeemde, include=FALSE}
+```{r peilbuiskoppel4 doodebeemde}
 ggplot(komgr_doodebeemde_tijdreeks %>% 
          filter(loc_code %in% c("DYLP050",
                                 "DYLP051")) %>% 
@@ -1371,12 +1405,12 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL) 
 ```
 
-Hier zijn wel degelijk verschillen in stijghoogte aanwezig.
+Hier zijn wel degelijk verschillen in stijghoogte aanwezig. Vlak aan de voet van de steilrand van de vallei is er een vaak sowieso een hogere kweldruk te verwachten, zelfs in ondiepe peilbuizen.
 
 
 * Peilbuiskoppel DYLP053-052
 
-```{r peilbuiskoppel5 doodebeemde, include=FALSE}
+```{r peilbuiskoppel5 doodebeemde}
 ggplot(komgr_doodebeemde_tijdreeks %>% 
          filter(loc_code %in% c("DYLP052",
                                 "DYLP053")) %>% 
@@ -1436,7 +1470,7 @@ komgr_doodebeemde_loc_fltrd %>%
 
 In `r length(komgr_doodebeemde_loc_fltrd_vec)` van de `r length(komgr_doodebeemde_loc_vec)` meetpunten in de komgrond van de Doode Beemde hebben de stijghoogten dus ooit eens boven maaiveld gelegen in ondiepe peilbuizen.
 
-Figuur met de tijdreeksen voor de subset van ondiepe meetpunten met minstens één of meerdere stijghoogten boven maaiveld in westelijk deel van de komgrond:
+Figuur met de tijdreeksen voor de subset van ondiepe meetpunten met minstens één of meerdere stijghoogten boven maaiveld in het westelijk deel van de komgrond:
 
 ```{r tijdreeks_doodebeemde_west_plot_bovenmaaiveld, message=FALSE, warning=FALSE}
 ggplot(komgr_doodebeemde_tijdreeks %>% 
@@ -1459,7 +1493,7 @@ ggplot(komgr_doodebeemde_tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-Figuur met de tijdreeksen voor de subset van ondiepe meetpunten met minstens één of meerdere stijghoogten boven maaiveld in oostelijk deel van de komgrond:
+Figuur met de tijdreeksen voor de subset van ondiepe meetpunten met minstens één of meerdere stijghoogten boven maaiveld in het oostelijk deel van de komgrond:
 
 ```{r tijdreeks_doodebeemde_oost_plot_bovenmaaiveld, message=FALSE, warning=FALSE}
 ggplot(komgr_doodebeemde_tijdreeks %>% 
@@ -1691,6 +1725,8 @@ ggplot(komgr_doodebeemde_tijdreeks_opp) +
 
 #### Meetpunten:
 
+Enkel ondiepe peilfilters:
+
 ```{r}
 komgr_doodebeemde_raai1_locs <- get_locs(
   watina, 
@@ -1729,6 +1765,8 @@ leaflet(komgr_doodebeemde_raai1_locs %>%
 
 #### Tijdreeksen:
 
+Beperkt tot ondiepe peilfilters:
+
 ```{r}
 komgr_doodebeemde_raai1_locs %>% 
   inner_join(tbl(watina, "FactPeilMeting"),
@@ -1752,7 +1790,7 @@ komgr_doodebeemde_raai1_locs %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-Beperkt tot meetreeksen met metingen boven maaiveld:
+Beperkt tot meetreeksen van ondiepe filters met metingen boven maaiveld:
 
 ```{r}
 temp <- komgr_doodebeemde_raai1_locs %>% 
@@ -1786,7 +1824,7 @@ komgr_doodebeemde_raai1_locs %>%
 
 #### Samenhang grond- en oppervlaktewaterpeilen:
 
-Tijdreeks Leibeek in zwarte stippellijn:
+Tijdreeks Leibeek in zwarte stippellijn, bovenop de tijdreeksen in de ondiepe filters met stijghoogten boven maaiveld:
 
 ```{r, warning = FALSE}
 temp <- komgr_doodebeemde_raai1_locs %>% 
@@ -1833,7 +1871,8 @@ Het lijkt alvast dat de peilen van de Leibeek nauw samenhangen met veel van de s
 ## Finale selectie grondwatermeetpunten en -metingen
 
 Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 2.5 m.
-De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (dus PeilmetingCategorie leeg of enkel duidend op overstroming).
+De vraag is of hier nog individuele ondiepe peilbuizen uitgesloten moeten worden omwille van hoge kweldrukken, vnl. dan aan de oostelijke steilrand van de vallei.
 
 # Komgrond Langerodevijver
 Het gaat hier om de komgrond tussen Ijse en Ruwaal, op de westelijke oever van de Dijle, die wordt doorsneden door de Leigracht. Aangezien de Leigracht onderbroken werd ter hoogte van de Ijse functioneert deze komgrond onafhankelijk van de zuidelijk gelegen komgrond van Neerijse.
@@ -1995,7 +2034,7 @@ Hieruit komen een aantal zaken naar voren:
 
 * de stijghoogten komen in de meetpunten nauwelijks substantieel boven maaiveld uit, zelfs niet in de diepere peilbuizen
 * de duur van de tijdreeksen varieert uiteraard per meetpunt. Niet alle meetpunten worden/werden even lang bemeten
-* oudere metingen gebeurden veelal manueel; pas later werden de automatische meetsondes geïntroduceerd. Die laatste het voordeel hebben dat ze elke dag 2 metingen registreren en daardoor beter in staat zijn tijdelijke overstromingen te detecteren dan met manuele metingen, die in het beste geval slechts om de 14 dagen gebeuren
+* oudere metingen gebeurden veelal manueel; pas later werden de automatische meetsondes geïntroduceerd. Automatische peilsondes hebben het voordeel dat ze elke dag 2 metingen registreren en daardoor beter in staat zijn tijdelijke overstromingen te detecteren dan manuele metingen, die in het beste geval slechts om de 14 dagen gebeuren
 * meetpunt DYLP109 kende vroeger een opvallend grotere amplitude; de stijghoogten liggen sinds de herstart van de metingen in 2019 beduidend hoger in de zomerperiode dan in de periode vóór 2015, en dat ondanks de droge klimatologische omstandigheden in 2019 en 2020
 
 ### Peilmeting met labels die wijzen op effectieve overstromingen
@@ -2203,6 +2242,7 @@ ggplot(komgr_langerode_tijdreeks %>%
         legend.position = "right") +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
 ```
+
 Het lijkt er niet op de er een uitgesproken relatie is tussen de peilen van de Dijle enerzijds en de stijghoogten boven maaiveld in de grondwatermeetpunten in de komgrond van Langerode. Stijghoogten boven maaiveld zijn schaars in deze komgrond. Recente overstromingen lijken zich ook te beperken tot een smalle band (ong. 100 m) rondom de Leigracht zelf (cfr. recent overstroomde gebieden in onderstaand kaartje).
 
 ```{r}
@@ -2256,16 +2296,16 @@ leaflet() %>%
 ```
 
 ## Opsplitsing naar raaien
-Niet relevant?
+Niet relevant
 
 ## Finale selectie grondwatermeetpunten en -metingen
 
 Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een filterdiepte van minder dan 3 m.
-De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (dus PeilmetingCategorie leeg of duidend op overstroming).
 
 # Komgrond Leibeek West (tot E40)
 
-Deze komgrond ligt op de linkeroever van de Dijle, tussen de Stationstraat in Korbeek-Dijle in het zuiden tot de E40 snelweg in het noorden. De depressies rond Veeweide en Ormendaal worden ontwatert door de Leibeek die centraal in de komgrond in de Dijle uitmondt. De depressie rond Rotspoel (E40) ontwatert naar de komgrond van Egenhoven ten noorden van de E40 via een waterloop (Langestaart) die onder de E40 door stroomt (via pompstation?). Eigenlijk hoort het noordelijke stuk van deze komgrond dus eerder tot de komgrond van Egenhoven, maar de E40 zorgt wel voor een barrière.
+Deze komgrond ligt op de linkeroever van de Dijle, tussen de Stationstraat in Korbeek-Dijle in het zuiden en de E40 snelweg in het noorden. De depressies rond Veeweide en Ormendaal worden ontwatert door de Leibeek die centraal in de komgrond in de Dijle uitmondt. De depressie rond Rotspoel (E40) ontwatert naar de komgrond van Egenhoven ten noorden van de E40 via een waterloop (Langestaart) die onder de E40 door stroomt (via pompstation?). Eigenlijk hoort het noordelijke stuk van deze komgrond dus eerder tot de komgrond van Egenhoven, maar de E40 zorgt wel voor een zekere barrière.
 
 ```{r include=FALSE}
 watina <- connect_watina()
@@ -2290,8 +2330,7 @@ komgr_leibeekW_loc <- get_locs(watina,
 komgr_leibeekW_loc %>% collect() %>% knitr::kable()
 ```
 
-Voor net iets meer dan de helft van de (historische) peilbuizen is de peilbuislengte, en dus ook de filterdiepte, gekend. In 4 van de 7 peilbuizen met gekende filterdiepte, zit de filter meer dan 2.5 m onder maaiveld.
-De meetpunten DYLP177 en DYLP277 vormen een peilbuiskoppel, hoewel de filterdiepten slechts ongeveer 1 m verschillen.
+Voor net iets meer dan de helft van de (historische) peilbuizen is de peilbuislengte, en dus ook de filterdiepte, gekend. In 4 van de 7 peilbuizen met gekende filterdiepte, zit de filter meer dan 2.5 m onder maaiveld. De meetpunten DYLP177 en DYLP277 vormen een peilbuiskoppel, hoewel de filterdiepten slechts ongeveer 1 m verschillen. Beide peilbuizen hebben wel een filterdiepte van meer dan 5 m onder maaiveld.
 
 De ligging van deze grondwatermeetpunten wordt in onderstaande figuur weergegeven, met onderscheid naar filterdiepte.
 
@@ -2427,9 +2466,9 @@ Hieruit komen een aantal zaken naar voren:
 * er zijn slechts drie meetpunten met een filterdiepte < 2.5 m; de tijdreeks van DYLP130 is bovendien erg kort, en de overige twee meetpunten (DYLP200 en DYLP132) liggen in dezelfde depressie (Rotspoel, langs E40)
 * DYLP176 (diepe filter) vertoont in de periode 2002-2012 rare, niet-seizoensgebonden schommelingen en bovendien lijkt er een trend aanwezig die duidt op een globale toename van de stijghoogte in diezelfde periode. Heeft dit mogelijks te maken met een sterkere beïnvloeding van de grondwaterpeilen door de peilen van de Dijle dan in andere komgronden, of misschien met de nabijheid van de drinkwaterwinning die de freatische grondwaterlagen in het gebied aanboort, of nog een andere reden?
 * in heel wat van deze tijdreeksen, die bovendien allemaal uit handmatige metingen bestaan, springen de gemeten stijghoogten regelmatig boven maaiveld; vanwege de grotere tijdspanne tussen opeenvolgende handmatige metingen is het evenwel mogelijk dat kortstondige overstromingen niet altijd (nauwkeurig) geregistreerd werden 
-* DYLP200 vertoont geen globaal stijgende trend met onduidelijke seizoenale schommelingen, in tegenstelling tot de tijdreeksen van sommige andere meetpunten; de tijdreeks vertoont daarentegen duidelijke seizoenale schommelingen met buiten de zomerperiode bovendien stijghoogten die quasi continu tot boven het maaiveld reiken; die filterdiepte (2.45 m) doet alvast niet vermoeden dat hier sprake is van een kweldruk
+* DYLP200 vertoont geen globaal stijgende trend met onduidelijke seizoenale schommelingen, in tegenstelling tot de tijdreeksen van sommige andere meetpunten; de tijdreeks vertoont daarentegen duidelijke seizoenale schommelingen met buiten de zomerperiode bovendien stijghoogten die quasi continu tot boven het maaiveld reiken; de filterdiepte (2.45 m) doet alvast niet vermoeden dat hier sprake is van een kweldruk
 
-**Samengevat**: geen stijghoogten boven maaiveld bruikbaar voor kalibratie van overstromingsdiepten in deze komgrond.
+**Samengevat**: de meetreeksen met stijghoogten boven maaiveld lijken weinig bruikbaar voor kalibratie van overstromingsdiepten in deze komgrond.
 
 Redenen:
 
@@ -2914,7 +2953,7 @@ Hieruit komen een aantal zaken naar voren:
 * vermoedelijk sterke kweldruk in een aantal meetpunten:
     * in DYLP107 en DYLP117: vanwege ligging net onderaan de steilrand van vallei --> hoge kweldruk met dus stijghoogten die hoger liggen dan effectief grondwaterpeil
     * DYLP171: vanwege zeer diepe filter; nabij laagste punt komgrond, langs Leibeek
-    * DYLP113 en DYLP116: waarom zijn de peilbuislengten (en dus filterdiepten) niet gedefinieerd; het gaat hier toch mooie tijdreeksen die bovendien actueel nog bemeten worden; vraag waarom de stijghoogten, die tot 2018 zeer frequent boven maaiveld liggen (kweldruk?), zeer drastisch (tot 1 m) gedaald zijn sinds 2019-2020 ...
+    * DYLP113 en DYLP116: waarom zijn de peilbuislengten (en dus filterdiepten) niet gedefinieerd; het gaat hier toch om mooie tijdreeksen die bovendien actueel nog bemeten worden; vraag waarom de stijghoogten, die tot 2018 zeer frequent boven maaiveld liggen (kweldruk?), zeer drastisch (tot 1 m) gedaald zijn sinds 2019-2020 ...
 * sterke veranderingen in stijghoogten tussen verschillende meetperioden (na onderbreking van metingen):
     * DYLP171: zeer diepe filter --> stijghoogten komen niet overeen met grondwaterpeil; bovendien grote verandering in gemeten stijghoogten tussen 2010-2013 en vanaf 2017: vanwaar die grote sprong?
     * DYLP121: grote verandering in stijghoogten in 2000-2001 vs in 2006-2008: vanwaar die verandering? Zie ook DYLP171, want beide meetpunten liggen dicht bij elkaar langs de Leibeek, tussen de Dijle en de Vijvers van Oud-Heverlee; veranderingen in beheer van de Leibeek (ruiming, opstuwing, aantakking Dijle)?
@@ -3083,7 +3122,7 @@ ggplot(komgr_leibeekO_tijdreeks_S) +
 
 Uit bovenstaande figuren blijkt alvast dat er weinig samenhang is tussen de peilen van de Leibeek en die van de Dijle.
 
-Hieronder bekijken we de meetreeks van Dijle samen met de grondwaterstijghoogten in de meetpunten met metingen boven maaiveld om te kijken of er interactie te zien is die erop kan wijzen dat de stijghoogten boven maaiveld samengaan met (pieken in) de waterpeilen in de Dijle of Leibeek.
+Hieronder bekijken we de meetreeks van de Dijle samen met de grondwaterstijghoogten in de meetpunten met metingen boven maaiveld om te kijken of er interactie te zien is die erop kan wijzen dat de stijghoogten boven maaiveld samengaan met (pieken in) de waterpeilen in de Dijle of Leibeek.
 
 Noordelijk deel, peilen van Dijle in lichtgrijs:
 
@@ -3235,12 +3274,13 @@ ggplot(komgr_leibeekO_tijdreeks %>%
 Eveneens weinig interactie.
 
 ## Opsplitsing naar raaien
-Niet relevant?
+Niet relevant
 
 ## Finale selectie grondwatermeetpunten en -metingen
 
 Uit bovenstaande screening besluiten we dat we enkel de meetpunten selecteren met een (gekende) filterdiepte van minder dan 2.5 m.
 De peilmetingen zelf beperken we tot de gevalideerde metingen (PeilmetingStatus) zonder speciale metingen (PeilmetingCategorie leeg of duidend op overstroming).
+De vraag is dan nog of ook DYLP107 nog moet uitgesloten worden (kweldruk).
 
 # Komgrond Egenhovenbos
 
@@ -3679,6 +3719,8 @@ selectie van peilbuizen met filterdiepte < 2.5 m (peilbuis met ongekende filterd
 
 # Komgrond Leigracht Oost
 
+Het gaat hier om een zone op de rechteroever (oost) van Dijle. De waterloop "Grens van Oud-Heverlee" vormt de noordelijke grens, de Neerijsebaan de zuidelijke, de oeverwallen van de Dijle de westelijke, en in het oosten is er de vrij steile valleiflank. Ook hier doorkruist een diepe gracht de komgrond van zuid naar noord, de Leigracht. Ter hoogte van de Reigerstraat mondt die uit in de Dijle. Het is niet geheel duidelijk of het stukje tussen de Reigerstraat en de waterloop "Grens van Oud-Heverlee" nog tot deze komgrond behoort, dan wel tot die van de Doode Beemde (zie hoger). Hieronder worden de meetpunten in dat deel alvast wel tot deze komgrond gerekend.
+
 ```{r include=FALSE}
 watina <- connect_watina()
 # library(inbodb)
@@ -3741,13 +3783,14 @@ leaflet() %>%
   )
 ```
 
-Spreiding qua filterdiepte van de peilbuizen, wetende dat voor de helft geen filterdiepte bekend is:
+Spreiding qua filterdiepte van de peilbuizen, wetende dat voor één peilbuis geen filterdiepte bekend is:
 
 ```{r message = FALSE, warning = FALSE, error = FALSE, echo = FALSE}
 komgr_leigrachtO_loc %>% 
   ggplot() +
   geom_histogram(aes(x = filterdepth), binwidth = 0.10)
 ```
+
 Op basis van bovenstaand kaartje kunnen we de volgende peilbuiskoppels onderscheiden:
 
 * diep (>2.5m) - ondiep (<=2.5m):
@@ -4233,6 +4276,7 @@ dataset_kal_overstr_dijle <-
 
 # Openstaande vragen
 
+* juiste opdeling in komgronden?
 * hoe de peilmetingen met bepaalde categorieën uit de tijdreeksen van meetsondes verwijderen (twijfelachtig, meetartefacten, e.d.)? Die categorieën worden nu steeds weer overschreven bij hercompensatie/-kalibratie van drukmetingen, en kunnen er daardoor nu niet uitgefilterd worden. Enkel bij handmatige metingen zitten ze "ingebakken" ... Die categorieën zorgen nu voor uitschieters (zowel op- of neerwaarts) die mogelijks problemen geven als we ze als zodanig aanleveren ter kalibratie van de overstromingskaarten
 * veel meetreeksen lijken te stoppen rond 2015; de oorzaak hiervan is niet geheel duidelijk: gaat het hier om meetpunten die nog wel bemeten worden, maar waarvoor de de metingen nog niet aangevuld werden in de databank, of werden er veel meetpunten effectief afgesloten in die periode?
 * komgrond Doode Beemde: het is onduidelijk of ook de meetpunten ten oosten van de spoorwegbedding tot deze komgrond moeten gerekend worden. In principe lijkt dit stuk wel hydrologisch verbonden via de doorgang onder de spoorweg (verbindingsweggetje naar Waversebaan)
