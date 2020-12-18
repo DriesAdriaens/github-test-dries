@@ -1,7 +1,7 @@
 ---
 title: "Dataset validatie overstromingen - Mombeek"
 author: "Dries Adriaens"
-date: "26-10-2020"
+date: "18-12-2020"
 output:
   html_document:
     code_folding: hide
@@ -26,6 +26,7 @@ library(stringr)
 library(tidyr)
 library(sf)
 library(leaflet)
+library(wateRinfo)
 ```
 
 ```{r connection}
@@ -487,6 +488,8 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
+Eventueel nog (langere) meetreeksen bekijken van meetstations L09_16G en L09_167 op resp. Oude Mombeek en Mombeek, gelegen tussen raai 2 en 3 ter hoogte van de monding van de Melbeekgracht in de Mombeek?
+
 ## Raai 3
 
 ### Kaart
@@ -525,11 +528,13 @@ leaflet(data = locs %>%
 
 ### Tijdreeksen
 
+Beperkt tot tijdreeksen met stijghoogten boven maaiveld
+
 m-mv
 
 ```{r tijdreeks_raai_3, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
-         filter(transect_nr == 3 & loc_typecode != "S")) +
+         filter(transect_nr == 3 & loc_typecode != "S" & gr_mv == 1)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -551,7 +556,7 @@ m-mv, sinds 2017
 
 ```{r tijdreeks_raai_3_2017, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
-         filter(transect_nr == 3 & loc_typecode != "S")) +
+         filter(transect_nr == 3 & loc_typecode != "S" & gr_mv == 1)) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -573,7 +578,7 @@ mTAW
 
 ```{r tijdreeks_raai_3_TAW, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
-         filter(transect_nr == 3)) +
+         filter(transect_nr == 3 & gr_mv == 1)) +
   geom_line(aes(x = date(Datum),
                 y = mTAW,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -597,7 +602,7 @@ mTAW, sinds 2017
 
 ```{r tijdreeks_raai_3_TAW_2017, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
-         filter(transect_nr == 3)) +
+         filter(transect_nr == 3 & gr_mv == 1)) +
   geom_line(aes(x = date(Datum),
                 y = mTAW,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -616,6 +621,87 @@ ggplot(tijdreeks %>%
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
+
+mTAW, sinds 2017, met aanduiding van tijdreeksen Mombeek
+
+```{r tijdreeks_raai_3_TAW_2017_2, message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 3 & gr_mv == 1)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.75),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  geom_line(data = tijdreeks %>% filter(transect_nr == 3 & loc_code %in% c("MOMS010")),
+            aes(x = date(Datum),
+                y = mTAW,
+                # linetype = loc_code
+                group = loc_code, linetype = loc_code),
+            alpha = 0.5) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Mombeek")
+```
+mTAW, sinds 2017, met aanduiding van tijdreeksen Oude Mombeek
+
+```{r tijdreeks_raai_3_TAW_2017_3, message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 3 & gr_mv == 1)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.75),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  geom_line(data = tijdreeks %>% filter(transect_nr == 3 & loc_code %in% c("MOMS011")),
+            aes(x = date(Datum),
+                y = mTAW,
+                # linetype = loc_code
+                group = loc_code, linetype = loc_code),
+            alpha = 0.5) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Oude Mombeek")
+```
+
+Enkel de peilschalen van raai 3 (MOMS011: Oude Mombeek; MOMS010: Mombeek):
+```{r tijdreeks_raai_3_TAW_2017_4, message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 3 & loc_typecode == "S")) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.75),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+Eventueel nog (langere) meetreeksen bekijken van meetstations L09_16G en L09_167 op resp. Oude Mombeek en Mombeek, gelegen tussen raai 2 en 3 ter hoogte van de monding van de Melbeekgracht in de Mombeek?
 
 ## Raai 4
 
