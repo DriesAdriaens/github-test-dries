@@ -1,7 +1,7 @@
 ---
 title: "Dataset validatie overstromingen - Mombeek"
 author: "Dries Adriaens"
-date: "18-12-2020"
+date: "21-12-2020"
 output:
   html_document:
     code_folding: hide
@@ -33,28 +33,50 @@ library(wateRinfo)
 watina <- connect_watina()
 ```
 
+# Doelstelling
+
+Voor het project Future Floodplains worden de overstromingen in de alluviale vallei van de Mombeek gemodelleerd (werkpakket 1, KULeuven). Voor de validatie van de overstromingskaarten voor de actuele toestand is er nood aan effectief gemeten waterstanden tijdens overstromingen. De vraag is of er op basis van de grondwatermeetpunten (en evt. oppervlaktewatermeetpunten) uit de WATINA databank dergelijke meetgegevens op een betrouwbare manier aangeleverd kunnen worden.
+
+Onderstaand document verkent welke gegevens eventueel in aanmerking komen als dataset ter validatie van de overstromingskaarten, en welke niet.
+
+# Aanpak
+
+* selectie grondwatermeetpunten
+* kijken of meetwaarden effectief overeenstemmen met reële waterpeilen boven maaiveld
+  + gebruik maken van manuele metingen met specifieke labels (zgn. peilmetingcategorieën) die wijzen op effectieve overstromingen
+  + uitsluiten van diepere peilbuizen waar een eventuele kweldruk tot peilen boven maaiveld kan leiden die niet overeenstemmen met waterpeilen tijdens overstromingen
+  + checken van locatie van peilbuizen; bv. meer kans op kweldruk aan de steilrand van de vallei
+* desgevallend groeperen van meetpunten in relevante raaien, veelal dwars georiënteerd op vallei
+* eventueel relatie bekijken met aanwezige peilmetingen van oppervlaktewater (peilschalen) die kan wijzen op effectieve overstromingen ter hoogte van peilbuizen, waardoor er meer kans is dat de gemeten stijghoogten overeenstemmen met de waterpeilen in de overstroomde zones
+
 # Meetpunten
 
-We vragen al de meetpunten met peilbuis (piëzometer) in de vallei van de Mombeek op met behulp van het R-package `Watina`.
+We vragen de metadata van de grond- en oppervlaktewatermeetpunten in de vallei van de Mombeek op met behulp van het R-package `Watina`.
 
 ```{r meetpunten}
 locaties <- get_locs(watina,
                      area_codes = "MOM",
-                     loc_type = c("P", "S"),
+                     loc_type = c("P", "B", "S"),
                      loc_validity = c("VLD", "ENT"),
                      filterdepth_guess = TRUE,
                      filterdepth_na = TRUE,
                      filterdepth_range = c(0, 30))
 locaties %>% collect() %>% knitr::kable()
 ```
-Histogram op basis van de diepte van de peilbuisfilters:
+Histogram op basis van de diepte van de filters van de grondwatermeetpunten (`loc_type == "P"`) :
 ```{r}
 locaties %>% 
   ggplot() +
   geom_histogram(aes(x = filterdepth))
 ```
 
-## Raaien
+De maximale filterdiepte bedraagt 2.94m.
+
+# Raaien
+
+In de vallei van de Mombeek liggen de meetpunten gegroepeerd in 3 raaien, dwars georiënteerd op de Mombeek. Eén meetpunt ligt geïsoleerd in het oosten.
+
+Onderstaande tabel groepeert de meetpunten per raai.
 
 ```{r raaien}
 trans_mom_1 <- c("MOMP005", "MOMP006", "MOMP007", "MOMP008", "MOMP009")
@@ -80,7 +102,7 @@ transects %>% knitr::kable()
 locs <- locaties %>% collect() %>% 
   left_join(transects, by = "loc_code")
 ```
-Overzichtskaartje van de peilbuizen en peilschalen, met aanduiding van de overstromingsgevoelige gebieden:
+Overzichtskaartje van de peilbuizen en peilschalen, met aanduiding van de overstromingsgevoelige gebieden (optioneel: recent overstroomde gebieden en de habitatrichtlijngebieden (HRL)):
 
 ```{r}
 pal <- colorFactor(palette = c("red", "blue"), domain = locs$loc_typecode)
@@ -103,7 +125,11 @@ leaflet(data = locs %>%
               layers = "RecOvstrGeb",
               options = WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 0.5),
               group = "Recent overstroomd") %>% 
-  hideGroup("Recent overstroomd") %>% 
+  addWMSTiles("https://www.mercator.vlaanderen.be/raadpleegdienstenmercatorpubliek/ows?SERVICE=WMS",
+              layers = "ps:ps_hbtrl_deel",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 0.5),
+              group = "HRL") %>% 
+  hideGroup(c("Recent overstroomd", "HRL")) %>% 
   addCircleMarkers(label = ~loc_code, fill = FALSE, weight = 3, color = ~pal(loc_typecode),
              labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
                                          direction = "right", opacity = 0.50),
@@ -111,14 +137,20 @@ leaflet(data = locs %>%
   addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>% 
   addLayersControl(
     baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
-    overlayGroups = c("Overstromingsgevoelig", "Recent overstroomd", "Meetpunten"),
+    overlayGroups = c("Overstromingsgevoelig", "Recent overstroomd", "Meetpunten", "HRL"),
     options = layersControlOptions(collapsed = FALSE)) %>% 
   addLegend(#pal = pal, values = ~loc_typecode,
             colors = c("red", "blue"), labels = c("grondwater", "oppervlaktewater"),
             group = "Meetpunten", title = "Meetpunttype")
 ```
 
+Uit de metadata van de grondwatermeetpunten leiden we af dat er in geen van de raaien peilbuiskoppels aanwezig zijn waarmee we ons een idee kunnen vormen van de eventueel aanwezig kweldruk in een meetpunt. Het gaat dan om twee of meerdere peilbuizen met filters op verschillende diepten. Stijghoogteverschillen tussen deze filters op eenzelfde locatie wijzen dan op een grondwaterstroming (flux) van de ene filter naar de andere. Hoe hoger de druk, hoe minder de gemeten stijghoogte in een peilbuis overeen zal stemmen met de werkelijke grondwatertafel ter hoogte van het meetpunt. Meestal geldt: hoe dieper de filter, hoe groter de kans op een grotere stijghoogte, en hoe groter de afwijking tussen de stijghoogte en de effectieve grondwatertafel. Die grondwatertafel ligt vaak lager dan de gemeten stijghoogte in een peilbuis doordat het vrij stromende grondwater vaak uittreedt ter hoogte van het maaiveld en afgevoerd wordt via greppels en sloten, of zich onder het maaiveld reeds lateraal verplaatst vooraleer aan de oppervlakte te komen. Bij een hoge kweldruk kan de gemeten stijghoogte dus boven maaiveld liggen, terwijl de grondwatertafel gelijk of onder maaiveld ligt. Door in zo'n geval te veronderstellen dat stijghoogten zonder meer overeenstemmen met de effectieve grondwatertafel, zou men denken dat het maaiveld onder water staat, en er dus sprake is van overstroming, terwijl in realiteit door de aanwezige drainage of laterale grondwaterstroming het effectieve grondwaterpeil helemaal niet boven maaiveld uitkomt. Die vergissing is uiteraard te vermijden als je die metingen (stijghoogten in geval van piëzometers) net wil gebruiken om gemodelleerde overstromingsdiepten te ijken.
+
+Daarom is het belangrijk om meetpunten uit te sluiten waar aangetoond kan worden (in geval van peilbuiskoppel) of er het vermoeden is van een hoge kweldruk. Doordat er geen peilbuiskoppels in de vallei van de Mombeek aanwezig zijn, kunnen we geen uitsluitsel geven over een kweldruk. Daarnaast is de kans het grootst om verhoogde kweldrukken aan te treffen aan de rand van de vallei. Meer naar het centrum van de vallei neemt die kweldruk veelal af. Extra aandacht is dus nodig bij de beoordeling van de metingen van punten aan de rand van de vallei. Hier is de kans het grootst dat gemeten stijghoogten boven maaiveld niet overeenstemmen met effectieve overstromingen.
+
 # Tijdreeksen per raai
+
+We stellen de tijdreeksen voor de verschillende meetpunten samen door alle gevalideerde metingen op te vragen, met uitzondering van de speciale peilmetingcategorieën. We nemen enkel de categorieën "Peilbuis onder water" (SOUWA) en "Peilpunt onder water" (TBWWL) mee in de selectie.
 
 ```{r tijdreeks}
 tijdreeks <-
@@ -134,7 +166,7 @@ tijdreeks <-
   mutate(gr_mv = ifelse(max(mMaaiveld) > 0 & loc_typecode != "S", 1, 0))
 ```
 
-Meetpunten met tijdreeksen met stijghoogten boven maaiveld:
+Op basis van de peilmetingen kunnen we de grondwatermeetpunten selecteren waar de stijghoogten ooit boven maaiveld lagen.
 
 ```{r}
 locs <- locs %>% 
@@ -149,6 +181,13 @@ locs %>% filter(gr_mv == 1) %>%
   knitr::kable()
 ```
 
+Uit dat lijstje blijkt dat de stijghoogten in de drie westelijk gelegen raaien telkens in meerdere meetpunten boven maaiveld liggen.
+
+## Peilmeting met labels die wijzen op effectieve overstromingen
+
+Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd. Dergelijke metingen werden in de vallei van de Mombeek echter niet vastgesteld
+
+We bekijken hieronder de tijdreeksen voor elk van deze raaien in meer detail. 
 
 ## Raai 1
 
@@ -185,7 +224,9 @@ leaflet(data = locs %>%
             group = "Meetpunten", title = "Meetpunttype")
 ```
 
-### Tijdreeksen
+### Tijdreeksen met stijghoogten boven maaiveld
+
+Beperkt tot tijdreeksen met stijghoogten boven maaiveld
 
 m-mv
 
@@ -231,7 +272,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-mTAW
+mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn
 
 ```{r tijdreeks_raai_1_TAW, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -255,7 +296,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-mTAW, sinds 2017
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn
 
 ```{r tijdreeks_raai_1_TAW_2017, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -314,9 +355,9 @@ leaflet(data = locs %>%
             group = "Meetpunten", title = "Meetpunttype")
 ```
 
-### Tijdreeksen
+### Tijdreeksen met stijghoogten boven maaiveld
 
-Beperkt tot tijdreeksen met stijghoogten boven maaiveld
+Beperkt tot tijdreeksen met stijghoogten boven maaiveld. Merk op dat in het valleigedeelte tussen Oude Mombeek en Mombeek de stijghoogten niet boven maaiveld uitkomen. Dat is enkel het geval in de meetpunten ten zuiden van de Oude Mombeek.
 
 m-mv
 
@@ -362,7 +403,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-mTAW
+mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn
 
 ```{r tijdreeks_raai_2_TAW, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -386,7 +427,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-mTAW, sinds 2017
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn
 
 ```{r tijdreeks_raai_2_TAW_2017_1, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -410,7 +451,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-mTAW, sinds 2017, met aanduiding van tijdreeksen Mombeek
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn. De tijdreeksen van de waterpeilen van de Mombeek staan in het grijs.
 
 ```{r tijdreeks_raai_2_TAW_2017_2, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -439,7 +480,10 @@ ggplot(tijdreeks %>%
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Mombeek")
 ```
-mTAW, sinds 2017, met aanduiding van tijdreeksen Oude Mombeek
+
+Hieruit blijkt dat de grondwaterpeilen vooral in het voorjaar sterk reageren op peilmaxima in de Mombeek.
+
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn. De tijdreeksen van de waterpeilen van de Oude Mombeek staan in het grijs.
 
 ```{r tijdreeks_raai_2_TAW_2017_3, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -468,7 +512,14 @@ ggplot(tijdreeks %>%
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Oude Mombeek")
 ```
-Enkel de peilschalen van raai 2 (MOMS001 en MOMS009: Oude Mombeek; MOMS002 en MOMS008: Mombeek):
+
+Vaststellingen:
+
+* In het na- en voorjaar liggen de stijghoogten in de grondwatermeetpunten boven het waterpeil van zowel Mombeek als Oude Mombeek. In die periode werken beide waterlopen dus drainerend op de omliggende valleigronden.
+* In de zomerperiode zakken de stijghoogten onder het waterpeil van de Mombeek, en onder het bodempeil van de Oude Mombeek
+* De Oude Mombeek valt elk jaar in de zomerperiode een hele tijd droog; helaas zijn er geen meetgegevens om te bekijken hoe uitzonderlijk droog de meetperiode was in vergelijking met voorgaande jaren
+
+Figuur met enkel de peilschalen van raai 2 (MOMS001 en MOMS009: Oude Mombeek; MOMS002 en MOMS008: Mombeek):
 ```{r tijdreeks_raai_2_TAW_2017_4, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
          filter(transect_nr == 2 & loc_typecode == "S")) +
@@ -488,7 +539,170 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-Eventueel nog (langere) meetreeksen bekijken van meetstations L09_16G en L09_167 op resp. Oude Mombeek en Mombeek, gelegen tussen raai 2 en 3 ter hoogte van de monding van de Melbeekgracht in de Mombeek?
+De peilen in de Oude Mombeek liggen lager dan die van de Mombeek. De peilen in de Oude Mombeek kennen een amplitude van ongeveer 1 meter, met de hoogste peilen uiteraard in het na- en voorjaar. In de zomerperiode valt de Oude Mombeek droog, de Mombeek niet. In de zomer ligt het peil van de Mombeek ongeveer een halve meter boven het bodempeil van de Oude Mombeek. Beide waterlopen kennen uitgesproken pieken in de peilen in respons op neerslag.
+
+Hieronder bekijken we ter informatie ook nog de tijdreeksen van de peilen van de Mombeek en de Oude Mombeek ter hoogte van de Luikersteenweg (N20), halverwege raai 2 en 3. Deze metingen zijn beschikbaar via waterinfo.be. Het gaat resp. om de meetstations L09_167 en L09_16G. Deze tijdreeksen beslaan een langere meetperiode (2013-2020). Beide meetstations liggen ongeveer 1200 m stroomopwaarts van meetraai 2. 
+<!-- Eventueel nog (langere) meetreeksen bekijken van meetstations L09_16G en L09_167 op resp. Oude Mombeek en Mombeek, gelegen tussen raai 2 en 3 ter hoogte van de monding van de Melbeekgracht in de Mombeek? -->
+
+```{r}
+# supported_variables("nl")
+
+get_stations(variable_name = "waterstand") %>%
+  filter(grepl("Mombeek", station_name)) %>%
+  arrange(station_no) %>%
+  knitr::kable()
+
+```
+
+Verifiëren van de ligging van het betreffende meetstations:
+
+```{r}
+
+leaflet(get_stations(variable_name = "waterstand") %>%
+          filter(grepl("Mombeek", station_name)) %>%
+          st_as_sf(coords = c("station_longitude", "station_latitude"))) %>%
+  addWMSTiles("https://wms.ngi.be/cartoweb/1/service?", layers = "cartoweb_topo",
+              options = WMSTileOptions(format = "image/png", transparent = TRUE),
+              group = "Cartoweb") %>%
+  addTiles(group = "OSM") %>%
+  addWMSTiles("https://geoservices.informatievlaanderen.be/raadpleegdiensten/omwrgbmrvl/wms?",
+              layers = "Ortho",
+              options = WMSTileOptions(format = "image/png", transparant = TRUE),
+              group = "Ortho_VL_winter") %>%
+  addCircleMarkers(
+    label = ~paste0(station_name, "\n", station_no), fill = FALSE, weight = 3,
+    color = "red", opacity = 1,
+    labelOptions = labelOptions(noHide = TRUE, textOnly = FALSE,
+                                direction = "right", opacity = 0.75),
+    group = "Meetstations") %>%
+  addMiniMap(toggleDisplay = TRUE,zoomLevelOffset = -5) %>%
+  addLayersControl(
+    baseGroups = c("OSM", "Ortho_VL_winter", "Cartoweb"),
+    overlayGroups = c("Meetstations"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
+
+Opvragen van de waterstandsvariabelen die opgemeten of berekend worden voor dit meetstation:
+
+```{r message=FALSE}
+get_variables("L09_167") %>%
+  filter(parametertype_name == "H") %>%
+  knitr::kable()
+```
+Omdat de grondwatermetingen ook een tijdsresolutie van een halve dag hebben (indien sondemetingen althans), en de maximale waarde wellicht het meest bepalend is voor de grondwaterstanden, kiezen we hier voor "DagMax". Dat levert voor meetstation L09_167 (Mombeek) en L09_16G (Oude Mombeek) resp. `ts_id = 4874042` en `ts_id = 4984042` op. Op basis van deze id's vragen we de tijdreeksen op tussen 2000 en 2020.
+
+Tijdreeks:
+
+```{r message=FALSE}
+ggplot() +
+  geom_line(data = get_timeseries_tsid("4874042", from = "2000-01-01"),
+            aes(date(ymd_hms(Timestamp)), Value, colour = "L09_167_Mombeek"), alpha = 0.5) +
+  geom_line(data = get_timeseries_tsid("4984042", from = "2000-01-01"),
+            aes(date(ymd_hms(Timestamp)), Value, colour = "L09_16G_Oude_Mombeek"), alpha = 0.5) +
+  # geom_line(data = get_locs(watina, loc_vec = c("DYLS102"), loc_type = c("S")) %>%
+  #             inner_join(tbl(watina, "FactPeilMeting"),
+  #                        by = c("loc_wid" = "MeetpuntWID")) %>%
+  #             filter(PeilmetingStatusCode == "VLD") %>%
+  #             inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")),
+  #           aes(x = date(Datum),
+  #               y = mTAW, colour = "DYLS102"), alpha = 0.5) +
+  # coord_cartesian(xlim = c(ymd("2015-01-01"), ymd("2016-01-01"))) +
+  labs(colour = NULL, x = "Datum", y = "Maximaal dagpeil (mTAW)") +
+  theme(legend.position = "bottom")
+```
+
+We bekijken deze meetreeksen samen met de meetreeksen uit WATINA:
+
+```{r message=FALSE}
+ggplot() +
+  geom_line(data = get_timeseries_tsid("4874042", from = "2000-01-01"),
+            aes(date(ymd_hms(Timestamp)), Value, colour = "L09_167_Mombeek"), alpha = 0.5) +
+  geom_line(data = get_timeseries_tsid("4984042", from = "2000-01-01"),
+            aes(date(ymd_hms(Timestamp)), Value, colour = "L09_16G_Oude_Mombeek"), alpha = 0.5) +
+  geom_line(data = tijdreeks %>% 
+         filter(transect_nr == 2 & loc_typecode == "S"),
+         aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  labs(colour = NULL, x = "Datum", y = "Peil (mTAW)") +
+  theme(legend.position = "bottom")
+```
+
+Enkel voor metingen sinds 2012:
+
+```{r message=FALSE}
+ggplot() +
+  geom_line(data = get_timeseries_tsid("4874042", from = "2000-01-01"),
+            aes(date(ymd_hms(Timestamp)), Value, colour = "L09_167_Mombeek"), alpha = 0.5) +
+  geom_line(data = get_timeseries_tsid("4984042", from = "2000-01-01"),
+            aes(date(ymd_hms(Timestamp)), Value, colour = "L09_16G_Oude_Mombeek"), alpha = 0.5) +
+  geom_line(data = tijdreeks %>% 
+         filter(transect_nr == 2 & loc_typecode == "S"),
+         aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  xlim(c(ymd("2012-01-01"), ymd("2021-01-01"))) +
+  ylim(c(32.5, 36)) +
+  labs(colour = NULL, x = "Datum", y = "Peil (mTAW)") +
+  theme(legend.position = "bottom")
+```
+
+Hieruit maken we op dat:
+
+* Ter hoogte van de meetstations van waterinfo.be liggen de peilen van de Mombeek lager dan die van de Oude Mombeek. In meetraai 2, dus ongeveer 1 km stroomafwaarts, is dat net omgekeerd. In meetraai 2 is het peilverschil tussen beide ook groter (ongeveer 0.5 m)
+* Ter hoogte van de meetstations lijkt de Oude Mombeek niet echt droog te vallen, terwijl dat wel het geval is in raai 2, met name dan in de zomerperiode
+* de peilen in beide waterlopen een vrij gelijkaardig verloop kennen in elk van de 8 afgelopen jaren
+
+### Tijdreeksen met enkel stijghoogten onder maaiveld
+
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn, enkel de meetpunten met stijghoogten die niet boven maaiveld uitkomen
+
+```{r warning=FALSE, message=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 2 & loc_typecode == "P" & gr_mv == 0)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(31.5, 34.25),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn, enkel de meetpunten met stijghoogten die niet boven maaiveld uitkomen
+
+```{r warning=FALSE, message=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 2 & loc_typecode == "P" & gr_mv == 0)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(31.5, 34.25),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
 
 ## Raai 3
 
@@ -526,7 +740,7 @@ leaflet(data = locs %>%
             group = "Meetpunten", title = "Meetpunttype")
 ```
 
-### Tijdreeksen
+### Tijdreeksen met stijghoogten boven maaiveld
 
 Beperkt tot tijdreeksen met stijghoogten boven maaiveld
 
@@ -574,7 +788,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-mTAW
+mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn
 
 ```{r tijdreeks_raai_3_TAW, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -598,7 +812,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-mTAW, sinds 2017
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn
 
 ```{r tijdreeks_raai_3_TAW_2017, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -622,7 +836,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-mTAW, sinds 2017, met aanduiding van tijdreeksen Mombeek
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn. De tijdreeksen van de waterpeilen van de Mombeek staan in het grijs.
 
 ```{r tijdreeks_raai_3_TAW_2017_2, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -646,12 +860,12 @@ ggplot(tijdreeks %>%
                 y = mTAW,
                 # linetype = loc_code
                 group = loc_code, linetype = loc_code),
-            alpha = 0.5) +
+            alpha = 0.25) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Mombeek")
 ```
-mTAW, sinds 2017, met aanduiding van tijdreeksen Oude Mombeek
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn. De tijdreeksen van de waterpeilen van de Oude Mombeek staan in het grijs.
 
 ```{r tijdreeks_raai_3_TAW_2017_3, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -701,7 +915,57 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-Eventueel nog (langere) meetreeksen bekijken van meetstations L09_16G en L09_167 op resp. Oude Mombeek en Mombeek, gelegen tussen raai 2 en 3 ter hoogte van de monding van de Melbeekgracht in de Mombeek?
+Voor langere tijdreeksen van Mombeek en Oude Mombeek verwijzen we naar de reeksen voor de meetstations van waterinfo.be zoals besproken onder raai 2.
+
+### Tijdreeksen met enkel stijghoogten onder maaiveld
+
+mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn, enkel de meetpunten met stijghoogten die niet boven maaiveld uitkomen
+
+```{r warning=FALSE, message=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 3 & loc_typecode == "P" & gr_mv == 0)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(34, 37.5),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn, enkel de meetpunten met stijghoogten die niet boven maaiveld uitkomen
+
+```{r warning=FALSE, message=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 3 & loc_typecode == "P" & gr_mv == 0)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(34, 37.5),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
 
 ## Raai 4
 
@@ -762,7 +1026,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
-mTAW
+mTAW, met aanduiding van de maaiveldhoogte in stippellijn
 
 ```{r tijdreeks_raai_4_TAW, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
@@ -786,4 +1050,8 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
+# Dataset met selectie van metingen
 
+Doel: kalibratie van de overstromingsdiepte zoals voorspeld door de overstromingskaarten die aangemaakt worden in het kader van werkpakket 1 van het project Future Floodplains.
+
+Alle metingen? Met uitsluiting van MOMP001 vanwege vermoedelijke kweldruk aan rand van vallei?
