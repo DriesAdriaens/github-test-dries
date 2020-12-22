@@ -64,13 +64,13 @@ locaties <- get_locs(watina,
 locaties %>% collect() %>% knitr::kable()
 ```
 Histogram op basis van de diepte van de filters van de grondwatermeetpunten (`loc_type == "P"`) :
-```{r}
+```{r warning=FALSE, message=FALSE}
 locaties %>% 
   ggplot() +
   geom_histogram(aes(x = filterdepth))
 ```
 
-De maximale filterdiepte bedraagt 2.94m.
+De maximale filterdiepte bedraagt 2.94m. Relatief ondiep dus, waardoor hoge kweldrukken minder waarschijnlijk zijn, maar niet uitgesloten.
 
 # Raaien
 
@@ -144,11 +144,21 @@ leaflet(data = locs %>%
             group = "Meetpunten", title = "Meetpunttype")
 ```
 
-Uit de metadata van de grondwatermeetpunten leiden we af dat er in geen van de raaien peilbuiskoppels aanwezig zijn waarmee we ons een idee kunnen vormen van de eventueel aanwezig kweldruk in een meetpunt. Het gaat dan om twee of meerdere peilbuizen met filters op verschillende diepten. Stijghoogteverschillen tussen deze filters op eenzelfde locatie wijzen dan op een grondwaterstroming (flux) van de ene filter naar de andere. Hoe hoger de druk, hoe minder de gemeten stijghoogte in een peilbuis overeen zal stemmen met de werkelijke grondwatertafel ter hoogte van het meetpunt. Meestal geldt: hoe dieper de filter, hoe groter de kans op een grotere stijghoogte, en hoe groter de afwijking tussen de stijghoogte en de effectieve grondwatertafel. Die grondwatertafel ligt vaak lager dan de gemeten stijghoogte in een peilbuis doordat het vrij stromende grondwater vaak uittreedt ter hoogte van het maaiveld en afgevoerd wordt via greppels en sloten, of zich onder het maaiveld reeds lateraal verplaatst vooraleer aan de oppervlakte te komen. Bij een hoge kweldruk kan de gemeten stijghoogte dus boven maaiveld liggen, terwijl de grondwatertafel gelijk of onder maaiveld ligt. Door in zo'n geval te veronderstellen dat stijghoogten zonder meer overeenstemmen met de effectieve grondwatertafel, zou men denken dat het maaiveld onder water staat, en er dus sprake is van overstroming, terwijl in realiteit door de aanwezige drainage of laterale grondwaterstroming het effectieve grondwaterpeil helemaal niet boven maaiveld uitkomt. Die vergissing is uiteraard te vermijden als je die metingen (stijghoogten in geval van piëzometers) net wil gebruiken om gemodelleerde overstromingsdiepten te ijken.
+# Kweldruk
+
+Uit de metadata van de grondwatermeetpunten leiden we af dat er in geen van de raaien peilbuiskoppels aanwezig zijn waarmee we ons een idee kunnen vormen van de eventueel aanwezig kweldruk in een meetpunt. Het gaat dan om twee of meerdere peilbuizen met filters op verschillende diepten (piëzometers).
+
+Stijghoogteverschillen tussen deze filters op eenzelfde locatie wijzen op een grondwaterstroming (flux) van de ene filter naar de andere. Hoe hoger de druk, hoe minder de gemeten stijghoogte in een peilbuis overeen zal stemmen met de werkelijke grondwatertafel ter hoogte van het meetpunt. Meestal geldt: hoe dieper de filter, hoe groter de kans op een grotere stijghoogte, en hoe groter de afwijking tussen de stijghoogte en de effectieve grondwatertafel. Die grondwatertafel ligt vaak lager dan de gemeten stijghoogte in een peilbuis doordat het vrij stromende grondwater vaak uittreedt ter hoogte van het maaiveld en afgevoerd wordt via greppels en sloten, of zich onder het maaiveld reeds lateraal verplaatst vooraleer aan de oppervlakte te komen. Bij een hoge kweldruk kan de gemeten stijghoogte dus boven maaiveld liggen, terwijl de grondwatertafel gelijk of onder maaiveld ligt. Door in zo'n geval te veronderstellen dat stijghoogten zonder meer overeenstemmen met de effectieve grondwatertafel, zou men denken dat het maaiveld onder water staat, en er dus sprake is van overstroming, terwijl in realiteit door de aanwezige drainage of laterale grondwaterstroming het effectieve grondwaterpeil helemaal niet boven maaiveld uitkomt. Die vergissing is uiteraard te vermijden als je die metingen (stijghoogten in geval van piëzometers) net wil gebruiken om gemodelleerde overstromingsdiepten te ijken.
 
 Daarom is het belangrijk om meetpunten uit te sluiten waar aangetoond kan worden (in geval van peilbuiskoppel) of er het vermoeden is van een hoge kweldruk. Doordat er geen peilbuiskoppels in de vallei van de Mombeek aanwezig zijn, kunnen we geen uitsluitsel geven over een kweldruk. Daarnaast is de kans het grootst om verhoogde kweldrukken aan te treffen aan de rand van de vallei. Meer naar het centrum van de vallei neemt die kweldruk veelal af. Extra aandacht is dus nodig bij de beoordeling van de metingen van punten aan de rand van de vallei. Hier is de kans het grootst dat gemeten stijghoogten boven maaiveld niet overeenstemmen met effectieve overstromingen.
 
 # Tijdreeksen per raai
+
+Hieronder bespreken we de tijdreeksen per raai. We zetten de gemeten stijghoogten uit relatief ten opzichte van maaiveld, maar ook in absolute hoogte (mTAW). Dat laatste laat toe om ook de gemeten oppervlaktewaterpeilen van de Mombeek en Oude Mombeek mee in de grafieken op te nemen. Op die manier kunnen we relaties tussen grond- en oppervlaktewaterpeilen visueel beoordelen.
+
+De focus ligt op de meetpunten met tijdreeksen waar stijghoogten boven maaiveld liggen. Ter volledigheid nemen we ook de tijdreeksen op van meetpunten met stijghoogten die jaarrond onder maaiveld liggen. 
+
+## Samenstellen van tijdreeksen
 
 We stellen de tijdreeksen voor de verschillende meetpunten samen door alle gevalideerde metingen op te vragen, met uitzondering van de speciale peilmetingcategorieën. We nemen enkel de categorieën "Peilbuis onder water" (SOUWA) en "Peilpunt onder water" (TBWWL) mee in de selectie.
 
@@ -185,11 +195,15 @@ Uit dat lijstje blijkt dat de stijghoogten in de drie westelijk gelegen raaien t
 
 ## Peilmeting met labels die wijzen op effectieve overstromingen
 
-Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd. Dergelijke metingen werden in de vallei van de Mombeek echter niet vastgesteld
+Aan sommige manuele metingen (handmetingen dan wel kalibratiemetingen) werd expliciet een bepaald label (peilmetingcategorie) toegekend dat aangeeft dat het "maaiveld onder water" stond (code "SOUWA"), dan wel dat de "peilbuis onder water stond" (code "TBWWL"). Tijdens deze metingen werd dus op het terrein met zekerheid vastgesteld dat het maaiveld/de peilbuis overstroomd werd. Dergelijke metingen werden in de vallei van de Mombeek echter niet vastgesteld.
 
-We bekijken hieronder de tijdreeksen voor elk van deze raaien in meer detail. 
+We bekijken hieronder de tijdreeksen voor elk van de raaien in meer detail. 
 
 ## Raai 1
+
+Dit is de meest westelijk gelegen raai van de Mombeekvallei. De meetpunten liggen net ten oosten van de verbindingsweg tussen Hasselt en Sint-Truiden (N80). De raai vertrekt aan de voet van het voormalige stort aan de zuidrand van de vallei (MOMP005) en eindigt ter hoogte van meetpunt MOMP009 aan de vrij steile, noordoostelijke rand van de vallei. De raai overspant de Oude Mombeek, de Ossengracht en de Mombeek. Net stroomopwaarts de N80 vloeien de Oude Mombeek en de Ossengracht samen met de Kleine Herk. En net stroomafwaarts de N80 mondt de Mombeek uit in de Herk.
+
+De maaiveldhoogte loopt systematisch op van zuidwest naar noordoost.
 
 ### Kaart
 
@@ -224,9 +238,9 @@ leaflet(data = locs %>%
             group = "Meetpunten", title = "Meetpunttype")
 ```
 
-### Tijdreeksen met stijghoogten boven maaiveld
+### Tijdreeksen
 
-Beperkt tot tijdreeksen met stijghoogten boven maaiveld
+In elk van de meetpunten in deze raai bevatten de tijdreeksen stijghoogten boven maaiveld.
 
 m-mv
 
@@ -269,6 +283,29 @@ ggplot(tijdreeks %>%
   geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 1 & gr_mv == 1)) +
+  geom_hline(yintercept = 0, colour = "black", size = 0.5) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.25),
+  # #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        # legend.position = "bottom"
+        ) +
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
@@ -318,6 +355,60 @@ ggplot(tijdreeks %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 1 & gr_mv == 1)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.25),
+  # #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = loc_code), linetype = "dashed") +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
+Vaststellingen:
+
+* De stijghoogten liggen vooral in de uiterste meetpunten (MOMP005 en MOMP009) van de raai voor langere perioden boven maaiveld. In de overige meetpunten komen de stijghoogten enkel zeer kortstondig boven maaiveld, wellicht enkel op momenten met hoge neerslag in de winterperiode als de waterpeilen van de waterlopen stijgen en ze buiten hun oevers treden
+* MOMP005 ligt aan de voet van een stort, op het laagste punt van de raai. Hier is het dan ook waarschijnlijk dat de stijghoogten boven maaiveld overeenstemmen met effectieve overstromingen
+* MOMP009 daarentegen ligt aan de voet van de vrij steile, noordoostelijke valleirand, op een 20-tal meter van de Mombeek, maar wel ongeveer 2 meter hoger dan het peil van de Mombeek. Gezien de helling ter hoogte van het meetpunt en de eerder langdurige periode met stijghoogten (net) boven maaiveld is het onwaarschijnlijk dat de stijghoogten boven maaiveld overeenkomen met het peil van overstromingen in de vallei. Bovendien zitten er geen pieken in deze peilen die wijzen op het vaak kortstondig karakter van overstromingen. Het gaat hier dus waarschijnlijk eerder om tijdelijk verhoogde kweldrukken in de winterperiode. De peilen boven maaiveld blijven ook vrij beperkt.
+
+```{r message=FALSE, warning=FALSE}
+tijdreeks %>% 
+  filter(transect_nr == 1 & mMaaiveld > 0) %>% 
+  select(loc_code, mMaaiveld) %>% 
+  # ggplot() + geom_histogram(aes(mMaaiveld)) %>% 
+  ggplot() + geom_violin(aes(x = loc_code, y = mMaaiveld, fill = loc_code),
+                         scale = "count",
+                         # draw_quantiles = c(0.25, 0.5, 0.75)
+                         ) + 
+  geom_boxplot(aes(x = loc_code, y = mMaaiveld), fill = NA) +
+  geom_text(data = tijdreeks %>%
+              filter(transect_nr == 1 & mMaaiveld > 0) %>%
+              group_by(loc_code) %>%
+              summarise(numb = n()),
+            aes(x = loc_code, y = -0.02, label = paste0("n = ", round(numb, 2)))) +
+  labs(x = NULL, y = "m-mv [mMaaiveld > 0]")
+  
+# tijdreeks %>% 
+#   filter(loc_code == "MOMP009" & mMaaiveld > 0) %>% 
+#   select(loc_code, Datum, mMaaiveld) %>% 
+#   arrange(Datum) %>% 
+#   knitr::kable()
 ```
 
 ## Raai 2
@@ -403,6 +494,29 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
+```{r message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 2 & gr_mv == 1)) +
+  geom_hline(yintercept = 0, colour = "black", size = 0.5) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.25),
+  # #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        # legend.position = "bottom"
+        ) +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+
 mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn
 
 ```{r tijdreeks_raai_2_TAW, message=FALSE, warning=FALSE}
@@ -451,6 +565,30 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
+```{r message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 2 & gr_mv == 1)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(32.25, 34.25),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
 mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn. De tijdreeksen van de waterpeilen van de Mombeek staan in het grijs.
 
 ```{r tijdreeks_raai_2_TAW_2017_2, message=FALSE, warning=FALSE}
@@ -473,12 +611,47 @@ ggplot(tijdreeks %>%
   geom_line(data = tijdreeks %>% filter(transect_nr == 2 & loc_code %in% c("MOMS002", "MOMS008")),
             aes(x = date(Datum),
                 y = mTAW,
-                # linetype = loc_code
                 group = loc_code, linetype = loc_code),
             alpha = 0.25) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Mombeek")
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot() +
+  geom_line(data = tijdreeks %>% as.data.frame() %>% filter(transect_nr == 2 &
+                                                              loc_code %in% c("MOMS008", "MOMS002")) %>% 
+              select(-loc_code),
+            aes(x = date(Datum),
+                y = mTAW, linetype = "Mombeek"),
+            alpha = 0.25) +
+  geom_line(data = tijdreeks %>% 
+              filter(transect_nr == 2 & gr_mv == 1),
+            aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(32.25, 34.25),
+                  # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+                  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(data = tijdreeks %>% 
+              filter(transect_nr == 2 & gr_mv == 1),
+            aes(x = date(Datum),
+                y = mvTAW,
+                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))
+                colour = loc_code),
+            linetype = "dashed") +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom", legend.box = "horizontal",
+        legend.direction = "horizontal") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
 ```
 
 Hieruit blijkt dat de grondwaterpeilen vooral in het voorjaar sterk reageren op peilmaxima in de Mombeek.
@@ -513,11 +686,70 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Oude Mombeek")
 ```
 
+```{r message=FALSE, warning=FALSE}
+ggplot() +
+  geom_line(data = tijdreeks %>% as.data.frame() %>% filter(transect_nr == 2 &
+                                                              loc_code %in% c("MOMS009")) %>% 
+              select(-loc_code),
+            aes(x = date(Datum),
+                y = mTAW, linetype = "Oude Mombeek"),
+            alpha = 0.25) +
+  geom_line(data = tijdreeks %>% 
+              filter(transect_nr == 2 & gr_mv == 1),
+            aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  coord_cartesian(ylim = c(32.25, 34.25),
+                  # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(data = tijdreeks %>% 
+              filter(transect_nr == 2 & gr_mv == 1),
+            aes(x = date(Datum),
+                y = mvTAW,
+                colour = loc_code),
+            linetype = "dashed") +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom", legend.box = "horizontal",
+        legend.direction = "horizontal") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+```
+
 Vaststellingen:
 
 * In het na- en voorjaar liggen de stijghoogten in de grondwatermeetpunten boven het waterpeil van zowel Mombeek als Oude Mombeek. In die periode werken beide waterlopen dus drainerend op de omliggende valleigronden.
 * In de zomerperiode zakken de stijghoogten onder het waterpeil van de Mombeek, en onder het bodempeil van de Oude Mombeek
 * De Oude Mombeek valt elk jaar in de zomerperiode een hele tijd droog; helaas zijn er geen meetgegevens om te bekijken hoe uitzonderlijk droog de meetperiode was in vergelijking met voorgaande jaren
+
+```{r message=FALSE, warning=FALSE}
+tijdreeks %>% 
+  filter(transect_nr == 2 & mMaaiveld > 0 & loc_typecode != "S") %>% 
+  select(loc_code, mMaaiveld) %>% 
+  # ggplot() + geom_histogram(aes(mMaaiveld)) %>% 
+  ggplot() + geom_violin(aes(x = loc_code, y = mMaaiveld, fill = loc_code),
+                         scale = "count",
+                         # draw_quantiles = c(0.25, 0.5, 0.75)
+                         ) + 
+  geom_boxplot(aes(x = loc_code, y = mMaaiveld), fill = NA) +
+  geom_text(data = tijdreeks %>%
+              filter(transect_nr == 2 & mMaaiveld > 0 & loc_typecode != "S") %>%
+              group_by(loc_code) %>%
+              summarise(numb = n()),
+            aes(x = loc_code, y = -0.02, label = paste0("n = ", round(numb, 2)))) +
+  labs(x = NULL, y = "m-mv [mMaaiveld > 0]")
+  
+# tijdreeks %>% 
+#   filter(loc_code == "MOMP009" & mMaaiveld > 0) %>% 
+#   select(loc_code, Datum, mMaaiveld) %>% 
+#   arrange(Datum) %>% 
+#   knitr::kable()
+```
 
 Figuur met enkel de peilschalen van raai 2 (MOMS001 en MOMS009: Oude Mombeek; MOMS002 en MOMS008: Mombeek):
 ```{r tijdreeks_raai_2_TAW_2017_4, message=FALSE, warning=FALSE}
@@ -788,6 +1020,29 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "m-mv", colour = NULL)
 ```
 
+```{r message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 3 & gr_mv == 1)) +
+  geom_hline(yintercept = 0, colour = "black", size = 0.5) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.25),
+  # #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        # legend.position = "bottom"
+        ) +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+```
+
 mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn
 
 ```{r tijdreeks_raai_3_TAW, message=FALSE, warning=FALSE}
@@ -836,6 +1091,30 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
+```{r message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(transect_nr == 3 & gr_mv == 1)) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.25),
+  # #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+```
+
 mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn. De tijdreeksen van de waterpeilen van de Mombeek staan in het grijs.
 
 ```{r tijdreeks_raai_3_TAW_2017_2, message=FALSE, warning=FALSE}
@@ -860,11 +1139,48 @@ ggplot(tijdreeks %>%
                 y = mTAW,
                 # linetype = loc_code
                 group = loc_code, linetype = loc_code),
-            alpha = 0.25) +
+            alpha = 0.5) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Mombeek")
 ```
+
+```{r message=FALSE, warning=FALSE}
+ggplot() +
+  geom_line(data = tijdreeks %>% as.data.frame() %>% filter(transect_nr == 3 &
+                                                              loc_code %in% c("MOMS010")) %>% 
+              select(-loc_code),
+            aes(x = date(Datum),
+                y = mTAW, linetype = "Mombeek"),
+            alpha = 0.25) +
+  geom_line(data = tijdreeks %>% 
+              filter(transect_nr == 3 & gr_mv == 1),
+            aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.25),
+  #                 # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(data = tijdreeks %>% 
+              filter(transect_nr == 3 & gr_mv == 1),
+            aes(x = date(Datum),
+                y = mvTAW,
+                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))
+                colour = loc_code),
+            linetype = "dashed") +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom", legend.box = "horizontal",
+        legend.direction = "horizontal") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+```
+
 mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn. De tijdreeksen van de waterpeilen van de Oude Mombeek staan in het grijs.
 
 ```{r tijdreeks_raai_3_TAW_2017_3, message=FALSE, warning=FALSE}
@@ -893,6 +1209,42 @@ ggplot(tijdreeks %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Oude Mombeek")
+```
+
+```{r message=FALSE, warning=FALSE}
+ggplot() +
+  geom_line(data = tijdreeks %>% as.data.frame() %>% filter(transect_nr == 3 &
+                                                              loc_code %in% c("MOMS011")) %>% 
+              select(-loc_code),
+            aes(x = date(Datum),
+                y = mTAW, linetype = "Mombeek"),
+            alpha = 0.25) +
+  geom_line(data = tijdreeks %>% 
+              filter(transect_nr == 3 & gr_mv == 1),
+            aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.25),
+  #                 # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(data = tijdreeks %>% 
+              filter(transect_nr == 3 & gr_mv == 1),
+            aes(x = date(Datum),
+                y = mvTAW,
+                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))
+                colour = loc_code),
+            linetype = "dashed") +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom", legend.box = "horizontal",
+        legend.direction = "horizontal") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
 ```
 
 Enkel de peilschalen van raai 3 (MOMS011: Oude Mombeek; MOMS010: Mombeek):
