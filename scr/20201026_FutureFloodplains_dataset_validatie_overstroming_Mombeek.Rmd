@@ -1,14 +1,14 @@
 ---
 title: "Dataset validatie overstromingen - Mombeek"
 author: "Dries Adriaens"
-date: "04-01-2020"
+date: "05-01-2020"
 output:
   html_document:
     code_folding: hide
-    toc: TRUE
-    toc_float: TRUE
+    toc: yes
+    toc_float: yes
     toc_depth: 4
-    number_sections: TRUE
+    number_sections: yes
     fig_width: 8
     fig_height: 5.7
 ---
@@ -271,7 +271,7 @@ In elk van de meetpunten in deze raai bevatten de tijdreeksen stijghoogten boven
 
 Tabel met kenmerken van de metingen per meetpunt (resp. begin- en einddatum, aantal metingen, aantal en procentueel aandeel van metingen met stijghoogten boven maaiveld); gesorteerd volgens y-coördinaat:
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 tijdreeks %>%
   filter(transect_nr == 1 & loc_typecode == "P") %>% 
   mutate(gr_mv_ = ifelse(mMaaiveld > 0, 1, 0)) %>% 
@@ -508,7 +508,7 @@ leaflet(data = locs %>%
 
 Tabel met kenmerken van de metingen per meetpunt (resp. begin- en einddatum, aantal metingen, aantal en procentueel aandeel van metingen met stijghoogten boven maaiveld); gesorteerd volgens y-coördinaat:
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 tijdreeks %>%
   filter(transect_nr == 2 & loc_typecode == "P" & gr_mv == 1) %>% 
   mutate(gr_mv_ = ifelse(mMaaiveld > 0, 1, 0)) %>% 
@@ -977,7 +977,7 @@ Hieruit maken we op dat:
 
 Tabel met kenmerken van de metingen per meetpunt (resp. begin- en einddatum, aantal metingen, aantal en procentueel aandeel van metingen met stijghoogten boven maaiveld); gesorteerd volgens y-coördinaat:
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 tijdreeks %>%
   filter(transect_nr == 2 & loc_typecode == "P" & gr_mv == 0) %>% 
   mutate(gr_mv_ = ifelse(mMaaiveld > 0, 1, 0)) %>% 
@@ -1093,7 +1093,7 @@ Beperkt tot tijdreeksen met stijghoogten boven maaiveld
 
 Tabel met kenmerken van de metingen per meetpunt (resp. begin- en einddatum, aantal metingen, aantal en procentueel aandeel van metingen met stijghoogten boven maaiveld); gesorteerd volgens y-coördinaat:
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 tijdreeks %>%
   filter(transect_nr == 3 & loc_typecode == "P" & gr_mv == 1) %>% 
   mutate(gr_mv_ = ifelse(mMaaiveld > 0, 1, 0)) %>% 
@@ -1225,7 +1225,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL)
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, fig.height=10}
 ggplot(tijdreeks %>% 
          filter(transect_nr == 3 & gr_mv == 1)) +
   geom_line(aes(x = date(Datum),
@@ -1281,19 +1281,19 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Mombeek")
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, fig.height=10}
 ggplot() +
+  geom_line(data = tijdreeks %>% 
+              filter(transect_nr == 3 & gr_mv == 1),
+            aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code)) +
   geom_line(data = tijdreeks %>% as.data.frame() %>% filter(transect_nr == 3 &
                                                               loc_code %in% c("MOMS010")) %>% 
               select(-loc_code),
             aes(x = date(Datum),
                 y = mTAW, linetype = "Mombeek"),
             alpha = 0.25) +
-  geom_line(data = tijdreeks %>% 
-              filter(transect_nr == 3 & gr_mv == 1),
-            aes(x = date(Datum),
-                y = mTAW,
-                colour = loc_code)) +
   ## non-clipping zoom
   # coord_cartesian(ylim = c(32.25, 34.25),
   #                 # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
@@ -1347,7 +1347,7 @@ ggplot(tijdreeks %>%
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = "Oude Mombeek")
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, fig.height=10}
 ggplot() +
   geom_line(data = tijdreeks %>% as.data.frame() %>% filter(transect_nr == 3 &
                                                               loc_code %in% c("MOMS011")) %>% 
@@ -1390,10 +1390,11 @@ tijdreeks %>%
   filter(transect_nr == 3 & mMaaiveld > 0 & loc_typecode != "S") %>% 
   select(loc_code, mMaaiveld) %>% 
   # ggplot() + geom_histogram(aes(mMaaiveld)) %>% 
-  ggplot() + geom_violin(aes(x = loc_code, y = mMaaiveld, fill = loc_code),
-                         scale = "count",
-                         # draw_quantiles = c(0.25, 0.5, 0.75)
-                         ) + 
+  ggplot() +
+  geom_violin(aes(x = loc_code, y = mMaaiveld, fill = loc_code),
+              scale = "count",
+              # draw_quantiles = c(0.25, 0.5, 0.75)
+  ) + 
   geom_boxplot(aes(x = loc_code, y = mMaaiveld), fill = NA) +
   geom_text(data = tijdreeks %>%
               filter(transect_nr == 3 & mMaaiveld > 0 & loc_typecode != "S") %>%
@@ -1435,7 +1436,7 @@ Voor langere tijdreeksen van Mombeek en Oude Mombeek verwijzen we naar de reekse
 
 Tabel met kenmerken van de metingen per meetpunt (resp. begin- en einddatum, aantal metingen, aantal en procentueel aandeel van metingen met stijghoogten boven maaiveld); gesorteerd volgens y-coördinaat:
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 tijdreeks %>%
   filter(transect_nr == 3 & loc_typecode == "P" & gr_mv == 0) %>% 
   mutate(gr_mv_ = ifelse(mMaaiveld > 0, 1, 0)) %>% 
@@ -1597,7 +1598,7 @@ ggplot(tijdreeks %>%
 
 Doel: kalibratie van de overstromingsdiepte zoals voorspeld door de overstromingskaarten die aangemaakt worden in het kader van werkpakket 1 van het project Future Floodplains.
 
-Selectie van metingen: alle metingen? Met uitsluiting van MOMP001 vanwege vermoedelijke kweldruk aan rand van vallei?
+Selectie van metingen: alle metingen? Met uitsluiting van MOMP001 vanwege vermoedelijke kweldruk aan rand van vallei? MOMP009 ook uit de selectie laten?
 
 # To do
 
