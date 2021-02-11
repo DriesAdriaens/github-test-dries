@@ -6,7 +6,7 @@ library(inbodb)
 library(ggplot2)
 library(inboggvegan)
 library(vegan)
-library(tidyverse)
+library(tidyr)
 library(stringr)
 
 # Make connection ----
@@ -15,29 +15,29 @@ con <- connect_inbo_dbase("D0010_00_Cydonia")
 
 # Test INBOVEG functions of inbodb package ----
 
-test <- get_inboveg_survey(con, "SBO%", collect = TRUE)
-test <- get_inboveg_recordings(con, "SBO%", collect = TRUE)
+survey <- get_inboveg_survey(con, "SBO%", collect = TRUE)
+record <- get_inboveg_recordings(con, "SBO%", collect = TRUE)
 
-test %>% count(CoverageCode) %>% ggplot() + geom_bar(aes(CoverageCode, n), stat = "identity")
-test %>% count(LayerCode)
+record %>% count(CoverageCode) %>% ggplot() + geom_bar(aes(CoverageCode, n), stat = "identity")
+record %>% count(LayerCode)
 
-test <- get_inboveg_header(con, rec_type = "classic", survey_name = "%SBO%", collect = TRUE)
-test %>% count(Observer) %>% ggplot() + 
+header <- get_inboveg_header(con, rec_type = "classic", survey_name = "%SBO%", collect = TRUE)
+header %>% count(Observer) %>% ggplot() + 
   geom_bar(aes(Observer, n), stat = "identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
 
-test %>% filter(grepl("Dries", Observer) & grepl("Siege", Observer)) %>% count(Observer)
+header %>% filter(grepl("Dries", Observer) & grepl("Siege", Observer)) %>% count(Observer)
 
-test <- get_inboveg_classification(con, classif = "3130", collect = TRUE)
-test %>% count(Name)                
+clsf <- get_inboveg_classification(con, classif = "3130", collect = TRUE)
+clsf %>% count(Name)                
 
-test <- get_inboveg_classification(con)
-test %>% count(ActionGroup)
-temp <- test %>%
+clsf <- get_inboveg_classification(con)
+clsf %>% count(ActionGroup)
+temp <- clsf %>%
   filter(ActionGroup == "N2k") %>% 
+  collect() %>% 
   count(Name) %>%
   arrange(-n) %>%
-  collect() %>% 
   View()
 temp <- test %>% filter(ActionGroup == "N2k") %>% count(Classif) %>% collect() %>% arrange(-n)
 
