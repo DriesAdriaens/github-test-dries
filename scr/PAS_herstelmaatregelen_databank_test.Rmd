@@ -1,0 +1,93 @@
+---
+title: "Untitled"
+author: "Dries Adriaens"
+date: "10-2-2021"
+output: html_document
+---
+```{r}
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(sf)
+library(leaflet)
+library(foreign)
+```
+
+
+```{r}
+setwd(dir = "G:/.shortcut-targets-by-id/1Py6EhebSmWkt0Hfv4K3WmphqZATgPbQ_/2021_Prioritering_hab_gebieden_herstelmaatregelen/Verkenning_GEBAdatabank/Verkenning_GEBA/")
+
+geba <- read.csv("GEBA_hele_databank.csv", stringsAsFactors = FALSE)
+
+geba <- geba %>% 
+  rename("dz" = Code, 
+         "opp_dz_ha" = Oppervlakte, 
+         "SBZ_cde" = Speciale.Bescherming.Zone.Code,
+         "SBZ" = Speciale.Bescherming.Zone,
+          "zoekzone" = Habitat.Is.Zoekzone,
+         "overschr_opp_geba_ha" = Habitat.Overschreden.Oppervlakte,
+         "hab_cde" = Habitat.Habitat.Type.Code, 
+          "hab_omschrijving" =Habitat.Habitat.Type, 
+        "hab_prio" =Habitat.Prioriteit,
+        "hab_prio_cde" =Habitat.Prioriteit.Code,
+         "hab_belang_cde" = Habitat.Belangrijkheids.Code,
+         "hab_belang" =Habitat.Belangrijkheid,
+         "prio_vl" = Habitat.Prioriteit.Vlaamse.Herstelstrategie,
+         "prio_dz" = Habitat.Prioriteit.Deelzone,
+         "motiv_aanpassen_prio" = Habitat.Motivatie.Aanpassen.Piroriteit,
+        "maatr" = Habitat.Maatregel,
+         "maatr_detail" = Habitat.Maatregel.Omschrijving,
+         "maatr_schaal" =Habitat.Maatregelschaal) %>% 
+  filter(!is.na(maatr)) %>% 
+  mutate(maatr_schaal = ifelse(maatr_schaal == "0p landschapsniveau","Op landschapsniveau" , maatr_schaal)) %>% 
+  mutate(maatr_k = case_when(
+           maatr == "Aanleg van een scherm"~ "Aanleg scherm",
+           maatr == "Herstel waterhuishouding: herstel grondwaterkwaliteit"~ "W: grondwaterkwaliteit",
+           maatr == "Herstel waterhuishouding: optimaliseren lokale drainage"~ "W: lokale drainage",
+           maatr == "Herstel waterhuishouding: afbouw grote grondwateronttrekkingen"~ "W: grondwateronttrekking",
+           maatr == "Herstel waterhuishouding: verhogen infiltratie neerslag"~ "W: infiltratie",
+           maatr == "Herstel waterhuishouding: structureel herstel op landschapsschaal"~ "W: herstel landschap",
+           maatr == "Herstel waterhuishouding: herstel oppervlaktewaterkwaliteit"~ "W: oppervlaktewaterkwaliteit",
+           maatr == "Ingrijpen structuur boom- en struiklaag"~ "Structuur boom-/struiklaag",
+           maatr == "Ingrijpen soorten boom- en struiklaag"~ "Soorten boom-/struiklaag",
+           maatr == "Verminderde oogst houtige biomassa"~ "Minder oogst hout",
+           TRUE ~ maatr),
+         maatr = str_replace(string = maatr, pattern = "Herstel waterhuishouding", 
+                               replacement = "Waterhuishouding"),
+         prio_dz_gp = case_when(
+                  str_detect(string = prio_dz, pattern = "1") ~ "prioriteit 1 of lager",
+                  str_detect(string = prio_dz, pattern = "2") ~ "prioriteit 2 of lager",
+                  str_detect(string = prio_dz, pattern = "3") ~ "prioriteit 3",
+                  TRUE ~ "prioriteit onbepaald"))
+
+glimpse(geba)
+```
+
+```{r}
+geba %>%
+  distinct(maatr, maatr_schaal) %>% 
+  knitr::kable()
+  
+```
+
+```{r}
+test <- geba %>% 
+  filter(str_detect(string = maatr, pattern = "waterkwaliteit")) %>% 
+  count(dz, maatr, prio_dz_gp) %>% 
+  pivot_wider(values_from = n, values_fill = 0, names_from = prio_dz_gp)
+```
+
+```{r}
+geba %>% 
+  group_by(dz) %>% 
+  mutate(
+    n_hab = n_distinct(hab_cde),
+    
+    opp_overschr_dz_ha_geba = sum(overschr_opp_geba_ha)
+    ) %>% 
+  View()
+  )
+```
+
