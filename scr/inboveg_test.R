@@ -73,6 +73,12 @@ CA <- cca(testdata_trans)
 ggscreeplot(CA, type = "both")
 ggbiplot_vegan(CA)
 
-CA_plot <- ordiplot(CA, type = "text", xlim = c(-4, 4), ylim = c(-2, 0.5))
+CA_plot <- ordiplot(CA, type = "text", xlim = c(-2, 4), ylim = c(-2, 0.5), display = "species")
 identify(CA_plot, "species")
 identify(CA_plot, "sites")
+
+ggplot() +
+  geom_point(data = data.frame(CA$CA$u), aes(x = CA1, y = CA2)) +
+  geom_point(data = data.frame(CA$CA$v), aes(x = CA1, y = CA2), colour = "red", alpha = 0.5)
+
+ggbiplot_vegan(CA, choices = c(1,3), species_geom = "point")
