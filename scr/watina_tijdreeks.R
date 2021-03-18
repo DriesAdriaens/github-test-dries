@@ -211,7 +211,7 @@ tijdreeks %>%
   count()
 
 
-## 4. figuren TAW ----
+## 4. tijdreeks figuren TAW ----
 
 locaties_TAW <- get_locs(watina,
                      # area_codes = "GGV",
