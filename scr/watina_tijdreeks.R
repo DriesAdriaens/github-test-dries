@@ -15,7 +15,8 @@ locaties <- get_locs(watina,
                      # loc_type = c("P", "S", "R", "N", "W", "D", "L", "B"),
                      # loc_vec = c("KASP001", "KASP002", "KASP032"),
                      # loc_vec = c("SILP001", "SILP002", "SILP003", "SILP004"),
-                     loc_vec = c("VRIP008", "VRIP009", "VRIP010", "VRIP011", "VRIP012", "VRIP013"),
+                     # loc_vec = c("VRIP008", "VRIP009", "VRIP010", "VRIP011", "VRIP012", "VRIP013"),
+                     loc_vec = c("VRIP045", "VRIP028", "VRIP033", "VRIP046", "VRIP047"),
                      # loc_vec = c("VRIP003", "VRIP006"
                      #             #, "VRIP007"
                      #             ),
@@ -25,7 +26,7 @@ locaties <- get_locs(watina,
                      # mask = NULL,
                      # join_mask = FALSE,
                      # buffer = 10,
-                     filterdepth_range = c(0, 5),
+                     filterdepth_range = c(0, 10),
                      # filterdepth_guess = FALSE,
                      # filterdepth_na = FALSE,
                      # obswells = FALSE,
@@ -47,14 +48,14 @@ tijdreeks <-
     # rnk_pct = percent_rank(cumsum),
     # grp = loc_wid + rnk_pct/10,
     # diff = Datum - lag(Datum),
-    diff = ifelse(is.na(Datum - lag(Datum)), ReprPeriode, Datum - lag(Datum)),
+    diff = ifelse(is.na(ymd(Datum) - lag(ymd(Datum))), ReprPeriode, ymd(Datum) - lag(ymd(Datum))),
     cumsum_dif = cumsum(diff > 60),
     grp_diff = loc_wid + percent_rank(cumsum_dif)/10,
     )
 
-# tijdreeks %>% 
-#   select(loc_code, Datum, mMaaiveld, mTAW) %>% 
-#   View()
+tijdreeks %>%
+  select(loc_code, Datum, mMaaiveld, mTAW, ReprPeriode, diff, cumsum_dif, grp_diff) %>%
+  View()
   
 
 # 2. figuur van tijdreeks(en) voor gewenste meetpunten ----
@@ -75,8 +76,8 @@ plot_tijdreeks <- ggplot(tijdreeks) +
   #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  # xlim(ymd("2018-01-01"), ymd("2020-08-01")) +
-  ylim(-0.85, 0.05) +
+  xlim(ymd("2015-01-01"), ymd("2016-01-01")) +
+  # ylim(-0.85, 0.05) +
   geom_hline(yintercept = 0, colour = "black", size = 1,
              linetype = "dotted"
              ) +
@@ -89,6 +90,7 @@ plot_tijdreeks <- ggplot(tijdreeks) +
              aes(x = date(Datum), y = mMaaiveld,
                  colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
              size = 1)
+  ## enkel punten plotten met reprper > limiet
   # geom_point(data = tijdreeks %>%
   #              filter(ReprPeriode > 30),
   #            aes(x = date(Datum), y = mMaaiveld))
@@ -98,7 +100,7 @@ plot_tijdreeks <- ggplot(tijdreeks) +
   #             aes(x = date(Datum), y = mMaaiveld),
   #             colour = "black", size = 1.5)
 
-ggsave("plot2.png", plot_tijdreeks, dpi = 300, width = 15, units = "cm")  
+# ggsave("plot2.png", plot_tijdreeks, dpi = 300, width = 15, units = "cm")  
 plot_tijdreeks
 
 xg3 <- get_xg3(locs = locaties, con = watina,
