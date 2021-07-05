@@ -4,19 +4,39 @@ library(lubridate)
 library(dplyr)
 library(stringr)
 library(tidyr)
+library(inbodb)
 
 
 watina <- connect_watina()
+# watina <- connect_inbo_dbase("W0002_00_Watina", autoconvert_utf8 = TRUE)
 
 # 1. tabel met peilmetingen opvragen voor gewenste meetpunten ----
 
 locaties <- get_locs(watina,
                      # area_codes = "GGV",
                      # loc_type = c("P", "S", "R", "N", "W", "D", "L", "B"),
+                     # loc_vec = c("VLVP001", "VLVP002", "VLVP003", "VLVP004", "VLVP005", "VLVP006"), #transectNZ Vloethemveld, enkel ondiepe peilbuizen
+                     # loc_vec = c("VLVP001", "VLVP301", "VLVP004", "VLVP304"), #transectNZ Vloethemveld, enkel peilbuiskoppels
+                     # loc_vec = c("VLVP007", "VLVP008", "VLVP009", "VLVP010", "VLVP003"), #transectOW Vloethemveld
+                     # loc_vec = c("BZKP001", "BZKP002"),
+                     # loc_vec = c("VUIP001"),
+                     # loc_vec = c("TILP001", "TILP002", "TILP003", "TILP004", "TILP005"),
                      # loc_vec = c("KASP001", "KASP002", "KASP032"),
                      # loc_vec = c("SILP001", "SILP002", "SILP003", "SILP004"),
                      # loc_vec = c("VRIP008", "VRIP009", "VRIP010", "VRIP011", "VRIP012", "VRIP013"),
-                     loc_vec = c("VRIP045", "VRIP028", "VRIP033", "VRIP046", "VRIP047"),
+                     # loc_vec = c(
+                     #   "VRIP045",
+                     #   "VRIP028",
+                     #   "VRIP031",
+                     #   "VRIP033",
+                     #   "VRIP046",
+                     #   "VRIP047"
+                     #   ),
+                     # loc_vec =  c("DYLP004", "DYLP017", "DYLP006"),
+                     # loc_vec =  c("DYLP012", "DYLP013", "DYLP056"),
+                     # loc_vec = c("DYLP090", "DYLP090", "DYLP089", "DYLP089", "DYLP084", "DYLP081", "DYLP073", "DYLP057", "DYLP012", "DYLP018", "DYLP034", "DYLP019", "DYLP018", "DYLP016", "DYLP009", "DYLP005", "DYLP017", "DYLP002", "DYLP001", "DYLP074", "DYLP044", "DYLP004", "DYLP039", "DYLP091", "DYLP045"),
+                     # loc_vec = c("KASP032", "KASP030", "KASP031", "KASP001", "KASP002"),
+                     loc_vec = c("SBRP005", "SBRP006"),
                      # loc_vec = c("VRIP003", "VRIP006"
                      #             #, "VRIP007"
                      #             ),
@@ -26,7 +46,7 @@ locaties <- get_locs(watina,
                      # mask = NULL,
                      # join_mask = FALSE,
                      # buffer = 10,
-                     filterdepth_range = c(0, 10),
+                     filterdepth_range = c(0, 100),
                      # filterdepth_guess = FALSE,
                      # filterdepth_na = FALSE,
                      # obswells = FALSE,
@@ -51,17 +71,21 @@ tijdreeks <-
     diff = ifelse(is.na(ymd(Datum) - lag(ymd(Datum))), ReprPeriode, ymd(Datum) - lag(ymd(Datum))),
     cumsum_dif = cumsum(diff > 60),
     grp_diff = loc_wid + percent_rank(cumsum_dif)/10,
-    )
+    ) %>% 
+  ungroup()
 
-tijdreeks %>%
-  select(loc_code, Datum, mMaaiveld, mTAW, ReprPeriode, diff, cumsum_dif, grp_diff) %>%
-  View()
-  
+# tijdreeks %>%
+#   select(loc_code, Datum, mMaaiveld, mTAW, ReprPeriode, diff, cumsum_dif, grp_diff) %>%
+#   View()
+
 
 # 2. figuur van tijdreeks(en) voor gewenste meetpunten ----
 
 
-plot_tijdreeks <- ggplot(tijdreeks) +
+plot_tijdreeks <- ggplot(tijdreeks
+                         # %>% 
+                         #   filter(loc_code %in% c("VRIP031", "VRIP045", "VRIP033"))
+                         ) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 # y = mTAW,
@@ -71,26 +95,29 @@ plot_tijdreeks <- ggplot(tijdreeks) +
                 # ,linetype = PeilmetingStatus
                 )) +
   ## non-clipping zoom
-  # coord_cartesian(ylim = c(-1, 0.1),
-  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
-  #                 ) +
+  coord_cartesian(
+    # ylim = c(-1, 0.1),
+    xlim = c(ymd("2010-01-01"), ymd("2022-01-01"))
+  ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2015-01-01"), ymd("2016-01-01")) +
+  # xlim(ymd("2012-01-01"), ymd("2021-01-01")) +
   # ylim(-0.85, 0.05) +
-  geom_hline(yintercept = 0, colour = "black", size = 1,
-             linetype = "dotted"
+  geom_hline(yintercept = 0, colour = "black",
+             # size = 1,
+             # linetype = "dotted"
              ) +
+  # theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed"),
         legend.position = "bottom") +
   labs(x = "Datum", y = "m-mv", colour = NULL) +
-  ## plotten van peilmetingen met representatieve periode > 30 dagen
-  geom_point(data = tijdreeks,
+  ## plotten van peilmetingen als punten
+  geom_point(#data = tijdreeks,
              aes(x = date(Datum), y = mMaaiveld,
                  colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
              size = 1)
-  ## enkel punten plotten met reprper > limiet
+  ## punten plotten met reprper > limiet
   # geom_point(data = tijdreeks %>%
   #              filter(ReprPeriode > 30),
   #            aes(x = date(Datum), y = mMaaiveld))
@@ -100,16 +127,32 @@ plot_tijdreeks <- ggplot(tijdreeks) +
   #             aes(x = date(Datum), y = mMaaiveld),
   #             colour = "black", size = 1.5)
 
-# ggsave("plot2.png", plot_tijdreeks, dpi = 300, width = 15, units = "cm")  
+# ggsave("Grondwaterdynamiek_tijdreeksen.png", plot_tijdreeks, dpi = 300,
+#        width = 15,
+#        height = 10,
+#        units = "cm")
 plot_tijdreeks
 
-xg3 <- get_xg3(locs = locaties, con = watina,
-                startyear = 1900, endyear = 2020,
-                vert_crs = "local") %>%
-  eval_xg3_series(xg3_type = c("L", "H", "V"), max_gap = 0, min_dur = 2)
 
-ghg <- xg3$ser_mean[xg3$loc_code == "GGVP032" & xg3$xg3_variable == "hg3_lcl"]
-glg <- xg3$ser_mean[xg3$loc_code == "GGVP032" & xg3$xg3_variable == "lg3_lcl"]
+xg3 <- get_xg3(locs = locaties, con = watina,
+                startyear = 1900, endyear = 2021,
+                vert_crs = "local",
+               with_estimated = TRUE,
+               truncated = TRUE,
+               collect = TRUE
+               )
+
+xg3_eval_series <- eval_xg3_series(xg3, xg3_type = c("L", "H", "V"), max_gap = 100, min_dur = 1)
+
+xg3_eval_avail <- eval_xg3_avail(xg3, xg3_type = c("L", "H", "V"))
+
+ghg <- xg3_eval_series$ser_mean[xg3_eval_series$loc_code == "GGVP032" & xg3_eval_series$xg3_variable == "hg3_lcl"]
+glg <- xg3_eval_series$ser_mean[xg3_eval_series$loc_code == "GGVP032" & xg3_eval_series$xg3_variable == "lg3_lcl"]
+
+# xg3 %>% 
+#   group_by(loc_code) %>% 
+#   summarise(across(everything(), ~ length(.x[!is.na(.x)]))) %>% 
+#   write.table("clipboard", sep="\t", row.names=FALSE)
 
 plot_tijdreeks + 
   geom_hline(size = 1, linetype = "dashed", aes(yintercept = ghg, color = "GHG/GLG GGVP032")) +
@@ -316,19 +359,27 @@ locaties_TAW <- get_locs(watina,
                      # loc_vec = c("KASP001", "KASP002", "KASP032"),
                      # loc_vec = c("SILP001", "SILP002", "SILP003", "SILP004"),
                      # loc_vec = c("GGVP011", "GGVP013", "GGVP015", "GGVP017", "GGVP032", "GGVP033",
+                     loc_vec = c(
+                       "VRIP045",
+                       "VRIP028",
+                       "VRIP031",
+                       "VRIP033",
+                       "VRIP046",
+                       "VRIP047"
+                     ),
                      #             "GGVS003","GGVS004", "GGVS010", "GGVS011"),
-                     loc_vec = c("VRIP003", "VRIP006", "VRIP007"),
+                     # loc_vec = c("VRIP003", "VRIP006", "VRIP007"),
                      loc_validity = c("VLD", "ENT", "DEL", "CLD"),
                      # mask = NULL,
                      # join_mask = FALSE,
                      # buffer = 10,
-                     filterdepth_range = c(0, 5),
+                     filterdepth_range = c(0, 10),
                      # filterdepth_guess = FALSE,
                      # filterdepth_na = FALSE,
                      # obswells = FALSE,
                      # obswell_aggr = c("latest", "latest_fd", "latest_sso", "mean"),
                      collect = FALSE)
-locaties_TAW %>% collect() %>% View()
+# locaties_TAW %>% collect() %>% View()
 
 tijdreeks_TAW <-
   locaties_TAW %>% 
@@ -353,15 +404,17 @@ plot_tijdreeks_TAW <- ggplot(tijdreeks_TAW) +
   #               colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
   #           linetype = "dashed", size = 1) +
   ## non-clipping zoom
-  # coord_cartesian(ylim = c(-1, 0.1),
-  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
-  #                 ) +
+  coord_cartesian(
+    ylim = c(7.25, 8.25),
+    xlim = c(ymd("2015-01-01"), ymd("2016-01-01"))
+  ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  # xlim(ymd("2018-01-01"), ymd("2020-08-01")) +
+  # xlim(ymd("2015-01-01"), ymd("2016-01-01")) +
   # ylim(-1, 0.1) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        panel.grid.minor.x = element_line(linetype = "dashed")) +
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
   labs(x = "Datum", y = "mTAW", colour = "Meetpunt")
   ## plotten van peilmetingen met representatieve periode > 30 dagen
   # geom_point(data = tijdreeks_TAW %>%
