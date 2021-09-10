@@ -18,6 +18,14 @@ locaties <- get_locs(watina,
                      # loc_vec = c("VLVP001", "VLVP002", "VLVP003", "VLVP004", "VLVP005", "VLVP006"), #transectNZ Vloethemveld, enkel ondiepe peilbuizen
                      # loc_vec = c("VLVP001", "VLVP301", "VLVP004", "VLVP304"), #transectNZ Vloethemveld, enkel peilbuiskoppels
                      # loc_vec = c("VLVP007", "VLVP008", "VLVP009", "VLVP010", "VLVP003"), #transectOW Vloethemveld
+                     # Grote Gete Meetraai 4
+                     loc_vec = c("GGVP001", "GGVP003", "GGVP005", "GGVP006", "GGVP007", "GGVP103"),
+                     # Grote Gete Meetraai 3
+                     # loc_vec = c("GGVP008", "GGVP009", "GGVP010", "GGVP011", "GGVP012", "GGVP013", "GGVP014", "GGVP015", "GGVP016", "GGVP033", "GGVP017"),
+                     # Grote Gete Meetraai 2
+                     # loc_vec = c("GGVP018", "GGVP019", "GGVP020","GGVP021", "GGVP022", "GGVP023", "GGVP024", "GGVP025"),
+                     # Grote Gete Meetraai 1
+                     # loc_vec = c("GGVP026", "GGVP027", "GGVP028", "GGVP029", "GGVP030", "GGVP031"),
                      # loc_vec = c("BZKP001", "BZKP002"),
                      # loc_vec = c("VUIP001"),
                      # loc_vec = c("TILP001", "TILP002", "TILP003", "TILP004", "TILP005"),
@@ -36,7 +44,7 @@ locaties <- get_locs(watina,
                      # loc_vec =  c("DYLP012", "DYLP013", "DYLP056"),
                      # loc_vec = c("DYLP090", "DYLP090", "DYLP089", "DYLP089", "DYLP084", "DYLP081", "DYLP073", "DYLP057", "DYLP012", "DYLP018", "DYLP034", "DYLP019", "DYLP018", "DYLP016", "DYLP009", "DYLP005", "DYLP017", "DYLP002", "DYLP001", "DYLP074", "DYLP044", "DYLP004", "DYLP039", "DYLP091", "DYLP045"),
                      # loc_vec = c("KASP032", "KASP030", "KASP031", "KASP001", "KASP002"),
-                     loc_vec = c("SBRP005", "SBRP006"),
+                     # loc_vec = c("SBRP005", "SBRP006"),
                      # loc_vec = c("VRIP003", "VRIP006"
                      #             #, "VRIP007"
                      #             ),
@@ -57,6 +65,9 @@ tijdreeks <-
   rename(mvTAW = soilsurf_ost) %>% 
   inner_join(tbl(watina, "FactPeilMeting"), by = c("loc_wid" = "MeetpuntWID")) %>% 
   inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>%
+  filter(PeilmetingStatus == "Gevalideerd",
+         is.na(PeilmetingCategorie)
+         ) %>% 
   dplyr::collect() %>% 
   group_by(loc_code) %>%
   arrange(loc_code, Datum) %>% 
@@ -72,7 +83,10 @@ tijdreeks <-
     cumsum_dif = cumsum(diff > 60),
     grp_diff = loc_wid + percent_rank(cumsum_dif)/10,
     ) %>% 
-  ungroup()
+  ungroup() %>% 
+  mutate(
+    test = ifelse(Datum < "2007-01-01", "2004-2005", "2018-2021")
+  )
 
 # tijdreeks %>%
 #   select(loc_code, Datum, mMaaiveld, mTAW, ReprPeriode, diff, cumsum_dif, grp_diff) %>%
@@ -89,17 +103,20 @@ plot_tijdreeks <- ggplot(tijdreeks
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 # y = mTAW,
-                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+                colour = loc_code,
                 group = grp_diff
                 # Peilmetingstatus weergeven in legende (lijntype; ingegeven/gevalideerd)
                 # ,linetype = PeilmetingStatus
                 )) +
   ## non-clipping zoom
   coord_cartesian(
-    # ylim = c(-1, 0.1),
-    xlim = c(ymd("2010-01-01"), ymd("2022-01-01"))
+    ylim = c(-3.75, 0),
+    # xlim = c(ymd("2010-01-01"), ymd("2022-01-01"))
   ) +
-  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  scale_x_date(date_breaks = "year", date_labels = "%Y",
+               # date_minor_breaks = "3 months"
+               ) +
   ## clipping zoom
   # xlim(ymd("2012-01-01"), ymd("2021-01-01")) +
   # ylim(-0.85, 0.05) +
@@ -110,13 +127,19 @@ plot_tijdreeks <- ggplot(tijdreeks
   # theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed"),
-        legend.position = "bottom") +
+        legend.position = "bottom",
+        legend.direction = "horizontal"
+        ) +
   labs(x = "Datum", y = "m-mv", colour = NULL) +
   ## plotten van peilmetingen als punten
-  geom_point(#data = tijdreeks,
-             aes(x = date(Datum), y = mMaaiveld,
-                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
-             size = 1)
+  # geom_point(#data = tijdreeks,
+  #            aes(x = date(Datum), y = mMaaiveld,
+  #                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+  #                colour = loc_code),
+  #            size = 1) +
+  ## opgedeelde figuur
+  # facet_wrap(~test, scales = "free_x",) +
+  facet_grid(~test, space = "free_x", scales = "free_x")
   ## punten plotten met reprper > limiet
   # geom_point(data = tijdreeks %>%
   #              filter(ReprPeriode > 30),
@@ -127,14 +150,14 @@ plot_tijdreeks <- ggplot(tijdreeks
   #             aes(x = date(Datum), y = mMaaiveld),
   #             colour = "black", size = 1.5)
 
-# ggsave("Grondwaterdynamiek_tijdreeksen.png", plot_tijdreeks, dpi = 300,
-#        width = 15,
-#        height = 10,
-#        units = "cm")
+ggsave("Grondwaterdynamiek_tijdreeksen_GGV_raai4.png", plot_tijdreeks, dpi = 300,
+       width = 15,
+       height = 10,
+       units = "cm")
 plot_tijdreeks
 
 
-xg3 <- get_xg3(locs = locaties, con = watina,
+driesxg3 <- get_xg3(locs = locaties, con = watina,
                 startyear = 1900, endyear = 2021,
                 vert_crs = "local",
                with_estimated = TRUE,
@@ -164,6 +187,89 @@ plot_tijdreeks +
 
 ggsave("figuur2.jpg")
 ggsave("figuur2.svg")
+
+## 2.2 Jaarreeksen ----
+
+doy <- date(c("2016-01-01",
+              "2016-02-01",
+              "2016-03-01",
+             "2016-04-01",
+             "2016-05-01",
+             "2016-06-01",
+             "2016-07-01",
+             "2016-08-01",
+             "2016-09-01",
+             "2016-10-01",
+             "2016-11-01",
+             "2016-12-01"))
+
+doy <- tibble(mon = month(doy, label = T),
+             jul = yday(doy))
+
+plot_jaarreeks <- ggplot(tijdreeks
+                         %>%
+                           filter(loc_code %in% c("GGVP007", "GGVP001"))
+                         ) +
+  geom_line(aes(x = yday(date(Datum)),
+                # x = Jaardag_Nummer,
+                y = mMaaiveld,
+                # y = mTAW,
+                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+                # colour = paste0(loc_code, "_", Jaar)
+                colour = as.factor(Jaar),
+                linetype = loc_code,
+                # group = grp_diff
+                # Peilmetingstatus weergeven in legende (lijntype; ingegeven/gevalideerd)
+                # ,linetype = PeilmetingStatus
+                ), size = 1) +
+  ## non-clipping zoom
+  coord_cartesian(
+    # ylim = c(-1, 0.1),
+    # xlim = c(ymd("2010-01-01"), ymd("2022-01-01"))
+  ) +
+  # scale_x_date(date_breaks = "month", date_labels = "%M") +
+  scale_x_continuous(breaks = doy$jul, labels = doy$mon) +
+  ## clipping zoom
+  # xlim(ymd("2012-01-01"), ymd("2021-01-01")) +
+  # ylim(-0.85, 0.05) +
+  geom_hline(yintercept = 0, colour = "black",
+             # size = 1,
+             # linetype = "dotted"
+  ) +
+  # theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "right",
+        legend.direction = "vertical"
+  ) +
+  labs(x = "Datum", y = "m-mv", colour = "Jaar", linetype = "Peilbuis") +
+  ## plotten van peilmetingen als punten
+  geom_point(#data = tijdreeks,
+    aes(x = yday(date(Datum)), y = mMaaiveld,
+        # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+        colour = as.factor(Jaar),
+        linetype = loc_code),
+    size = 1)
+  ## opgedeelde figuur
+  # facet_wrap(~test, scales = "free_x",) +
+  # facet_grid(~test, space = "free_x", scales = "free_x")
+## punten plotten met reprper > limiet
+# geom_point(data = tijdreeks %>%
+#              filter(ReprPeriode > 30),
+#            aes(x = date(Datum), y = mMaaiveld))
+## accentueren van specifieke tijdreeks
+# geom_line(data = tijdreeks %>%
+#               filter(loc_code == "ASHP013"),
+#             aes(x = date(Datum), y = mMaaiveld),
+#             colour = "black", size = 1.5)
+
+# ggsave("Grondwaterdynamiek_jaarreeksen.png", plot_tijdreeks, dpi = 300,
+#        width = 15,
+#        height = 10,
+#        units = "cm")
+
+plot_jaarreeks
+
 
 # 3. Referentietabel NICHE inlezen ----
 
