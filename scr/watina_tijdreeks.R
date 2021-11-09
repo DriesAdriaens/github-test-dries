@@ -17,16 +17,18 @@ watina <- connect_watina()
 
 locaties <- get_locs(watina,
                      # area_codes = "GGV",
-                     # loc_type = c("P", "S", "R", "N", "W", "D", "L", "B"),
+                     loc_type = c("P", "S", "R", "N", "W", "D", "L", "B"),
+                     loc_vec = c("ZWAP009"),
                      # loc_vec = c("VLVP001", "VLVP002", "VLVP003", "VLVP004", "VLVP005", "VLVP006"), #transectNZ Vloethemveld, enkel ondiepe peilbuizen
                      # loc_vec = c("VLVP001", "VLVP301", "VLVP004", "VLVP304"), #transectNZ Vloethemveld, enkel peilbuiskoppels
                      # loc_vec = c("VLVP007", "VLVP008", "VLVP009", "VLVP010", "VLVP003"), #transectOW Vloethemveld
                      # Grote Gete Meetraai 4
                      # loc_vec = c("GGVP001", "GGVP003", "GGVP005", "GGVP006", "GGVP007", "GGVP037", "GGVP038", "GGVP039"),
                      # Grote Gete Meetraai 3
-                     loc_vec = c("GGVP008", "GGVP009", "GGVP010", "GGVP011", "GGVP012", "GGVP013", "GGVP014", "GGVP015", "GGVP016", "GGVP032", "GGVP033", "GGVP017"
-                     ,"GGVP034", "GGVP035", "GGVP036"
-                     ),
+                     # loc_vec = c("GGVP008", "GGVP009", "GGVP010", "GGVP011", "GGVP012", "GGVP013", "GGVP014", "GGVP015", "GGVP016", "GGVP032", "GGVP033", "GGVP017"
+                     # ,"GGVP034", "GGVP035", "GGVP036",
+                     # , "GGVS003", "GGVS004", "GGVS010", "GGVS011"
+                     # ),
                      # Grote Gete Meetraai 2
                      # loc_vec = c("GGVP018", "GGVP019", "GGVP020","GGVP021", "GGVP022", "GGVP023", "GGVP024", "GGVP025"),
                      # Grote Gete Meetraai 1
@@ -102,9 +104,10 @@ tijdreeks <-
 
 
 plot_tijdreeks <- ggplot(tijdreeks
-                         # %>%
+                         %>%
                          #   filter(loc_code %in% c("VRIP031", "VRIP045", "VRIP033"),
                          # filter(mMaaiveld >= 0)
+                         filter(loc_typecode == "P")
                          ) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
@@ -115,16 +118,27 @@ plot_tijdreeks <- ggplot(tijdreeks
                 # Peilmetingstatus weergeven in legende (lijntype; ingegeven/gevalideerd)
                 # ,linetype = PeilmetingStatus
                 )) +
+  ## plotten van peilmetingen als punten
+  # geom_point(#data = tijdreeks,
+  #   aes(x = date(Datum),
+  #       # y = mMaaiveld,
+  #       y = mTAW,
+  #       # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+  #       colour = loc_code),
+  #   size = 1) +
   ## non-clipping zoom
-  coord_cartesian(
-    ylim = c(-3.75, 1),
-    # xlim = c(ymd("2021-05-01"), ymd("2021-10-01"))
-  ) +
+  # coord_cartesian(
+  #   ylim = c(-2.5, 1.5),
+  #   # xlim = c(ymd("2021-06-13"), ymd("2021-08-18"))
+  # ) +
   ## clipping zoom
-  # xlim(ymd("2012-05-01"), ymd("2021-01-01")) +
+  # xlim(ymd("2021-06-13"), ymd("2021-08-18")) +
   # ylim(-0.85, 0.05) +
-  scale_x_date(date_breaks = "year", date_labels = "%Y",
-               # date_minor_breaks = "3 months"
+  scale_x_date(
+    date_breaks = "year",
+               date_labels = "%Y",
+               # date_minor_breaks = "3 months",
+               # limits = c(ymd("2021-06-13"), ymd("2021-08-18"))
                ) +
   scale_colour_brewer(
     # type = "div", palette = 7,
@@ -140,17 +154,12 @@ plot_tijdreeks <- ggplot(tijdreeks
         panel.grid.minor.x = element_line(linetype = "dashed"),
         legend.position = "bottom",
         legend.direction = "horizontal",
+        # text = element_text(size = 20),
         ) +
-  labs(x = "Datum", y = "m-mv", colour = NULL) +
-  ## plotten van peilmetingen als punten
-  # geom_point(#data = tijdreeks,
-  #            aes(x = date(Datum), y = mMaaiveld,
-  #                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
-  #                colour = loc_code),
-  #            size = 1) +
+  labs(x = "Datum", y = "m-mv", colour = NULL) 
   ## opgedeelde figuur
   # facet_wrap(~test, scales = "free_x",) +
-  facet_grid(~test, space = "free_x", scales = "free_x")
+  # facet_grid(~test, space = "free_x", scales = "free_x")
   ## punten plotten met reprper > limiet
   # geom_point(data = tijdreeks %>%
   #              filter(ReprPeriode > 30),
@@ -162,10 +171,10 @@ plot_tijdreeks <- ggplot(tijdreeks
   #             colour = "black", size = 1.5)
   
 
-ggsave("Grondwaterdynamiek_tijdreeksen_GGV_raai.png", plot_tijdreeks, dpi = 300,
-       width = 15,
-       height = 10,
-       units = "cm")
+# ggsave("Grondwaterdynamiek_tijdreeksen_GGV_raai.png", plot_tijdreeks, dpi = 300,
+#        width = 15,
+#        height = 10,
+#        units = "cm")
 plot_tijdreeks
 
 
@@ -436,7 +445,7 @@ ggplot(reftab_long
   facet_wrap(~ mw_type) +
   labs(x = "Vegetatietype", y = "waterpeil (m-mv)", colour = "bodemtype") +
   theme(legend.position = "bottom", legend.direction = "horizontal")
-ggsave("Systeembeschrijving_GroteGete_GXG_Niche.png", width = 15, height = 10, units = "cm")
+ggsave("Systeembeschrijving_GroteGete_GXG_Niche.png", width = 20, height = 15, units = "cm")
 
 ggplot(reftab_long %>%
          filter(veg_code %in% 
@@ -543,8 +552,9 @@ tijdreeks %>%
 locaties_TAW <- get_locs(watina,
                      # area_codes = "GGV",
                      loc_type = c("P", "S"),
+                     loc_vec = c("ZWAP009"),
                      # Grote Gete Meetraai 3
-                     loc_vec = c("GGVP008", "GGVP009", "GGVP010", "GGVP011", "GGVP013", "GGVP015", "GGVP016", "GGVP032", "GGVP033", "GGVP017", "GGVS003", "GGVS004", "GGVS010", "GGVS011"),
+                     # loc_vec = c("GGVP008", "GGVP009", "GGVP010", "GGVP011", "GGVP013", "GGVP015", "GGVP016", "GGVP032", "GGVP033", "GGVP017", "GGVS003", "GGVS004", "GGVS010", "GGVS011"),
                      # loc_vec = c("GGVP034", "GGVP035", "GGVP015", "GGVP016","GGVP017", "GGVP033", "GGVP036", "GGVS010"),
                      # loc_vec = c("KASP001", "KASP002", "KASP032"),
                      # loc_vec = c("SILP001", "SILP002", "SILP003", "SILP004"),
@@ -576,9 +586,10 @@ tijdreeks_TAW <-
   rename(mvTAW = soilsurf_ost) %>% 
   inner_join(tbl(watina, "FactPeilMeting"), by = c("loc_wid" = "MeetpuntWID")) %>% 
   inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>% 
-  filter(PeilmetingStatus == "Gevalideerd",
-         is.na(PeilmetingCategorie)
-  ) %>% 
+  filter(
+    PeilmetingStatus == "Gevalideerd",
+    is.na(PeilmetingCategorie)
+  ) %>%
   dplyr::collect() %>% 
   group_by(loc_code) %>%
   arrange(loc_code, Datum) %>% 
@@ -666,7 +677,7 @@ ggplot(locaties_TAW %>% filter(loc_typecode == "P"),
   #              ),
   #            aes(y = mTAW),
   #            size = 4, colour = "orange") +
-  labs(x = "Meetpunt", y = "mTAW")
+  labs(x = "Meetpunt", y = "mTAW", colour = str_wrap("[hg3-lg3] per hydrojaar", width = 15))
 
 
 # Integratie met transectgegevens uit GIS, met behoud van hoogteligging uit peilpuntdefinitie (ook al geeft de geprojecteerde hoogteligging uit GIS een andere waarde)
@@ -674,6 +685,8 @@ ggplot(locaties_TAW %>% filter(loc_typecode == "P"),
 ggplot(locaties_TAW %>%
            filter(loc_typecode == "P"),
          aes(x = s)) +
+  geom_hline(aes(yintercept = 31.9), colour = "red", linetype = "dashed") +
+  geom_hline(aes(yintercept = 29), colour = "red", linetype = "dashed") +
   geom_linerange(aes(ymin = measuringref_ost - tubelength + filterlength,
                      ymax = measuringref_ost,
                      linetype = "piëzometer"),
@@ -849,10 +862,10 @@ plot_tijdreeks_TAW <- ggplot(tijdreeks_TAW) +
   #           # size = 1
   #           ) +
   ## non-clipping zoom
-  coord_cartesian(
-    ylim = c(25.5, 28.5),
-    # xlim = c(ymd("2015-01-01"), ymd("2016-01-01"))
-  ) +
+  # coord_cartesian(
+  #   ylim = c(25.5, 28.5),
+  #   # xlim = c(ymd("2015-01-01"), ymd("2016-01-01"))
+  # ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
   # xlim(ymd("2015-01-01"), ymd("2016-01-01")) +
@@ -868,8 +881,8 @@ plot_tijdreeks_TAW <- ggplot(tijdreeks_TAW) +
   # type = "qual", palette = "Set1",
   type = "qual", palette = "Accent",
   # type = "qual", palette = "Dark2"
-  ) +
-  facet_grid(~test, space = "free_x", scales = "free_x")
+  ) 
+  # facet_grid(~test, space = "free_x", scales = "free_x")
   ## plotten van peilmetingen met representatieve periode > 30 dagen
   # geom_point(data = tijdreeks_TAW %>%
   #              filter(ReprPeriode > 30),
