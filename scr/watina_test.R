@@ -1,5 +1,6 @@
 library(watina)
 library(dplyr)
+library(ggplot2)
 
 watina <- connect_watina()
 
@@ -33,12 +34,16 @@ mylocs %>%
 
 get_locs(con = watina, loc_vec = c("SILP003"), collect = TRUE, obswells = TRUE) %>% View()
 
-get_xg3(get_locs(con = watina, loc_vec = c("ASHP013")), con = watina, startyear = 1900, vert_crs = "local", truncated = FALSE, collect = TRUE) #%>% View()
+get_xg3(get_locs(con = watina, loc_vec = c("SILP003")), con = watina, startyear = 1900, vert_crs = "local", truncated = FALSE, collect = TRUE) #%>% View()
+
+ggplot(get_xg3(get_locs(con = watina, loc_vec = c("GGVP010")), con = watina, startyear = 1900, vert_crs = "local", truncated = FALSE, collect = TRUE), aes(x = hydroyear, y = hg3_lcl)) +
+         geom_line() +
+  geom_point()
 
 get_xg3(get_locs(con = watina, loc_vec = c("ASHP013")), con = watina, startyear = 1900, vert_crs = "local", truncated = FALSE, collect = TRUE) %>% 
   eval_xg3_avail(xg3_type = c("L", "H", "V"))
 
-get_xg3(get_locs(con = watina, loc_vec = c("ASHP013")), con = watina, startyear = 1900, vert_crs = "local", truncated = FALSE, collect = TRUE) %>% 
+get_xg3(get_locs(con = watina, loc_vec = c("GGVP010")), con = watina, startyear = 1900, vert_crs = "local", truncated = FALSE, collect = TRUE) %>% 
   eval_xg3_series(xg3_type = c("L", "H", "V"), max_gap = 0, min_dur = 2) %>% 
   View()
 
