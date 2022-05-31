@@ -100,7 +100,8 @@ transects <- data.frame(loc_code = locs$loc_code,
 transects %>% knitr::kable()
 
 locs <- locaties %>% collect() %>% 
-  left_join(transects, by = "loc_code")
+  left_join(transects, by = "loc_code") %>% 
+  filter(transect_nr > 0)
 ```
 Overzichtskaartje van de peilbuizen en peilschalen, met aanduiding van de overstromingsgevoelige gebieden (optioneel: recent overstroomde gebieden en de habitatrichtlijngebieden (HRL)):
 
@@ -324,7 +325,7 @@ ggplot(tijdreeks %>%
   #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
@@ -345,7 +346,7 @@ ggplot(tijdreeks %>%
   #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   facet_wrap(~loc_code) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
@@ -393,7 +394,7 @@ ggplot(tijdreeks %>%
   #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -415,7 +416,7 @@ ggplot(tijdreeks %>%
   #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -553,7 +554,9 @@ m-mv, sinds 2017
 
 ```{r tijdreeks_raai_2_2017, message=FALSE, warning=FALSE}
 ggplot(tijdreeks %>% 
-         filter(transect_nr == 2 & gr_mv == 1)) +
+         filter(transect_nr == 2
+                & gr_mv == 1
+                )) +
   geom_line(aes(x = date(Datum),
                 y = mMaaiveld,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
@@ -563,12 +566,45 @@ ggplot(tijdreeks %>%
   #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_hline(yintercept = 0, colour = "black", size = 1, linetype = "dotted") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "m-mv", colour = NULL)
+# ggsave("mom_raai2_mmv_single.jpg", width = 42, height = 30, units = "cm", dpi = 300, scale = 0.75)
+```
+```{r tijdreeks_raai_2_2017, message=FALSE, warning=FALSE}
+ggplot(tijdreeks %>% 
+         filter(loc_code %in% c(
+           "MOMP001", "MOMP002", "MOMP011", "MOMP012", "MOMP014", "MOMP015", "MOMP016"
+         )
+         )) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  ## clipping zoom
+  # xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
+  # ylim(-1, 0.1) +
+  geom_hline(yintercept = 0, colour = "black", size = 0.5,
+             # linetype = "dotted"
+             ) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(size = 0.5, linetype = "dashed"),
+        panel.grid.major.x = element_line(size = 0.75),
+        text = element_text(size = 20)) +
+  scale_x_date(date_breaks = "year",
+               date_labels = "%Y",
+               date_minor_breaks = "3 months",
+               limits = c(ymd("2017-01-01"), ymd("2022-05-01")),
+               expand = c(0,0)
+  ) +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+ggsave("mombeek_raai2_tijdreeks_mmv_single.pdf", width = 42, height = 30, units = "cm", dpi = 300)
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -584,7 +620,7 @@ ggplot(tijdreeks %>%
   #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   facet_wrap(~loc_code) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
@@ -592,6 +628,7 @@ ggplot(tijdreeks %>%
         # legend.position = "bottom"
         ) +
   labs(x = "Datum", y = "m-mv", colour = NULL)
+# ggsave("mom_raai2_mmv.jpg", width = 16, height = 16, units = "cm", dpi = 300)
 ```
 
 mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn
@@ -632,7 +669,7 @@ ggplot(tijdreeks %>%
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -649,12 +686,12 @@ ggplot(tijdreeks %>%
                 y = mTAW,
                 colour = loc_code)) +
   ## non-clipping zoom
-  coord_cartesian(ylim = c(32.25, 34.25),
+  coord_cartesian(ylim = c(31.5, 34.25),
   #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -664,6 +701,7 @@ ggplot(tijdreeks %>%
         panel.grid.minor.x = element_line(linetype = "dashed"),
         legend.position = "bottom") +
   labs(x = "Datum", y = "mTAW", colour = NULL)
+# ggsave("mom_raai2_taw.jpg", width = 16, height = 16, units = "cm", dpi = 300)
 ```
 
 mTAW, sinds 2017, met telkens de aanduiding van de maaiveldhoogte in stippellijn. De tijdreeksen van de waterpeilen van de Mombeek staan in het grijs.
@@ -675,12 +713,12 @@ ggplot(tijdreeks %>%
                 y = mTAW,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
-  coord_cartesian(ylim = c(32.25, 34.75),
+  coord_cartesian(ylim = c(31.5, 34.75),
   #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -709,12 +747,12 @@ ggplot() +
                 y = mTAW,
                 colour = loc_code)) +
   ## non-clipping zoom
-  coord_cartesian(ylim = c(32.25, 34.25),
+  coord_cartesian(ylim = c(31.5, 34.25),
                   # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_line(data = tijdreeks %>% 
               filter(transect_nr == 2 & gr_mv == 1),
@@ -729,6 +767,7 @@ ggplot() +
         legend.position = "bottom", legend.box = "horizontal",
         legend.direction = "horizontal") +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+# ggsave("mom_ps_raai2.jpg", width = 16, height = 16, units = "cm", dpi = 300)
 ```
 
 Hieruit blijkt dat de grondwaterpeilen vooral in het voorjaar sterk reageren op peilmaxima in de Mombeek.
@@ -742,12 +781,12 @@ ggplot(tijdreeks %>%
                 y = mTAW,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
-  coord_cartesian(ylim = c(32.25, 34.75),
+  coord_cartesian(ylim = c(31.5, 34.75),
   #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -765,8 +804,10 @@ ggplot(tijdreeks %>%
 
 ```{r message=FALSE, warning=FALSE}
 ggplot() +
-  geom_line(data = tijdreeks %>% as.data.frame() %>% filter(transect_nr == 2 &
-                                                              loc_code %in% c("MOMS009")) %>% 
+  geom_line(data = tijdreeks %>%
+              as.data.frame() %>%
+              filter(transect_nr == 2 &
+                       loc_code %in% c("MOMS009")) %>% 
               select(-loc_code),
             aes(x = date(Datum),
                 y = mTAW, linetype = "Oude Mombeek"),
@@ -777,12 +818,12 @@ ggplot() +
                 y = mTAW,
                 colour = loc_code)) +
   ## non-clipping zoom
-  coord_cartesian(ylim = c(32.25, 34.25),
+  coord_cartesian(ylim = c(31.5, 34.25),
                   # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_line(data = tijdreeks %>% 
               filter(transect_nr == 2 & gr_mv == 1),
@@ -796,6 +837,7 @@ ggplot() +
         legend.position = "bottom", legend.box = "horizontal",
         legend.direction = "horizontal") +
   labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+# ggsave("mom_ps_oudemombeek_raai2.jpg", width = 16, height = 16, units = "cm", dpi = 300)
 ```
 
 Vaststellingen:
@@ -844,11 +886,12 @@ ggplot(tijdreeks %>%
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
   # ylim(-1, 0.1) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
   labs(x = "Datum", y = "mTAW", colour = NULL)
+
 ```
 
 De peilen in de Oude Mombeek liggen lager dan die van de Mombeek. De peilen in de Oude Mombeek kennen een amplitude van ongeveer 1 meter, met de hoogste peilen uiteraard in het na- en voorjaar. In de zomerperiode valt de Oude Mombeek droog, de Mombeek niet. In de zomer ligt het peil van de Mombeek ongeveer een halve meter boven het bodempeil van de Oude Mombeek. Beide waterlopen kennen uitgesproken pieken in de peilen in respons op neerslag.
@@ -965,6 +1008,7 @@ ggplot() +
   ylim(c(32.5, 36)) +
   labs(colour = NULL, x = "Datum", y = "Peil (mTAW)") +
   theme(legend.position = "bottom")
+ggsave("Mom_peilschalen.jpg", width = 16, height = 10, dpi = 300, units = "cm")
 ```
 
 Hieruit maken we op dat:
@@ -1028,7 +1072,7 @@ ggplot(tijdreeks %>%
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
   coord_cartesian(ylim = c(31.5, 34.25),
-                  xlim = c(ymd("2017-01-01"), ymd("2020-01-01"))
+                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1142,7 +1186,7 @@ ggplot(tijdreeks %>%
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
   coord_cartesian(#ylim = c(-1, 0.1),
-                  xlim = c(ymd("2017-01-01"), ymd("2020-01-01"))
+                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1167,7 +1211,7 @@ ggplot(tijdreeks %>%
   #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
   # ylim(-1, 0.1) +
   facet_wrap(~loc_code) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
@@ -1215,7 +1259,7 @@ ggplot(tijdreeks %>%
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -1233,12 +1277,12 @@ ggplot(tijdreeks %>%
                 # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
                 colour = loc_code)) +
   ## non-clipping zoom
-  # coord_cartesian(ylim = c(32.25, 34.25),
-  # #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
-  #                 ) +
+  coord_cartesian(ylim = c(34.40, 37.20),
+                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -1260,12 +1304,12 @@ ggplot(tijdreeks %>%
                 y = mTAW,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
-  # coord_cartesian(ylim = c(32.25, 34.75),
-  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
-                  # ) +
+  coord_cartesian(ylim = c(34.40, 37.20),
+                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -1295,12 +1339,12 @@ ggplot() +
                 y = mTAW, linetype = "Mombeek"),
             alpha = 0.25) +
   ## non-clipping zoom
-  # coord_cartesian(ylim = c(32.25, 34.25),
-  #                 # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
-  #                 ) +
+  coord_cartesian(ylim = c(34.40, 37.20),
+                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
   # ylim(-1, 0.1) +
   geom_line(data = tijdreeks %>% 
               filter(transect_nr == 3 & gr_mv == 1),
@@ -1326,12 +1370,12 @@ ggplot(tijdreeks %>%
                 y = mTAW,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
-  # coord_cartesian(ylim = c(32.25, 34.75),
-  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
-                  # ) +
+  coord_cartesian(ylim = c(34.40, 37.20),
+                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  # xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -1340,7 +1384,8 @@ ggplot(tijdreeks %>%
             aes(x = date(Datum),
                 y = mTAW,
                 # linetype = loc_code
-                group = loc_code, linetype = loc_code),
+                # group = loc_code,
+                linetype = loc_code),
             alpha = 0.5) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
@@ -1361,12 +1406,12 @@ ggplot() +
                 y = mTAW,
                 colour = loc_code)) +
   ## non-clipping zoom
-  # coord_cartesian(ylim = c(32.25, 34.25),
-  #                 # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
-  #                 ) +
+   coord_cartesian(ylim = c(34.40, 37.20),
+                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
   # ylim(-1, 0.1) +
   geom_line(data = tijdreeks %>% 
               filter(transect_nr == 3 & gr_mv == 1),
@@ -1423,7 +1468,7 @@ ggplot(tijdreeks %>%
                   # ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2020-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
   # ylim(-1, 0.1) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
@@ -1486,8 +1531,8 @@ ggplot(tijdreeks %>%
                 y = mTAW,
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
-  coord_cartesian(ylim = c(34, 37.5),
-                  xlim = c(ymd("2017-01-01"), ymd("2020-01-01"))
+  coord_cartesian(ylim = c(34.5, 37.5),
+                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1598,30 +1643,164 @@ ggplot(tijdreeks %>%
 
 Doel: kalibratie van de overstromingsdiepte zoals voorspeld door de overstromingskaarten die aangemaakt worden in het kader van werkpakket 1 van het project Future Floodplains.
 
-Selectie van metingen: alle metingen? Met uitsluiting van MOMP001 vanwege vermoedelijke kweldruk aan rand van vallei? MOMP009 ook uit de selectie laten?
-
-# To do
-
-* Hoe gevalideerde sondemetingen wegfilteren met afwijkende metingen (cfr. peilmetingcategorieën bij handmatige metingen)?
-* Valideren van ontbrekende metingen voor 2020 (nu veelal metingen t.e.m. 09/2019)
-
-Tabel met kenmerken van metingen per meetpunt, gesorteerd volgens transect, y-coördinaat, meetpunt:
+Selectie van metingen: alle metingen boven maaiveld
 
 ```{r}
-tijdreeks %>%
-  mutate(gr_mv_ = ifelse(mMaaiveld > 0, 1, 0)) %>% 
-  # group_by(loc_code, gr_mv_) %>% 
-  # mutate(n_ = n()) %>%
-  # ungroup() %>% 
-  group_by(loc_code) %>% 
-  summarise(transect = min(transect_nr),
-            Date_first = min(Datum),
-            Date_last = max(Datum),
-            n = n(),
-            n_gr_mv = sum(gr_mv_),
-            y = min(y)) %>% 
-  arrange(transect, y, loc_code) %>% 
-  select(-y) %>% 
-  knitr::kable()
+WATINA_meas_above_surf_mombeek <- get_locs(watina,
+                                           area_codes = "MOM",
+                                           loc_type = c("P"),
+                                           loc_validity = c("VLD", "ENT"),
+                                           filterdepth_guess = TRUE,
+                                           filterdepth_na = TRUE,
+                                           filterdepth_range = c(0, 30),
+                                           obswells = TRUE) %>% 
+  inner_join(tbl(watina, "DimPeilpunt") %>%
+               select(PeilpuntWID, PeilpuntCode, PeilpuntXCoordinaat, PeilpuntYCoordinaat),
+             by = c("obswell_code" = "PeilpuntCode")) %>%
+  inner_join(tbl(watina, "FactPeilMeting"),
+             by = c("loc_wid" = "MeetpuntWID", "PeilpuntWID" = "PeilpuntWID")) %>%
+  filter(PeilmetingStatusCode == "VLD" & (is.na(PeilmetingCategorie) | 
+                                            PeilmetingCategorieCode %in% c("SOUWA", "TBWWL")) &
+           mMaaiveld > 0) %>% 
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>% 
+  inner_join(tbl(watina, "DimMetingType"), by = "MetingTypeWID") %>% 
+  rename(mvTAW = soilsurf_ost) %>% 
+  select(area_name, loc_code, obswell_code, PeilpuntXCoordinaat, PeilpuntYCoordinaat,
+         filterdepth, mvTAW, Datum, mTAW, mMaaiveld, ReprPeriode, MetingTypeNaam, PeilmetingCommentaar) %>% 
+  rename(x = PeilpuntXCoordinaat, y = PeilpuntYCoordinaat) %>% 
+  collect()
+summary(WATINA_meas_above_surf_mombeek)
 ```
+
+```{r include=FALSE, eval=FALSE}
+WATINA_meas_above_surf_mombeek_vgl <- tijdreeks %>% 
+  filter(!PeilpuntWID %in% c(40755, 41933) & mMaaiveld > 0 & loc_typecode == "P") %>% 
+  left_join(tbl(watina, "DimMetingType") %>% collect(), by = "MetingTypeWID") %>% 
+  select(loc_code, x, y, filterdepth, mvTAW, Datum, mTAW, mMaaiveld,
+         MetingTypeCode, PeilmetingCommentaar)
+summary(WATINA_meas_above_surf_mombeek_vgl)
+```
+Aantal meetpunten:
+```{r}
+WATINA_meas_above_surf_mombeek %>% 
+  select(loc_code) %>%
+  distinct() %>% 
+  nrow()
+  
+```
+
+```{r eval=FALSE, include=FALSE}
+rbind(WATINA_meas_above_surf_mombeek, WATINA_meas_above_surf_dijle) %>% 
+  write.table(file = "WATINA_meas_above_surf_mombeek_dijle.csv",
+              dec = ".", sep = ";", row.names = FALSE, qmethod = "double")
+```
+
+
+<!-- # To do -->
+
+<!-- * Hoe gevalideerde sondemetingen wegfilteren met afwijkende metingen (cfr. peilmetingcategorieën bij handmatige metingen)? Nu enkel probleem bij MOMP017 (kalibratiemeting 05/09/2018; wellicht fout in tabel "FactPeilMeting"; manueel meting weglaten uit dataset tijdreeks door extra `filter`-criterium in te voegen: `PeilpuntWID != 40755`) -->
+
+<!-- Tabel met kenmerken van metingen per meetpunt, oplopend gesorteerd volgens transect, y-coördinaat, meetpunt: -->
+
+<!-- ```{r warning=FALSE, message=FALSE} -->
+<!-- tijdreeks %>% -->
+<!--   mutate(gr_mv_ = ifelse(mMaaiveld > 0, 1, 0)) %>%  -->
+<!--   # group_by(loc_code, gr_mv_) %>%  -->
+<!--   # mutate(n_ = n()) %>% -->
+<!--   # ungroup() %>%  -->
+<!--   group_by(loc_code) %>%  -->
+<!--   summarise(transect = min(transect_nr), -->
+<!--             Date_first = min(Datum), -->
+<!--             Date_last = max(Datum), -->
+<!--             n = n(), -->
+<!--             n_gr_mv = sum(gr_mv_), -->
+<!--             y = min(y)) %>%  -->
+<!--   arrange(transect, y, loc_code) %>%  -->
+<!--   select(-y) %>%  -->
+<!--   knitr::kable() -->
+<!-- ``` -->
+
+<!-- # Klad -->
+
+<!-- ```{r} -->
+<!-- tijdreeks %>%  -->
+<!--   filter(PeilpuntWID != 40755 & grepl("MOMP00", loc_code)) %>%  -->
+<!--   group_by(loc_code) %>%  -->
+<!--   group_walk(~ write.csv(.x, file = paste0(.y$loc_code, "_tijdreeks_TAW.csv"))) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- test <- tijdreeks %>%  -->
+<!--   filter(PeilpuntWID != 40755 & grepl("MOMP00", loc_code)) %>%  -->
+<!--   group_by(loc_code) %>%  -->
+<!--   group_walk(~ function(deze.subset){ -->
+<!--     p <- ggplot(deze.subset) + -->
+<!--       geom_line(aes(x = date(Datum), -->
+<!--                     y = mTAW, -->
+<!--                     colour = loc_code)) + -->
+<!--       scale_x_date(date_breaks = "year", date_labels = "%Y") + -->
+<!--       geom_line(aes(x = date(Datum), -->
+<!--                     y = mvTAW, -->
+<!--                     colour = loc_code), linetype = "dashed") + -->
+<!--       theme(axis.text.x = element_text(angle = 90, vjust = 0.5), -->
+<!--             panel.grid.minor.x = element_line(linetype = "dashed"), -->
+<!--             legend.position = "right") + -->
+<!--       labs(x = "Datum", y = "mTAW", colour = NULL) -->
+<!--     ggsave(p, filename = paste0(deze.subset$loc_code, "_tijdreeks_TAW.jpeg"), device = "jpeg", -->
+<!--            width = 8, height = 5.7, units = "in") -->
+<!--   } -->
+<!--   ) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- tijdreeks %>%  -->
+<!--   filter(PeilpuntWID != 40755 & grepl("MOMP00", loc_code)) %>%  -->
+<!--   group_by(loc_code) %>%  -->
+<!--   group_walk(~ list(function(deze.subset){ -->
+<!--     ggplot(deze.subset) + -->
+<!--       geom_line(aes(x = date(Datum), -->
+<!--                     y = mTAW, -->
+<!--                     colour = loc_code)) + -->
+<!--       scale_x_date(date_breaks = "year", date_labels = "%Y") + -->
+<!--       geom_line(aes(x = date(Datum), -->
+<!--                     y = mvTAW, -->
+<!--                     colour = loc_code), linetype = "dashed") + -->
+<!--       theme(axis.text.x = element_text(angle = 90, vjust = 0.5), -->
+<!--             panel.grid.minor.x = element_line(linetype = "dashed"), -->
+<!--             legend.position = "right") + -->
+<!--       labs(x = "Datum", y = "mTAW", colour = NULL) -->
+<!--     }) -->
+<!--   ) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- tijdreeks %>% -->
+<!--   filter(!PeilpuntWID %in% c(40755, 41933) -->
+<!--          # & gr_mv == 1 -->
+<!--          ) %>% -->
+<!--   plyr::d_ply( -->
+<!--     ~loc_code, -->
+<!--     function(deze.subset){ -->
+<!--       p <- ggplot(deze.subset) + -->
+<!--         geom_line(aes(x = date(Datum), -->
+<!--                       y = mTAW, -->
+<!--                       colour = loc_code)) + -->
+<!--         scale_x_date(date_breaks = "year", date_labels = "%Y") + -->
+<!--         geom_line(aes(x = date(Datum), -->
+<!--                       y = mvTAW, -->
+<!--                       linetype = paste0("mv = ", round(mvTAW,2), " mTAW"))) + -->
+<!--         theme(axis.text.x = element_text(angle = 90, vjust = 0.5), -->
+<!--               panel.grid.minor.x = element_line(linetype = "dashed"), -->
+<!--               legend.position = "right") + -->
+<!--         labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL) -->
+<!--       ggsave(p, filename = paste0(deze.subset$loc_code, "_tijdreeks_TAW.jpeg"), device = "jpeg", -->
+<!--              width = 8, height = 5.7, units = "in") -->
+<!--     } -->
+<!--   ) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- tbl(watina, "vwDimPeilpunt") %>% -->
+<!--   filter(PeilpuntWID == 41933) -->
+<!-- ``` -->
 
