@@ -42,7 +42,7 @@ ggplot(Watkwal_agg_sel,
   labs(y = "mg/L", colour = "Meetpunt", linetype = "Basismilieunorm") +
   scale_x_continuous(minor_breaks = seq(1900,2050,2), limits = c(1989, 2021)) +
   theme_bw() + 
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom", legend.direction = "vertical")
 ggsave("Dijle_Waterkwaliteit_VMM_agg.png", dpi = 300, width = 15, height = 10, units = "cm")
 
 
