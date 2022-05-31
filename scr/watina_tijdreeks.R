@@ -16,9 +16,9 @@ watina <- connect_watina()
 # 1. tabel met peilmetingen opvragen voor gewenste meetpunten ----
 
 locaties <- get_locs(watina,
-                     # area_codes = "GGV",
-                     loc_type = c("P", "S", "R", "N", "W", "D", "L", "B"),
-                     loc_vec = c("ZWAP009"),
+                     # area_codes = "ELS",
+                     # loc_type = c("P", "S", "R", "N", "W", "D", "L", "B"),
+                     loc_vec = c("MOMP023", "MOMP024", "MOMP025", "MOMP026", "MOMP027"),
                      # loc_vec = c("VLVP001", "VLVP002", "VLVP003", "VLVP004", "VLVP005", "VLVP006"), #transectNZ Vloethemveld, enkel ondiepe peilbuizen
                      # loc_vec = c("VLVP001", "VLVP301", "VLVP004", "VLVP304"), #transectNZ Vloethemveld, enkel peilbuiskoppels
                      # loc_vec = c("VLVP007", "VLVP008", "VLVP009", "VLVP010", "VLVP003"), #transectOW Vloethemveld
@@ -56,8 +56,8 @@ locaties <- get_locs(watina,
                      #             #, "VRIP007"
                      #             ),
                      # loc_vec = c("VRIP004", "VRIP005"),
-                     # loc_validity = c("VLD", "ENT", "DEL", "CLD"),
-                     loc_validity = c("VLD"),
+                     loc_validity = c("VLD", "ENT", "DEL", "CLD"),
+                     # loc_validity = c("VLD"),
                      # mask = NULL,
                      # join_mask = FALSE,
                      # buffer = 10,
@@ -72,7 +72,8 @@ tijdreeks <-
   rename(mvTAW = soilsurf_ost) %>% 
   inner_join(tbl(watina, "FactPeilMeting"), by = c("loc_wid" = "MeetpuntWID")) %>% 
   inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>%
-  filter(PeilmetingStatus == "Gevalideerd",
+  filter(#PeilmetingStatus == "Gevalideerd",
+         PeilmetingStatus %in% c("Gevalideerd", "Ingegeven"),
          is.na(PeilmetingCategorie)
          ) %>% 
   dplyr::collect() %>% 
@@ -137,8 +138,8 @@ plot_tijdreeks <- ggplot(tijdreeks
   scale_x_date(
     date_breaks = "year",
                date_labels = "%Y",
-               # date_minor_breaks = "3 months",
-               # limits = c(ymd("2021-06-13"), ymd("2021-08-18"))
+               date_minor_breaks = "3 months",
+               # limits = c(ymd("2017-01-01"), ymd("2021-01-01"))
                ) +
   scale_colour_brewer(
     # type = "div", palette = 7,
@@ -156,10 +157,10 @@ plot_tijdreeks <- ggplot(tijdreeks
         legend.direction = "horizontal",
         # text = element_text(size = 20),
         ) +
-  labs(x = "Datum", y = "m-mv", colour = NULL) 
+  labs(x = "Datum", y = "m-mv", colour = NULL) +
   ## opgedeelde figuur
-  # facet_wrap(~test, scales = "free_x",) +
-  # facet_grid(~test, space = "free_x", scales = "free_x")
+  # facet_wrap(~test, scales = "free_x",) #+
+  facet_grid(~test, space = "free_x", scales = "free_x")
   ## punten plotten met reprper > limiet
   # geom_point(data = tijdreeks %>%
   #              filter(ReprPeriode > 30),
@@ -429,17 +430,17 @@ reftab_long <- reftab %>%
   pivot_wider(names_from = mw_minmax, values_from = mw_value)
 
 ggplot(reftab_long
-       %>%
-         filter(!soil_name %in% c("Z1", "Z2", "ZV"
-                                  , "K1", "KV"
-                                  ))
+       # %>%
+       #   filter(!soil_name %in% c("Z1", "Z2", "ZV"
+       #                            , "K1", "KV"
+       #                            ))
        ) +
   geom_linerange(aes(#x = factor(veg_code),
     x = reorder(paste0(veg_code, " - ", nederlandse_naam), -veg_code),
     ymin = -min/100, ymax = -max/100,
     colour = soil_name),
     position = position_dodge(0.5),
-    size = 1) +
+    size = 0.5) +
   geom_hline(yintercept = 0) +
   coord_flip() +
   facet_wrap(~ mw_type) +
@@ -547,7 +548,7 @@ tijdreeks %>%
   count()
 
 
-## 4. tijdreeks voor figuren TAW ----
+# 4. tijdreeks voor figuren TAW ----
 
 locaties_TAW <- get_locs(watina,
                      # area_codes = "GGV",
