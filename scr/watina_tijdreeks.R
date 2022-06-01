@@ -101,10 +101,59 @@ tijdreeks <-
 #   View()
 
 
-# 2. figuur van tijdreeks(en) voor gewenste meetpunten ----
+# 2. xg3's opvragen en gxg's berekenen (zeer ruw nu, met zeer liberale eisen naar minimumduur (1 jaar) en tussenliggende ontbrekende jaren (100 jaar) ----
+
+xg3 <- get_xg3(locs = locaties, con = watina,
+               startyear = 1900, endyear = 2021,
+               vert_crs = "local",
+               with_estimated = TRUE,
+               truncated = TRUE,
+               collect = TRUE
+)
+xg3_long <- xg3 %>% 
+  pivot_longer(cols = c("lg3_lcl", "hg3_lcl", "vg3_lcl"), values_to = "xg3_val", names_to = "xg3")
 
 
-plot_tijdreeks <- ggplot(tijdreeks
+xg3_eval_series <- eval_xg3_series(xg3, xg3_type = c("L", "H", "V"), max_gap = 100, min_dur = 1)
+
+# xg3_eval_avail <- eval_xg3_avail(xg3, xg3_type = c("L", "H", "V"))
+
+xg3_long <- xg3_long %>% 
+  left_join(xg3_eval_series, by = c("loc_code" = "loc_code", "xg3" = "xg3_variable"))
+
+# ggplot(xg3_long 
+#        %>% filter(hydroyear %in% (2018:2020),
+#                   xg3 != "vg3_lcl")
+# ) +
+#   # geom_line(aes(x = hydroyear,
+#   #               y = ser_mean,
+#   #               colour = loc_code,
+#   #               linetype = xg3)) +
+#   geom_line(aes(x = hydroyear,
+#                 y = xg3_val,
+#                 colour = loc_code,
+#                 linetype = xg3)) +
+#   geom_point(aes(x = hydroyear,
+#                  y = xg3_val,
+#                  colour = loc_code,
+#                  linetype = xg3)) +
+#   # geom_step(direction = "mid") +
+#   scale_linetype_manual(values = c("lg3_lcl" = "solid", "hg3_lcl" = "dashed", "vg3_lcl" = "dotted")) +
+#   scale_x_continuous(breaks = c(2018, 2019, 2020), minor_breaks = NULL) +
+#   scale_colour_brewer(
+#     # type = "div", palette = 7,
+#     # type = "div", palette = 8,
+#     type = "div", palette = 9
+#   )
+
+
+# 3. figuur van tijdreeks(en), in m-mv, voor gewenste meetpunten ----
+
+## 3.1 zonder gxg's ----
+
+### zonder facets
+
+plot_tijdreeks_mv <- ggplot(tijdreeks
                          %>%
                          #   filter(loc_code %in% c("VRIP031", "VRIP045", "VRIP033"),
                          # filter(mMaaiveld >= 0)
@@ -144,7 +193,10 @@ plot_tijdreeks <- ggplot(tijdreeks
   scale_colour_brewer(
     # type = "div", palette = 7,
     # type = "div", palette = 8,
-    type = "div", palette = 9
+    type = "div", palette = 9,
+    # type = "qual", palette = "Set1",
+    # type = "qual", palette = "Accent",
+    # type = "qual", palette = "Dark2"
     ) +
   geom_hline(yintercept = 0, colour = "black",
              # size = 1,
@@ -176,51 +228,39 @@ plot_tijdreeks <- ggplot(tijdreeks
 #        width = 15,
 #        height = 10,
 #        units = "cm")
-plot_tijdreeks
+plot_tijdreeks_mv
 
 
-xg3 <- get_xg3(locs = locaties, con = watina,
-                startyear = 1900, endyear = 2021,
-                vert_crs = "local",
-               with_estimated = TRUE,
-               truncated = TRUE,
-               collect = TRUE
-               )
-xg3_long <- xg3 %>% 
-  pivot_longer(cols = c("lg3_lcl", "hg3_lcl", "vg3_lcl"), values_to = "xg3_val", names_to = "xg3")
+### met facets
 
- 
-xg3_eval_series <- eval_xg3_series(xg3, xg3_type = c("L", "H", "V"), max_gap = 100, min_dur = 1)
-
-xg3_eval_avail <- eval_xg3_avail(xg3, xg3_type = c("L", "H", "V"))
-
-xg3_long <- xg3_long %>% 
-  left_join(xg3_eval_series, by = c("loc_code" = "loc_code", "xg3" = "xg3_variable"))
-
-ggplot(xg3_long 
-       %>% filter(hydroyear %in% (2018:2020),
-                  xg3 != "vg3_lcl")
-       ) +
-  # geom_line(aes(x = hydroyear,
-  #               y = ser_mean,
-  #               colour = loc_code,
-  #               linetype = xg3)) +
-  geom_line(aes(x = hydroyear,
-                 y = xg3_val,
-                 colour = loc_code,
-                 linetype = xg3)) +
-  geom_point(aes(x = hydroyear,
-                y = xg3_val,
+plot_tijdreeks_mv_fac <- ggplot(tijdreeks) +
+  geom_hline(yintercept = 0, colour = "black", size = 0.5) +
+  geom_line(aes(x = date(Datum),
+                y = mMaaiveld,
                 colour = loc_code,
-                linetype = xg3)) +
-  # geom_step(direction = "mid") +
-  scale_linetype_manual(values = c("lg3_lcl" = "solid", "hg3_lcl" = "dashed", "vg3_lcl" = "dotted")) +
-  scale_x_continuous(breaks = c(2018, 2019, 2020), minor_breaks = NULL) +
-  scale_colour_brewer(
-    # type = "div", palette = 7,
-    # type = "div", palette = 8,
-    type = "div", palette = 9
-  )
+                # colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+                group = grp_diff
+                )) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.25),
+  # #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
+  # ylim(-1, 0.1) +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        # legend.position = "bottom"
+  ) +
+  labs(x = "Datum", y = "m-mv", colour = NULL)
+
+plot_tijdreeks_mv_fac
+
+
+
+##3.2 met gxg's ----
 
 tijdreeks <- tijdreeks %>% 
   left_join(xg3_eval_series %>%
@@ -228,44 +268,57 @@ tijdreeks <- tijdreeks %>%
               pivot_wider(id_cols = loc_code, values_from = ser_mean, names_from = xg3_variable),
             by = "loc_code")
 
-plot_tijdreeks +
-  geom_line(aes(x = date(Datum),
+### zonder facets
+
+plot_tijdreeks_mv +
+  geom_line(data = tijdreeks, aes(x = date(Datum),
                 y = lg3_lcl,
                 colour = loc_code),
             linetype = "solid", size = 0.3) +
-  geom_line(aes(x = date(Datum),
+  geom_line(data = tijdreeks, aes(x = date(Datum),
                 y = hg3_lcl,
                 colour = loc_code),
             linetype = "dashed", size = 0.3)
 
-ggsave("Grondwaterdynamiek_tijdreeksen_GGV_raai_gxg.png", dpi = 300,
-       width = 15,
-       height = 10,
-       units = "cm")
+### met facets
+
+plot_tijdreeks_mv_fac +
+  geom_line(data = tijdreeks, aes(x = date(Datum),
+                                  y = lg3_lcl,
+                                  colour = loc_code),
+            linetype = "solid", size = 0.3) +
+  geom_line(data = tijdreeks, aes(x = date(Datum),
+                                  y = hg3_lcl,
+                                  colour = loc_code),
+            linetype = "dashed", size = 0.3)
 
 
+# ggsave("Grondwaterdynamiek_tijdreeksen_GGV_raai_gxg.png", dpi = 300,
+#        width = 15,
+#        height = 10,
+#        units = "cm")
 
 
-ghg <- xg3_eval_series$ser_mean[xg3_eval_series$loc_code == "GGVP032" & xg3_eval_series$xg3_variable == "hg3_lcl"]
-glg <- xg3_eval_series$ser_mean[xg3_eval_series$loc_code == "GGVP032" & xg3_eval_series$xg3_variable == "lg3_lcl"]
+# ghg <- xg3_eval_series$ser_mean[xg3_eval_series$loc_code == "GGVP032" & xg3_eval_series$xg3_variable == "hg3_lcl"]
+# glg <- xg3_eval_series$ser_mean[xg3_eval_series$loc_code == "GGVP032" & xg3_eval_series$xg3_variable == "lg3_lcl"]
+# 
+# # xg3 %>% 
+# #   group_by(loc_code) %>% 
+# #   summarise(across(everything(), ~ length(.x[!is.na(.x)]))) %>% 
+# #   write.table("clipboard", sep="\t", row.names=FALSE)
+# 
+# plot_tijdreeks + 
+#   geom_hline(size = 1, linetype = "dashed", aes(yintercept = ghg, color = "GHG/GLG GGVP032")) +
+#   geom_hline(size = 1, linetype = "dashed", aes(yintercept = glg, color = "GHG/GLG GGVP032")) +
+#   scale_color_discrete() +
+#   theme(text = element_text(size = 16)
+#         # , legend.position = c(0.85, 0.15)
+#         )
+# 
+# ggsave("figuur2.jpg")
+# ggsave("figuur2.svg")
 
-# xg3 %>% 
-#   group_by(loc_code) %>% 
-#   summarise(across(everything(), ~ length(.x[!is.na(.x)]))) %>% 
-#   write.table("clipboard", sep="\t", row.names=FALSE)
-
-plot_tijdreeks + 
-  geom_hline(size = 1, linetype = "dashed", aes(yintercept = ghg, color = "GHG/GLG GGVP032")) +
-  geom_hline(size = 1, linetype = "dashed", aes(yintercept = glg, color = "GHG/GLG GGVP032")) +
-  scale_color_discrete() +
-  theme(text = element_text(size = 16)
-        # , legend.position = c(0.85, 0.15)
-        )
-
-ggsave("figuur2.jpg")
-ggsave("figuur2.svg")
-
-## 2.2 Jaarreeksen ----
+# 4. figuur met tijdreeksen per jaar ----
 
 doy <- date(c("2016-01-01",
               "2016-02-01",
@@ -285,7 +338,7 @@ doy <- tibble(mon = month(doy, label = T),
 
 plot_jaarreeks <- ggplot(tijdreeks
                          %>%
-                           filter(loc_code %in% c("GGVP007", "GGVP001"))
+                           filter(loc_code %in% c("MOMP027"))
                          ) +
   geom_line(aes(x = yday(date(Datum)),
                 # x = Jaardag_Nummer,
@@ -548,14 +601,14 @@ tijdreeks %>%
   count()
 
 
-# 4. tijdreeks voor figuren TAW ----
+# 4. tijdreeks voor figuren, in mTAW ----
 
 locaties_TAW <- get_locs(watina,
                      # area_codes = "GGV",
                      loc_type = c("P", "S"),
-                     loc_vec = c("ZWAP009"),
+                     # loc_vec = c("MOMP023", "MOMP024", "MOMP025", "MOMP026", "MOMP027"),
                      # Grote Gete Meetraai 3
-                     # loc_vec = c("GGVP008", "GGVP009", "GGVP010", "GGVP011", "GGVP013", "GGVP015", "GGVP016", "GGVP032", "GGVP033", "GGVP017", "GGVS003", "GGVS004", "GGVS010", "GGVS011"),
+                     loc_vec = c("GGVP008", "GGVP009", "GGVP010", "GGVP011", "GGVP013", "GGVP015", "GGVP016", "GGVP032", "GGVP033", "GGVP017", "GGVS003", "GGVS004", "GGVS010", "GGVS011"),
                      # loc_vec = c("GGVP034", "GGVP035", "GGVP015", "GGVP016","GGVP017", "GGVP033", "GGVP036", "GGVS010"),
                      # loc_vec = c("KASP001", "KASP002", "KASP032"),
                      # loc_vec = c("SILP001", "SILP002", "SILP003", "SILP004"),
@@ -581,19 +634,19 @@ locaties_TAW <- get_locs(watina,
                      # obswell_aggr = c("latest", "latest_fd", "latest_sso", "mean"),
                      collect = FALSE)
 # locaties_TAW %>% View()
-  
+
 tijdreeks_TAW <-
-  locaties_TAW %>% 
-  rename(mvTAW = soilsurf_ost) %>% 
-  inner_join(tbl(watina, "FactPeilMeting"), by = c("loc_wid" = "MeetpuntWID")) %>% 
-  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>% 
-  filter(
-    PeilmetingStatus == "Gevalideerd",
+  locaties_TAW %>%
+  rename(mvTAW = soilsurf_ost) %>%
+  inner_join(tbl(watina, "FactPeilMeting"), by = c("loc_wid" = "MeetpuntWID")) %>%
+  inner_join(tbl(watina, "DimTijd"), by = c("TijdWID" = "DatumWID")) %>%
+  filter(#PeilmetingStatus == "Gevalideerd",
+    PeilmetingStatus %in% c("Gevalideerd", "Ingegeven"),
     is.na(PeilmetingCategorie)
   ) %>%
-  dplyr::collect() %>% 
+  dplyr::collect() %>%
   group_by(loc_code) %>%
-  arrange(loc_code, Datum) %>% 
+  arrange(loc_code, Datum) %>%
   mutate(
     # reprp01 = ifelse(ReprPeriode > 60, 1, 0),
     # reprp01_ = ifelse(reprp01 == 0 & lag(reprp01) == 1, 1, reprp01),
@@ -605,14 +658,201 @@ tijdreeks_TAW <-
     diff = ifelse(is.na(ymd(Datum) - lag(ymd(Datum))), ReprPeriode, ymd(Datum) - lag(ymd(Datum))),
     cumsum_dif = cumsum(diff > 60),
     grp_diff = loc_wid + percent_rank(cumsum_dif)/10
-    ) %>% 
-  ungroup() %>% 
+    ) %>%
+  ungroup() %>%
   mutate(
     test = ifelse(Datum < "2007-01-01", "2004-2005", "2018-2021")
   )
 
 
-# DHM transectdata uit GIS inlezen
+# 2. xg3's opvragen en gxg's berekenen (zeer ruw nu, met zeer liberale eisen naar minimumduur (1 jaar) en tussenliggende ontbrekende jaren (100 jaar) ----
+
+xg3_TAW <- get_xg3(locs = locaties_TAW, con = watina,
+               startyear = 1900, endyear = 2021,
+               vert_crs = "ostend",
+               with_estimated = TRUE,
+               truncated = TRUE,
+               collect = TRUE
+)
+xg3_long_TAW <- xg3_TAW %>% 
+  pivot_longer(cols = c("lg3_ost", "hg3_ost", "vg3_ost"), values_to = "xg3_val", names_to = "xg3")
+
+
+xg3_eval_series_TAW <- eval_xg3_series(xg3_TAW, xg3_type = c("L", "H", "V"), max_gap = 100, min_dur = 1)
+
+# xg3_eval_avail <- eval_xg3_avail(xg3, xg3_type = c("L", "H", "V"))
+
+xg3_long_TAW <- xg3_long_TAW %>% 
+  left_join(xg3_eval_series, by = c("loc_code" = "loc_code", "xg3" = "xg3_variable"))
+
+
+# 5. figuur van tijdreeks(en) voor gewenste meetpunten, TAW ----
+
+
+plot_tijdreeks_TAW <- ggplot(tijdreeks_TAW) +
+  geom_line(aes(x = date(Datum),
+                # y = mMaaiveld,
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+                group = grp_diff
+                # Peilmetingstatus weergeven in legende (lijntype; ingegeven/gevalideerd)
+                # ,linetype = PeilmetingStatus
+  )) +
+  # geom_line(data = tijdreeks_TAW %>% filter(loc_typecode == "P"),
+  #           aes(x = date(Datum), y = mvTAW,
+  #               colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
+  #           linetype = "dashed",
+  #           # size = 1
+  #           ) +
+  ## non-clipping zoom
+  # coord_cartesian(
+  #   ylim = c(25.5, 28.5),
+  #   # xlim = c(ymd("2015-01-01"), ymd("2016-01-01"))
+  # ) +
+scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  # xlim(ymd("2015-01-01"), ymd("2016-01-01")) +
+  # ylim(-1, 0.1) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
+  labs(x = "Datum", y = "mTAW", colour = "Meetpunt") +
+  scale_colour_brewer(
+    # type = "div", palette = 7,
+    # type = "div", palette = 8,
+    type = "div", palette = 9,
+    # type = "qual", palette = "Set1",
+    # type = "qual", palette = "Accent",
+    # type = "qual", palette = "Dark2"
+  ) #+
+# facet_grid(~test, space = "free_x", scales = "free_x")
+## plotten van peilmetingen met representatieve periode > 30 dagen
+# geom_point(data = tijdreeks_TAW %>%
+#              filter(ReprPeriode > 30),
+#            aes(x = date(Datum), y = mTAW)) +
+# theme(text = element_text(size = 16))
+## accentueren van specifieke tijdreeks
+# geom_line(data = tijdreeks %>%
+#               filter(loc_code == "ASHP013"),
+#             aes(x = date(Datum), y = mMaaiveld),
+#             colour = "black", size = 1.5)
+
+plot_tijdreeks_TAW
+
+## Met gxg's
+
+tijdreeks_TAW <- tijdreeks_TAW %>% 
+  left_join(xg3_eval_series_TAW %>%
+              filter(xg3_variable != "combined") %>% 
+              pivot_wider(id_cols = loc_code, values_from = ser_mean, names_from = xg3_variable),
+            by = "loc_code")
+
+### zonder facets
+
+plot_tijdreeks_TAW +
+  geom_line(data = tijdreeks_TAW, aes(x = date(Datum),
+                                  y = lg3_ost,
+                                  colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
+            linetype = "solid", size = 0.3) +
+  geom_line(data = tijdreeks_TAW, aes(x = date(Datum),
+                                  y = hg3_ost,
+                                  colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
+            linetype = "dashed", size = 0.3)
+
+
+## Andere mogelijkheden (recuperatie bestaande stukjes script)
+
+#mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn
+
+ggplot(tijdreeks_TAW) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
+                group = grp_diff
+                )) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(-1, 0.1),
+  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-10-01"), ymd("2022-03-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")), linetype = "dashed") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed")) +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+
+#mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn, facetted
+
+ggplot(tijdreeks_TAW) +
+  geom_line(aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code,
+                group = grp_diff
+                )) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(32.25, 34.25),
+  # #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-10-01"), ymd("2022-03-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(aes(x = date(Datum),
+                y = mvTAW,
+                colour = loc_code), linetype = "dashed") +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom") +
+  labs(x = "Datum", y = "mTAW", colour = NULL)
+
+#mTAW, met telkens de aanduiding van de maaiveldhoogte in stippellijn. De tijdreeksen van de waterpeilen van een te kiezen peilschaal staan in het grijs.
+
+ggplot() +
+  geom_line(data = tijdreeks_TAW %>%
+              as.data.frame() %>%
+              filter(loc_code %in% c("GGVS003")) %>% 
+              select(-loc_code),
+            aes(x = date(Datum),
+                y = mTAW,
+                group = grp_diff,
+                linetype = "Naam waterloop"),
+            alpha = 0.25) +
+  geom_line(data = tijdreeks_TAW,
+            aes(x = date(Datum),
+                y = mTAW,
+                colour = loc_code,
+                group = grp_diff
+                )) +
+  ## non-clipping zoom
+  # coord_cartesian(ylim = c(31.5, 34.25),
+                  # xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  # ) +
+  scale_x_date(date_breaks = "year", date_labels = "%Y") +
+  ## clipping zoom
+  xlim(ymd("2017-10-01"), ymd("2022-03-01")) +
+  # ylim(-1, 0.1) +
+  geom_line(data = tijdreeks_TAW, 
+            aes(x = date(Datum),
+                y = mvTAW,
+                colour = loc_code),
+            linetype = "dashed") +
+  facet_wrap(~loc_code) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        panel.grid.minor.x = element_line(linetype = "dashed"),
+        legend.position = "bottom", legend.box = "horizontal",
+        legend.direction = "horizontal") +
+  labs(x = "Datum", y = "mTAW", colour = NULL, linetype = NULL)
+
+
+
+#6. Integratie in transectgegevens (DTM) ----
+
+# DHM transectdata uit GIS inlezen (aangemaakt via qprof-plugin van QGIS)
 
 transect_DHM <- readxl::read_xlsx("Q:/Prjdata/Projects/PRJ_SBO_Future_Floodplains/155_GIS_werkkaarten/Gete/Transect_GGV/Profiel.xlsx", sheet = "Profiel_DTM")
 transect_waterlopen <- readxl::read_xlsx("Q:/Prjdata/Projects/PRJ_SBO_Future_Floodplains/155_GIS_werkkaarten/Gete/Transect_GGV/Profiel.xlsx", sheet = "Waterlopen")
@@ -844,58 +1084,7 @@ ggplot() +
                outlier.shape = NA, width = 10, colour = "blue")
 
 
-# 5. figuur van tijdreeks(en) voor gewenste meetpunten, TAW ----
 
-
-plot_tijdreeks_TAW <- ggplot(tijdreeks_TAW) +
-  geom_line(aes(x = date(Datum),
-                # y = mMaaiveld,
-                y = mTAW,
-                colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"),
-                group = grp_diff
-                # Peilmetingstatus weergeven in legende (lijntype; ingegeven/gevalideerd)
-                # ,linetype = PeilmetingStatus
-  )) +
-  # geom_line(data = tijdreeks_TAW %>% filter(loc_typecode == "P"),
-  #           aes(x = date(Datum), y = mvTAW,
-  #               colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)")),
-  #           linetype = "dashed",
-  #           # size = 1
-  #           ) +
-  ## non-clipping zoom
-  # coord_cartesian(
-  #   ylim = c(25.5, 28.5),
-  #   # xlim = c(ymd("2015-01-01"), ymd("2016-01-01"))
-  # ) +
-  scale_x_date(date_breaks = "year", date_labels = "%Y") +
-  ## clipping zoom
-  # xlim(ymd("2015-01-01"), ymd("2016-01-01")) +
-  # ylim(-1, 0.1) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        panel.grid.minor.x = element_line(linetype = "dashed"),
-        legend.position = "bottom") +
-  labs(x = "Datum", y = "mTAW", colour = "Meetpunt") +
-  scale_colour_brewer(
-  # type = "div", palette = 7,
-  # type = "div", palette = 8,
-  # type = "div", palette = 9,
-  # type = "qual", palette = "Set1",
-  type = "qual", palette = "Accent",
-  # type = "qual", palette = "Dark2"
-  ) 
-  # facet_grid(~test, space = "free_x", scales = "free_x")
-  ## plotten van peilmetingen met representatieve periode > 30 dagen
-  # geom_point(data = tijdreeks_TAW %>%
-  #              filter(ReprPeriode > 30),
-  #            aes(x = date(Datum), y = mTAW)) +
-  # theme(text = element_text(size = 16))
-## accentueren van specifieke tijdreeks
-# geom_line(data = tijdreeks %>%
-#               filter(loc_code == "ASHP013"),
-#             aes(x = date(Datum), y = mMaaiveld),
-#             colour = "black", size = 1.5)
-
-plot_tijdreeks_TAW
 
 
 
