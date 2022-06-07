@@ -46,7 +46,7 @@ data_voer = get_locs_vmm(stream = "mombeek", guess = T) %>% collect
 
 
 VLAREMII <- readxl::read_xlsx("G:/Mijn Drive/Databanken/VLAREM/VLAREMII_Oppwat_Grndwat.xlsx", sheet = "for_import") %>%
-  pivot_longer(cols = !1:7, names_to = "wbody_typecode", values_to = "value")
+  pivot_longer(cols = !1:7, names_to = "wbody_typecode", values_to = "ref")
 
 data_voer %>% 
   filter(variable %in% c("oPO4", "P t", "date")) %>% 
@@ -72,7 +72,7 @@ data_voer %>%
     variable %in% c("P t", "oPO4")
     ) %>% 
   group_by(
-    loc_code, variable, jaar = lubridate::year(date), HalfjaarType) %>% 
+    loc_code, wbody_typecode, variable, unit, jaar = lubridate::year(date), HalfjaarType) %>% 
   summarise(
     Minimum = min(value),
     Maximum = max(value),
@@ -82,18 +82,22 @@ data_voer %>%
     n = n()
   ) %>%
   # View() %>% 
-  pivot_longer(cols = -c(loc_code, variable, jaar, HalfjaarType),
+  pivot_longer(cols = -c(loc_code, wbody_typecode, variable, unit, jaar, HalfjaarType),
                names_to = "StatisticType",
-               values_to = "Value") %>% 
+               values_to = "Value") %>%
+  left_join(VLAREMII, by = c("variable" = "Symbool", "StatisticType" = "toetswijze_code",
+                             "wbody_typecode" = "wbody_typecode", "HalfjaarType" = "JaarType")) %>% 
+  # View() %>%
   filter(StatisticType %in% c(
     "Gemiddelde"#,
     # "Percentiel10",
     # "Percentiel90"
-    ),
-    jaar > 1995) %>%  
+  ),
+  jaar > 1995) %>%  
   ggplot(aes(x = jaar, y = Value)) +
-    geom_line(aes(colour = loc_code)) +
-  facet_grid(variable ~ HalfjaarType) +
+  geom_line(aes(colour = loc_code)) +
+  geom_hline(aes(yintercept = ref), linetype = "dashed") +
+  facet_grid(paste0(variable, " (", unit, ")") ~ HalfjaarType) +
   scale_colour_brewer(
     type = "div", palette = 7,
     # type = "div", palette = 8,
