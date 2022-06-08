@@ -41,14 +41,14 @@ data_oPO4_bbox = get_locs_vmm(parameter = "oPO4", bbox = c(xmin=100731,xmax =103
 data_NO3_SBZ = get_locs_vmm(parameter = 'NO3-', mask = sbz_gebieden) %>% collect
 
 #we vragen alle chemische gegevens op van de voer
-data_voer = get_locs_vmm(stream = "mombeek", guess = T) %>% collect
+data_vmm = get_locs_vmm(stream = "mombeek", guess = T) %>% collect
 
 
 
 VLAREMII <- readxl::read_xlsx("G:/Mijn Drive/Databanken/VLAREM/VLAREMII_Oppwat_Grndwat.xlsx", sheet = "for_import") %>%
   pivot_longer(cols = !1:8, names_to = "wbody_typecode", values_to = "ref")
 
-data_voer %>% 
+data_vmm %>% 
   filter(variable %in% c("oPO4", "P t", "date")) %>% 
   group_by(loc_code, variable) %>% 
   summarise(n = n(), 
@@ -61,11 +61,11 @@ tbl(vmmchem, "MetingFysicoChemiePerMeetpuntJaarTypeParameterBerekening") %>%
   collect() %>% 
   View()
 
-data_voer %>% 
+data_vmm %>% 
   mutate(
     HalfjaarType = ifelse(between(lubridate::yday(date), lubridate::yday("2000-05-01"), lubridate::yday("2000-10-30")),
            "Z", "W")) %>% 
-  bind_rows(data_voer %>% 
+  bind_rows(data_vmm %>% 
               mutate(HalfjaarType = "K")) %>% 
   filter(
     # loc_code %in% c("450980", "451000", "451050", "451445", "450862", "450860", "451100"),
@@ -73,7 +73,7 @@ data_voer %>%
     !grepl("^TR", loc_code)
     ) %>%
   group_by(
-    loc_code, wbody_typecode, variable, unit, jaar = lubridate::year(date), HalfjaarType) %>% 
+    loc_code, wbody_typecode, variable, unit, Jaar = lubridate::year(date), HalfjaarType) %>% 
   summarise(
     Minimum = min(value),
     Maximum = max(value),
@@ -82,8 +82,9 @@ data_voer %>%
     Percentiel10 = quantile(value, probs = 0.1),
     n = n()
   ) %>%
-  # View() %>% 
-  pivot_longer(cols = -c(loc_code, wbody_typecode, variable, unit, jaar, HalfjaarType),
+  pivot_longer(cols = -c(loc_code, wbody_typecode, variable, unit, Jaar, HalfjaarType,
+                         # grp_diff
+                         ),
                names_to = "StatisticType",
                values_to = "Value") %>%
   left_join(VLAREMII, by = c("wbody_typecode" = "wbody_typecode", 
@@ -98,10 +99,21 @@ data_voer %>%
     #   "Percentiel90"
     # ),
     !is.na(toetswijze),
-    # jaar > 1995
-    ) %>%  
-  ggplot(aes(x = jaar, y = Value)) +
-  geom_line(aes(colour = loc_code)) +
+    # Jaar > 1995
+    ) %>% 
+  # View() %>%
+  # berekenen van group variabele om lijngrafiek te onderbreken bij ontbrekende jaren
+  group_by(loc_code, variable) %>%
+  arrange(loc_code, variable, Jaar) %>%
+  mutate(
+    diff = ifelse(is.na(Jaar - lag(Jaar)), 0, Jaar - lag(Jaar)),
+    cumsum_dif = cumsum(diff > 1),
+    grp_diff = as.numeric(loc_code) + percent_rank(cumsum_dif)/10) %>% 
+  ggplot(aes(x = Jaar, y = Value, colour = loc_code,
+             group = grp_diff
+             )) +
+  geom_line() +
+  geom_point(size = 0.85) +
   geom_hline(aes(yintercept = ref), linetype = "dashed") +
   # facet_grid(paste0(variable, " (", unit, ")") ~ HalfjaarType) +
   facet_wrap(~paste0(variable, " (", unit, ")", ", ", HalfjaarType, "-", toetswijze_code_abbrev), scales = "free_y") +
