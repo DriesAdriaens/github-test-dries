@@ -46,7 +46,7 @@ data_voer = get_locs_vmm(stream = "mombeek", guess = T) %>% collect
 
 
 VLAREMII <- readxl::read_xlsx("G:/Mijn Drive/Databanken/VLAREM/VLAREMII_Oppwat_Grndwat.xlsx", sheet = "for_import") %>%
-  pivot_longer(cols = !1:7, names_to = "wbody_typecode", values_to = "ref")
+  pivot_longer(cols = !1:8, names_to = "wbody_typecode", values_to = "ref")
 
 data_voer %>% 
   filter(variable %in% c("oPO4", "P t", "date")) %>% 
@@ -68,9 +68,10 @@ data_voer %>%
   bind_rows(data_voer %>% 
               mutate(HalfjaarType = "K")) %>% 
   filter(
-    loc_code == "450980",
-    variable %in% c("P t", "oPO4")
-    ) %>% 
+    # loc_code %in% c("450980", "451000", "451050", "451445", "450862", "450860", "451100"),
+    # variable %in% c("P t", "oPO4"),
+    !grepl("^TR", loc_code)
+    ) %>%
   group_by(
     loc_code, wbody_typecode, variable, unit, jaar = lubridate::year(date), HalfjaarType) %>% 
   summarise(
@@ -85,22 +86,33 @@ data_voer %>%
   pivot_longer(cols = -c(loc_code, wbody_typecode, variable, unit, jaar, HalfjaarType),
                names_to = "StatisticType",
                values_to = "Value") %>%
-  left_join(VLAREMII, by = c("variable" = "Symbool", "StatisticType" = "toetswijze_code",
-                             "wbody_typecode" = "wbody_typecode", "HalfjaarType" = "JaarType")) %>% 
+  left_join(VLAREMII, by = c("wbody_typecode" = "wbody_typecode", 
+                             "variable" = "Symbool",
+                             "StatisticType" = "toetswijze_code",
+                             "HalfjaarType" = "JaarType")) %>% 
   # View() %>%
-  filter(StatisticType %in% c(
-    "Gemiddelde"#,
-    # "Percentiel10",
-    # "Percentiel90"
-  ),
-  jaar > 1995) %>%  
+  filter(
+    # StatisticType %in% c(
+    #   "Gemiddelde"#,
+    #   "Percentiel10",
+    #   "Percentiel90"
+    # ),
+    !is.na(toetswijze),
+    # jaar > 1995
+    ) %>%  
   ggplot(aes(x = jaar, y = Value)) +
   geom_line(aes(colour = loc_code)) +
   geom_hline(aes(yintercept = ref), linetype = "dashed") +
-  facet_grid(paste0(variable, " (", unit, ")") ~ HalfjaarType) +
-  scale_colour_brewer(
-    type = "div", palette = 7,
-    # type = "div", palette = 8,
-    # type = "qual", palette = "Accent",
-    # type = "div", palette = 9
+  # facet_grid(paste0(variable, " (", unit, ")") ~ HalfjaarType) +
+  facet_wrap(~paste0(variable, " (", unit, ")", ", ", HalfjaarType, "-", toetswijze_code_abbrev), scales = "free_y") +
+  # scale_colour_brewer(
+  #   type = "div", palette = 7,
+  #   # type = "div", palette = 8,
+  #   # type = "qual", palette = "Accent",
+  #   # type = "div", palette = 9
+  # ) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        # panel.grid.minor.x = element_line(linetype = "dashed"),
+        # legend.position = "bottom",
+        # legend.direction = "horizontal",
   )
