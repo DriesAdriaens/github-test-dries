@@ -894,11 +894,11 @@ ggplot(locaties_TAW %>% filter(loc_typecode == "P"),
   #                )) +
   # geom_hline(aes(yintercept = soilsurf_ost), size = 2, colour = "orange") +
   # facet_grid(~reorder(loc_code, soilsurf_ost), space = "free_x", scales = "free_x") +
-  geom_linerange(data = xg3 %>% 
+  geom_linerange(data = xg3_TAW %>% 
                    inner_join(locaties_TAW %>% collect(), by = "loc_code") %>% 
-                   filter(hydroyear >= 2018, hydroyear < 2021), 
-                 aes(ymin = soilsurf_ost + lg3_lcl,
-                     ymax = soilsurf_ost + hg3_lcl,
+                   filter(hydroyear >= 2018, hydroyear < 2021, loc_typecode == "P"), 
+                 aes(ymin = lg3_ost,
+                     ymax = hg3_ost,
                      colour = factor(hydroyear)),
                  size = 2,
                  # colour = "blue",
@@ -938,22 +938,20 @@ ggplot(locaties_TAW %>%
                  colour = "red",
                  # size = 2
   ) +
-  geom_point(aes(y = soilsurf_ost,
-                 shape = "maaiveld"), colour = "brown", size = 3) +
   geom_text(aes(y = measuringref_ost, label = loc_code,
                 angle = 90, hjust = 0
   )) +
   # geom_hline(aes(yintercept = soilsurf_ost), size = 2, colour = "orange") +
   # facet_grid(~reorder(loc_code, soilsurf_ost), space = "free_x", scales = "free_x") +
-  geom_linerange(data = xg3 %>% 
-                   inner_join(locaties_TAW, by = "loc_code") %>% 
-                   filter(hydroyear >= 2018, hydroyear < 2021), 
-                 aes(ymin = soilsurf_ost + lg3_lcl,
-                     ymax = soilsurf_ost + hg3_lcl,
+  geom_linerange(data = xg3_TAW %>%
+                   inner_join(locaties_TAW %>% collect(), by = "loc_code") %>%
+                   filter(hydroyear >= 2018, hydroyear < 2021, loc_typecode == "P"),
+                 aes(ymin = lg3_ost,
+                     ymax = hg3_ost,
                      colour = factor(hydroyear)),
                  size = 2,
                  # colour = "blue",
-                 position = position_dodge(width = 30)
+                 position = position_dodge(width = 50)
   ) +
   geom_boxplot(data = tijdreeks_TAW %>% 
                  filter(loc_typecode == "S") %>% 
@@ -971,6 +969,8 @@ ggplot(locaties_TAW %>%
             aes(y = z-0.5, label = id), colour = "blue", angle = 90, hjust = 1) +
   geom_line(data = transect_DHM,
             aes(rec_id, DHMVIIDTMR)) +
+  geom_point(aes(y = soilsurf_ost,
+                 shape = "maaiveld"), colour = "brown", size = 3) +
   # geom_point(data = tijdreeks_TAW %>%
   #              filter(loc_typecode == "P",
   #                     Datum == ymd("2018-02-01"),
@@ -1005,7 +1005,8 @@ ggplot(locaties_TAW %>%
          mutate(measuringref_ost = z + measuringref_ost - soilsurf_ost,
                 soilsurf_ost = z),
        aes(x = s)) +
-  geom_linerange(aes(ymin = measuringref_ost - tubelength + filterlength, ymax = measuringref_ost,
+  geom_linerange(aes(ymin = measuringref_ost - tubelength + filterlength,
+                     ymax = measuringref_ost,
                      linetype = "piëzometer"),
                  size = 2) +
   geom_linerange(aes(ymin = measuringref_ost - tubelength,
@@ -1013,30 +1014,28 @@ ggplot(locaties_TAW %>%
                      size = "filter"),
                  colour = "red",
                  # size = 2
-                 ) +
-  geom_point(aes(y = soilsurf_ost,
-                 shape = "maaiveld"), colour = "brown", size = 3) +
+  ) +
   geom_text(aes(y = measuringref_ost, label = loc_code,
-                 angle = 90, hjust = 0
-                 )) +
+                angle = 90, hjust = 0
+  )) +
   # geom_hline(aes(yintercept = soilsurf_ost), size = 2, colour = "orange") +
   # facet_grid(~reorder(loc_code, soilsurf_ost), space = "free_x", scales = "free_x") +
-  geom_linerange(data = xg3 %>% 
-                   inner_join(locaties_TAW, by = "loc_code") %>% 
-                   filter(hydroyear >= 2018, hydroyear < 2021), 
-                 aes(ymin = z + lg3_lcl,
-                     ymax = z + hg3_lcl,
+  geom_linerange(data = xg3_TAW %>%
+                   inner_join(locaties_TAW %>% collect(), by = "loc_code") %>%
+                   filter(hydroyear >= 2018, hydroyear < 2021, loc_typecode == "P"),
+                 aes(ymin = lg3_ost,
+                     ymax = hg3_ost,
                      colour = factor(hydroyear)),
                  size = 2,
                  # colour = "blue",
-                 position = position_dodge(width = 30)
+                 position = position_dodge(width = 50)
   ) +
   geom_boxplot(data = tijdreeks_TAW %>% 
                  filter(loc_typecode == "S") %>% 
                  inner_join(transect_waterlopen, by = c("loc_code" = "watina")),
                aes(x = s,  group = cut_width(s, 5), y = mTAW,
                    # colour = factor(HydroJaar)
-                   ),
+               ),
                outlier.alpha = 0.15, width = 30, size = 0.5,
                # position = position_dodge(width = 30),
                colour = "blue") +
@@ -1047,6 +1046,8 @@ ggplot(locaties_TAW %>%
             aes(y = z-0.5, label = id), colour = "blue", angle = 90, hjust = 1) +
   geom_line(data = transect_DHM,
             aes(rec_id, DHMVIIDTMR)) +
+  geom_point(aes(y = soilsurf_ost,
+                 shape = "maaiveld"), colour = "brown", size = 3) +
   # geom_point(data = tijdreeks_TAW %>%
   #              filter(loc_typecode == "P",
   #                     Datum == ymd("2018-02-01"),
@@ -1058,10 +1059,10 @@ ggplot(locaties_TAW %>%
   #              filter(loc_typecode == "P",
   #                     Datum == ymd("2018-10-01"),
   #                     # Datum > ymd("2018-01-01"), Datum < ymd("2018-02-01")
-  #                     ),
-  #            aes(y = mTAW),
-  #            size = 4, colour = "orange") +
-  scale_y_continuous(breaks = 25:34) +
+#                     ),
+#            aes(y = mTAW),
+#            size = 4, colour = "orange") +
+scale_y_continuous(breaks = 25:34) +
   coord_cartesian(ylim = c(25, 34)) +
   labs(x = "Afstand (m)",
        y = "mTAW", 
@@ -1074,18 +1075,11 @@ ggplot(locaties_TAW %>%
          colour = guide_legend(order = 3),
          size = guide_legend(order = 4))
 
-ggsave("test.jpg", dpi = 300, width = 29.7, height = 10, units = "cm")
+# ggsave("test.jpg", dpi = 300, width = 29.7, height = 10, units = "cm")
 
-ggplot() +
-  geom_boxplot(data = tijdreeks_TAW %>% 
-                   filter(loc_typecode == "S", HydroJaar >= 2018, HydroJaar < 2021) %>% 
-                   inner_join(transect_waterlopen, by = c("loc_code" = "watina")),
-                 aes(x = s,  group = cut_width(s, 5), y = mTAW, colour = factor(HydroJaar)),
-               outlier.shape = NA, width = 10, colour = "blue")
-
-
-
-
-
-
-DBI::dbDisconnect(watina)
+# ggplot() +
+#   geom_boxplot(data = tijdreeks_TAW %>% 
+#                    filter(loc_typecode == "S", HydroJaar >= 2018, HydroJaar < 2021) %>% 
+#                    inner_join(transect_waterlopen, by = c("loc_code" = "watina")),
+#                  aes(x = s,  group = cut_width(s, 5), y = mTAW, colour = factor(HydroJaar)),
+#                outlier.shape = NA, width = 10, colour = "blue")
