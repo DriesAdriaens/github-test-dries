@@ -6,48 +6,6 @@ library(dplyr)
 library(tibble)
 library(stringr)
 
-tmp <- read.table("C:/Users/dries_adriaens/Downloads/chart_fm.csv", sep = ";", dec = ".", header = TRUE) %>% 
-  pivot_longer(cols = -c("Lijnafstand..km.", "INV"),
-               values_to = "Value",
-               names_to = "Layer",
-               # names_to = c("Model", "Type", "Nr"),
-               names_prefix = "g3dv3_F_",
-               # names_sep = "_"
-               ) %>% 
-  rename(Dist = Lijnafstand..km.) %>% 
-  mutate(Layer = as.numeric(Layer),
-         Dist = Dist/10,
-         Value_neg = -Value
-         ) %>% 
-  select(-INV) %>% 
-  group_by(Layer) %>% 
-  mutate(sel = max(Value),
-         Layer_min = min(Value)) %>% 
-  ungroup() %>% 
-  filter(sel > 0) %>% 
-  group_by(Dist) %>% 
-  mutate(Tot_Dist = sum(Value),
-         Layer_Max_Dist = max(Layer)) %>% 
-  ungroup() %>% 
-  mutate(Tot_Max = max(Tot_Dist),
-         Tot_Min = min(Tot_Dist),
-         Value_new = ifelse(Layer == Layer_Max_Dist, Value - Tot_Max, Value),
-         # Value = Value - Tot_Max
-         )
-
-ggplot(tmp) +
-  geom_area(aes(x = Dist, y = Value, fill = as.factor(Layer))) +
-  # coord_cartesian(
-  #   ylim = c(150,250)
-  # ) +
-  scale_x_continuous(expand = c(0,0))# +
-  # theme(legend.position = "bottom", legend.direction = "horizontal")# +
-  # scale_fill_manual(values = )
-
-
-
-
-
 
 leg <- readxl::read_xlsx("C:/GDRIVE/GIS/Geologie/kleurcode_Tertiair_aanp100322_def.xlsx", sheet = "eigen_tabel")
 leg %>% 
