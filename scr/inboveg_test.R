@@ -41,6 +41,89 @@ temp <- clsf %>%
   View()
 temp <- test %>% filter(ActionGroup == "N2k") %>% count(Classif) %>% collect() %>% arrange(-n)
 
+library(tidyverse)
+library(inbodb)
+
+con <- connect_inbo_dbase("D0010_00_Cydonia")
+con_futon <- connect_inbo_dbase("D0013_00_Futon")
+
+# 1. Survey ####
+# 1.1 inbodb ####
+surveys <- get_inboveg_survey(con, survey_name = "%level%", collect = TRUE)
+
+# 1.2 full table
+colnames(tbl(con, "ivSurvey"))
+surveys_ <- tbl(con, "ivSurvey") %>% 
+  filter(Name %like% "%level%") %>%
+  # filter(str_like(Name, pattern = "%level%")) %>% 
+  collect()
+
+
+# 2. Header ####
+# 2.1 inbodb ####
+headers <- get_inboveg_header(con, survey_name = "%level%") %>% 
+  mutate(year = year(VagueDateBegin)) %>%
+  group_by(Name, SurveyId, LocationCode, Latitude, Longitude, year) %>%
+  summarise(n = count(RecordingGivid)) %>%
+  arrange(LocationCode, year, Name) %>%
+  collect()
+
+# 3. Recording ####
+# 3.1 inbodb ####
+recordings <- get_inboveg_recording(con, survey_name = "%level%")
+
+recordings_header <- recordings %>%
+  left_join(get_inboveg_header(con, survey_name = "%level%"), by = "RecordingGivid") %>% 
+  # filter(str_like(LocationCode, pattern ="%Aalmoezenijbos%"), year(VagueDateBegin) == 1988) %>% 
+  collect()
+
+# 4. Qualifiers ####
+# 4.1 inbodb ####
+qualifiers <- get_inboveg_qualifier(con, survey_name = "%level%")
+
+# 5. Classification ####
+# 5.1 inbodb ####
+classifications <- get_inboveg_classification(con)
+
+
+
+opname_selectie <- get_inboveg_header(con, rec_type = "Classic") %>% 
+  left_join(get_inboveg_recording(con) %>% 
+              group_by(RecordingGivid, RecordingScale) %>% 
+              summarise(n_spec = n()) %>% 
+              ungroup() %>% 
+              distinct(RecordingGivid, RecordingScale, n_spec), 
+            by = "RecordingGivid") %>% 
+  filter(Latitude != 500, !str_like(RecordingScale, pattern = "%tansley%")) %>% 
+  # left_join(get_inboveg_classification(con), by = "RecordingGivid") %>% 
+  collect() %>%
+  # left_join(get_inboveg_qualifier(con), by = "RecordingGivid") %>% 
+  left_join(tbl(con_futon, "ftActionGroupList") %>%
+              filter(ActionGroup == "cover") %>%
+              collect(),
+            by = c("RecordingScale" = "Description")) %>% 
+  filter(!str_like(ListName, pattern = "%tansley%|%twinspan%"),
+         year(VagueDateBegin) > 1980
+  ) %>% 
+  left_join(tbl(con, "ivSurvey") %>% collect(), by = c("SurveyId" = "Id"))
+
+# opname_selectie %>% write_csv("opname_selectie_INBOVEG_20240219.csv")
+
+opname_selectie %>%
+  mutate(Jaar = year(VagueDateBegin)) %>% 
+  group_by(Jaar) %>% 
+  summarise(n = n()) %>%
+  arrange(Jaar) %>% 
+  ggplot(aes(x = Jaar)) +
+  geom_bar(aes(y = n), stat = "identity") +
+  labs(y = "Aantal opnamen")
+
+opname_selectie %>% 
+  count(RecordingScale) %>% 
+  ggplot() + geom_bar(aes(x = RecordingScale, y = n), stat = "identity") + coord_flip()
+
+
+
 # Load testdata from INBOVEG for CA in vegan package ----
 
 testdata <- get_inboveg_recordings(con, "SBO%overstr%", collect = TRUE)
