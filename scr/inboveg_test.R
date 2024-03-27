@@ -49,7 +49,7 @@ con_futon <- connect_inbo_dbase("D0013_00_Futon")
 
 # 1. Survey ####
 # 1.1 inbodb ####
-surveys <- get_inboveg_survey(con, survey_name = "%level%", collect = TRUE)
+surveys <- get_inboveg_survey(con, survey_name = "%N2000meetnet%", collect = TRUE)
 
 # 1.2 full table
 colnames(tbl(con, "ivSurvey"))
@@ -59,8 +59,8 @@ surveys_ <- tbl(con, "ivSurvey") %>%
   collect()
 
 
-# 2. Header ####
-# 2.1 inbodb ####
+# 2. Header #####
+# 2.1 inbodb #####
 headers <- get_inboveg_header(con, survey_name = "%level%") %>% 
   mutate(year = year(VagueDateBegin)) %>%
   group_by(Name, SurveyId, LocationCode, Latitude, Longitude, year) %>%
@@ -103,7 +103,7 @@ opname_selectie <- get_inboveg_header(con, rec_type = "Classic") %>%
               collect(),
             by = c("RecordingScale" = "Description")) %>% 
   filter(!str_like(ListName, pattern = "%tansley%|%twinspan%"),
-         year(VagueDateBegin) > 1980
+         # year(VagueDateBegin) > 1980
   ) %>% 
   left_join(tbl(con, "ivSurvey") %>% collect(), by = c("SurveyId" = "Id"))
 
@@ -120,7 +120,56 @@ opname_selectie %>%
 
 opname_selectie %>% 
   count(RecordingScale) %>% 
-  ggplot() + geom_bar(aes(x = RecordingScale, y = n), stat = "identity") + coord_flip()
+  ggplot() + geom_bar(aes(x = str_wrap(RecordingScale, 70), y = n), stat = "identity") + coord_flip() + labs(x = "Opnameschaal", y = "Aantal opnamen")
+
+opname_selectie %>% 
+  filter(
+    str_like(Name.x, 
+             pattern = "%n2000meetnet%",
+             )
+  ) %>% 
+  group_by(Name.x, Description, SurveyId, RecordingScale, year(VagueDateBegin)) %>% 
+  count() %>% 
+  View()
+
+
+
+headers <- # Header gegevens van opnamen die in aanmerking komen voor TWINSPAN van 2190
+  get_inboveg_header(con, survey_name = c(
+  "N2000_Duinen_fieldapp",
+  "N2000meetnet_Duinen_BHM",
+  "Kust_PQ"),
+  multiple = TRUE) %>%
+  filter(RecTypeID == 2) %>% 
+  left_join(
+    get_inboveg_classification(con) %>% select(-Name),
+    by = "RecordingGivid") %>% 
+  left_join(
+    get_inboveg_relation_recording(con) %>% select(Child_GIVID, Parent_GIVID),
+    by = c("RecordingGivid" = "Child_GIVID")) %>% 
+  collect() %>% 
+  filter((grepl("N2000", Name) & grepl("2190|2130|2170", Classif))|
+           (is.na(Classif) & grepl("bd_15|be_03|bh_07|dh_01|dh_02|dh_04|dh_07|dh_13|dh_16|dp_03|fo_01|fo_02|gd_01|gd_02|gd_03|gd_04|gh_07|ha_01|ha_03|ha_04|ha_08|ha_11|ha_13|ha_15|ha_16|ha_33|ha_35|ha_37|ha_39|ha_40|hs_01|hs_20|ij_15|ka_02|nd_12|nd_20|nd_22|oh_06|ov_02|ov_93|ov_94|ov_95|ov_96|ov_98|pa_01|sb_03|sd_03|sl_03|ty_02|ty_05|ty_09|ty_11|ty_14|wd_03|wn_01|wn_05|wn_06|wn_07|wn_08|wn_09|wn_10|wn_11|wn_14|wn_16|wn_17|wn_18|wn_19|wn_20|wn_21|wn_27|wn_28|wn_31|wn_44|wn_45|wn_46|wn_47|wn_51|wn_52|wn_53|wn_54|wn_55|wn_57|wn_58|wn_60|wn_61|wn_62|wn_63|wn_64|wn_65|wn_67|wz_01|wz_03|wz_06|wz_07|wz_11|wz_13|wz_14|wz_15|wz_16|wz_28|wz_30|wz_31|wz_49|wz_51|wz_52|wz_53|wz_54|wz_61|wz_62|wz_63|wz_65|wz_66|wz_67|wz_68|wz_69|wz_74|zw_02|zw_06|zw_07|zw_08|zw_09|zw_18|zw_19|zw_29|zw_31|zw_92|zw_93|zw_97|gh_05", UserReference)))
+
+headers %>% # Aantal herhalingen van de pq's uit de Kust_PQ survey (PINK), op basis van de UserReference
+  filter(grepl("Kust_PQ", Name)) %>% 
+  mutate(UserRef_abbrev = str_sub(UserReference, 1, 5)) %>% 
+  group_by(UserRef_abbrev) %>% 
+  count() %>% View()
+
+headers %>% # Aantal herhalingen van de pq's op basis van de Parent-Child relationship (Container/Emmer)
+  group_by(Name, Parent_GIVID) %>% 
+  arrange(ymd(VagueDateBegin)) %>% 
+  summarise(
+    n = n(),
+    years = paste(year(ymd(VagueDateBegin)), collapse = ","),
+    user_ref = paste(UserReference, collapse = ",")
+  ) %>% 
+  ungroup() %>% 
+  arrange(-n) %>% 
+  View()
+
+
 
 
 
