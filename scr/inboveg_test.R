@@ -134,7 +134,7 @@ opname_selectie %>%
 
 
 
-headers <- # Header gegevens van opnamen die in aanmerking komen voor TWINSPAN van 2190
+headers <- # Header gegevens van opnamen die in aanmerking komen voor TWINSPAN van 2190; gebaseerd op combinatie van survey en classificatie (N2000 habitattype), en binnen de survey "Kust_PQ" specifiek op de pq's die volgens Sam in aanmerking komen voor de TWINSPAN (zie https://docs.google.com/spreadsheets/d/1im195IWtM1rzG9IemR_zfGl_b16RtykC/edit?usp=sharing&ouid=112596671114122444874&rtpof=true&sd=true, tabblad PQ)
   get_inboveg_header(con, survey_name = c(
   "N2000_Duinen_fieldapp",
   "N2000meetnet_Duinen_BHM",
@@ -150,6 +150,16 @@ headers <- # Header gegevens van opnamen die in aanmerking komen voor TWINSPAN v
   collect() %>% 
   filter((grepl("N2000", Name) & grepl("2190|2130|2170", Classif))|
            (is.na(Classif) & grepl("bd_15|be_03|bh_07|dh_01|dh_02|dh_04|dh_07|dh_13|dh_16|dp_03|fo_01|fo_02|gd_01|gd_02|gd_03|gd_04|gh_07|ha_01|ha_03|ha_04|ha_08|ha_11|ha_13|ha_15|ha_16|ha_33|ha_35|ha_37|ha_39|ha_40|hs_01|hs_20|ij_15|ka_02|nd_12|nd_20|nd_22|oh_06|ov_02|ov_93|ov_94|ov_95|ov_96|ov_98|pa_01|sb_03|sd_03|sl_03|ty_02|ty_05|ty_09|ty_11|ty_14|wd_03|wn_01|wn_05|wn_06|wn_07|wn_08|wn_09|wn_10|wn_11|wn_14|wn_16|wn_17|wn_18|wn_19|wn_20|wn_21|wn_27|wn_28|wn_31|wn_44|wn_45|wn_46|wn_47|wn_51|wn_52|wn_53|wn_54|wn_55|wn_57|wn_58|wn_60|wn_61|wn_62|wn_63|wn_64|wn_65|wn_67|wz_01|wz_03|wz_06|wz_07|wz_11|wz_13|wz_14|wz_15|wz_16|wz_28|wz_30|wz_31|wz_49|wz_51|wz_52|wz_53|wz_54|wz_61|wz_62|wz_63|wz_65|wz_66|wz_67|wz_68|wz_69|wz_74|zw_02|zw_06|zw_07|zw_08|zw_09|zw_18|zw_19|zw_29|zw_31|zw_92|zw_93|zw_97|gh_05", UserReference)))
+
+dubbele <- headers %>% # Check voor dubbele records n.a.v. Classification (complexen van meerdere habitattypen, met name grijze duinen 2130 en kruipwilgstruweel 2170)
+  group_by(RecordingGivid) %>% 
+  count() %>% 
+  filter(n > 1) %>% 
+  left_join(headers)
+
+headers <- headers %>% 
+  group_by(RecordingGivid) %>% 
+  slice_max(order_by = PctValue, n = 1, with_ties = FALSE)
 
 headers %>% # Aantal herhalingen van de pq's uit de Kust_PQ survey (PINK), op basis van de UserReference
   filter(grepl("Kust_PQ", Name)) %>% 
