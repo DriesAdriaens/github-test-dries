@@ -13,7 +13,7 @@ install_github("inbo/n2khab",
 
 library(n2khab)
 
-n2khab_data_path <- fileman_folders()
+n2khab_data_path <- fileman_up("n2khab_data")
 
 soilmap_simple_path <- file.path(n2khab_data_path, "20_processed/soilmap_simple")
 dir.create(soilmap_simple_path)
@@ -92,11 +92,12 @@ zwin_map + coord_sf(datum = st_crs(31370))
 zwin_map %>% ggplotly()
 
 sm_simple %>%
-        filter(bsm_region == "Zwin") %>%
-        mutate(bsm_mo_tex = as.character(bsm_mo_tex)) %>%
-        mapview(zcol = "bsm_mo_tex",
-                alpha.region = 0.2,
-                map.types = "OpenTopoMap")
+  filter(bsm_region == "Zwin") %>%
+  mutate(bsm_mo_tex = as.character(bsm_mo_tex)) %>%
+  mapview(zcol = "bsm_mo_tex",
+          alpha.region = 0.8
+          # map.types = c("OpenStreetMap", "OpenTopoMap")
+          )
 
 soilmap_path <- file.path(n2khab_data_path, "10_raw/soilmap")
 dir.create(soilmap_path)

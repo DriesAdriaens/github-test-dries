@@ -60,7 +60,10 @@ locaties <- get_locs(watina,
                      loc_validity = c("VLD", "ENT"),
                      filterdepth_guess = TRUE,
                      filterdepth_na = TRUE,
-                     filterdepth_range = c(0, 30))
+                     filterdepth_range = c(0, 30)) %>% 
+  mutate(loc_nr = as.numeric(substr(loc_code, 6, 7))) %>% 
+  filter(loc_typecode %in% c("P", "B") & loc_nr <= 29 |
+           loc_typecode == "S" & loc_nr <= 11)
 locaties %>% collect() %>% knitr::kable()
 ```
 Histogram op basis van de diepte van de filters van de grondwatermeetpunten (`loc_type %in% c("P", "B")`) :
@@ -1186,7 +1189,7 @@ ggplot(tijdreeks %>%
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
   coord_cartesian(#ylim = c(-1, 0.1),
-                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  xlim = c(ymd("2017-01-01"), ymd("2022-03-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1211,7 +1214,7 @@ ggplot(tijdreeks %>%
   #                 ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   facet_wrap(~loc_code) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
@@ -1231,7 +1234,7 @@ ggplot(tijdreeks %>%
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
   coord_cartesian(ylim = c(34, 37.5),
-  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 xlim = c(ymd("2018-01-01"), ymd("2022-03-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1259,7 +1262,7 @@ ggplot(tijdreeks %>%
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   geom_line(aes(x = date(Datum),
                 y = mvTAW,
@@ -1278,7 +1281,7 @@ ggplot(tijdreeks %>%
                 colour = loc_code)) +
   ## non-clipping zoom
   coord_cartesian(ylim = c(34.40, 37.20),
-                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  xlim = c(ymd("2017-01-01"), ymd("2022-03-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1305,7 +1308,7 @@ ggplot(tijdreeks %>%
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
   coord_cartesian(ylim = c(34.40, 37.20),
-                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  xlim = c(ymd("2017-01-01"), ymd("2022-03-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1340,7 +1343,7 @@ ggplot() +
             alpha = 0.25) +
   ## non-clipping zoom
   coord_cartesian(ylim = c(34.40, 37.20),
-                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  xlim = c(ymd("2017-01-01"), ymd("2022-03-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1371,7 +1374,7 @@ ggplot(tijdreeks %>%
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
   coord_cartesian(ylim = c(34.40, 37.20),
-                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  xlim = c(ymd("2017-01-01"), ymd("2022-03-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1407,7 +1410,7 @@ ggplot() +
                 colour = loc_code)) +
   ## non-clipping zoom
    coord_cartesian(ylim = c(34.40, 37.20),
-                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  xlim = c(ymd("2017-01-01"), ymd("2022-03-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1468,7 +1471,7 @@ ggplot(tijdreeks %>%
                   # ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
-  xlim(ymd("2017-01-01"), ymd("2021-01-01")) +
+  xlim(ymd("2017-01-01"), ymd("2022-03-01")) +
   # ylim(-1, 0.1) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
         panel.grid.minor.x = element_line(linetype = "dashed")) +
@@ -1508,7 +1511,7 @@ ggplot(tijdreeks %>%
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
   coord_cartesian(ylim = c(34, 37.5),
-  #                 xlim = c(ymd("2018-01-01"), ymd("2021-01-01"))
+  #                 xlim = c(ymd("2018-01-01"), ymd("2022-03-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom
@@ -1532,7 +1535,7 @@ ggplot(tijdreeks %>%
                 colour = paste0(loc_code, " (", round(mvTAW,2), " mTAW)"))) +
   ## non-clipping zoom
   coord_cartesian(ylim = c(34.5, 37.5),
-                  xlim = c(ymd("2017-01-01"), ymd("2021-01-01"))
+                  xlim = c(ymd("2017-01-01"), ymd("2022-03-01"))
                   ) +
   scale_x_date(date_breaks = "year", date_labels = "%Y") +
   ## clipping zoom

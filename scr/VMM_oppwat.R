@@ -25,9 +25,9 @@ Watkwal_agg_sel <- Watkwal_agg %>%
       TRUE ~ Symbool),
     Meetpunt_naam = ifelse(Meetpunt == "220500", "220500; Korbeek-Dijle", "221000; St-Joris-Weert"),
     Jaar_datum = ymd(paste0(Jaar, "0601"))) %>% 
+  #berekenen van group variabele om lijngrafiek te onderbreken bij ontbrekende jaren
   group_by(Meetpunt, Symbool) %>%
   arrange(Meetpunt, Symbool, Jaar) %>% 
-  #berekenen van group variabele om lijngrafiek te onderbreken bij ontbrekende jaren
   mutate(
     diff = ifelse(is.na(Jaar - lag(Jaar)), 0, Jaar - lag(Jaar)),
     cumsum_dif = cumsum(diff > 1),
